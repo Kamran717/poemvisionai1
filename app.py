@@ -11,22 +11,34 @@ from utils.poem_generator import generate_poem
 from utils.image_manipulator import create_framed_image
 from models import db, Creation
 
+# Set up logging first so we can use it everywhere
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 # Initialize Flask app
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
 
-# Set up database
+# Set up database with connection pooling and retry settings
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+    "pool_pre_ping": True,  # Check if connection is alive before using it
+    "pool_recycle": 280,    # Recycle connections after 280 seconds
+    "pool_timeout": 30,     # Timeout waiting for a connection from pool
+    "max_overflow": 15,     # Allow up to 15 connections beyond pool_size
+    "pool_size": 10,        # Keep up to 10 connections in the pool
+    "connect_args": {"connect_timeout": 10}  # Connection timeout in seconds
+}
 db.init_app(app)
 
 # Create all database tables if they don't exist
-with app.app_context():
-    db.create_all()
-
-# Set up logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+try:
+    with app.app_context():
+        db.create_all()
+        logger.info("Database tables created successfully")
+except Exception as e:
+    logger.error(f"Error creating database tables: {str(e)}", exc_info=True)
 
 # Routes
 @app.route('/')
@@ -77,27 +89,46 @@ def analyze_image_route():
             logger.error(f"Exception during image analysis: {str(analysis_error)}", exc_info=True)
             return jsonify({'error': 'Error analyzing image. Please try again with a different image.'}), 500
         
-        # Create a temporary creation in the database
-        try:
-            temp_creation = Creation(
-                image_data=image_data,
-                analysis_results=analysis_results,
-                share_code=f"temp{analysis_id}"  # Shorter share_code
-            )
-            db.session.add(temp_creation)
-            db.session.commit()
-            
-            # Store just the ID in the session
-            session[f'temp_creation_id_{analysis_id}'] = temp_creation.id
-            
-            return jsonify({
-                'success': True,
-                'analysisId': analysis_id,
-                'results': analysis_results
-            })
-        except Exception as db_error:
-            logger.error(f"Database error: {str(db_error)}", exc_info=True)
-            return jsonify({'error': 'Error saving analysis results. Please try again.'}), 500
+        # Create a temporary creation in the database with retry mechanism
+        max_retries = 3
+        retry_count = 0
+        
+        while retry_count < max_retries:
+            try:
+                # Create a new session for each attempt to avoid stale connections
+                db.session.close()
+                
+                temp_creation = Creation(
+                    image_data=image_data,
+                    analysis_results=analysis_results,
+                    share_code=f"temp{analysis_id}"  # Shorter share_code
+                )
+                db.session.add(temp_creation)
+                db.session.commit()
+                
+                # Store just the ID in the session
+                session[f'temp_creation_id_{analysis_id}'] = temp_creation.id
+                
+                return jsonify({
+                    'success': True,
+                    'analysisId': analysis_id,
+                    'results': analysis_results
+                })
+                
+            except Exception as db_error:
+                retry_count += 1
+                logger.warning(f"Database error (attempt {retry_count}/{max_retries}): {str(db_error)}")
+                
+                # Roll back the failed transaction
+                db.session.rollback()
+                
+                if retry_count >= max_retries:
+                    logger.error(f"Database error after {max_retries} attempts: {str(db_error)}", exc_info=True)
+                    return jsonify({'error': 'Error saving analysis results. Please try again with a smaller image.'}), 500
+                
+                # Wait briefly before retrying (exponential backoff)
+                import time
+                time.sleep(0.5 * retry_count)
     
     except Exception as e:
         logger.error(f"Unexpected error analyzing image: {str(e)}", exc_info=True)
