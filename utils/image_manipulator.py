@@ -28,12 +28,12 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         # Determine poem text size and layout
         padding = 40  # Padding around the image and text
         poem_height = 0
-        poem_font_size = 24
+        poem_font_size = 36  # Increased from 24 to 36 for better readability
         
         # Create a larger canvas for the framed image with poem
         # The height is increased to accommodate the poem text below the image
         poem_lines = poem_text.strip().split("\n")
-        poem_line_height = poem_font_size + 10  # Font size plus line spacing
+        poem_line_height = poem_font_size + 12  # Font size plus line spacing
         poem_height = (len(poem_lines) * poem_line_height) + (padding * 2)
         
         # Calculate margins based on frame style
@@ -109,20 +109,46 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         
         # Add poem text below the image
         try:
-            # Try to load a nice font
-            font = ImageFont.truetype("arial.ttf", poem_font_size)
-        except IOError:
-            # Fall back to default font
+            # Try to load one of several potential fonts, in order of preference
+            try_fonts = ["DejaVuSerif.ttf", "DejaVuSans.ttf", "LiberationSerif-Regular.ttf", 
+                         "Times New Roman.ttf", "arial.ttf", "Arial.ttf"]
+            
+            font = None
+            for font_name in try_fonts:
+                try:
+                    font = ImageFont.truetype(font_name, poem_font_size)
+                    logger.debug(f"Successfully loaded font: {font_name}")
+                    break
+                except IOError:
+                    continue
+                    
+            if font is None:
+                # If no TrueType font was loaded, fall back to default
+                font = ImageFont.load_default()
+                logger.warning("Using default font - none of the TrueType fonts were available")
+        except Exception as e:
+            # If anything goes wrong, use the default font
+            logger.error(f"Error loading font: {str(e)}")
             font = ImageFont.load_default()
         
         # Calculate text position (centered below the image)
         text_y = paste_y + original_height + padding
         
-        # Draw each line of the poem
+        # Draw each line of the poem with improved visibility
+        text_color = (0, 0, 0)  # Black text
+        text_shadow_color = (150, 150, 150)  # Light gray shadow for better contrast
+        
         for i, line in enumerate(poem_lines):
+            # Calculate text position for this line
             line_width = draw.textlength(line, font=font)
             text_x = (new_width - line_width) // 2
-            draw.text((text_x, text_y + (i * poem_line_height)), line, fill=(0, 0, 0), font=font)
+            line_y = text_y + (i * poem_line_height)
+            
+            # First draw a subtle shadow/outline to improve readability
+            draw.text((text_x+1, line_y+1), line, fill=text_shadow_color, font=font)
+            
+            # Then draw the main text
+            draw.text((text_x, line_y), line, fill=text_color, font=font)
         
         # Convert the image to bytes
         output_buffer = io.BytesIO()
