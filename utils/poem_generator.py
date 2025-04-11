@@ -29,6 +29,14 @@ POEM_ADJECTIVES = {
         "uplifting", "empowering", "motivating", "encouraging", "hopeful",
         "triumphant", "resilient", "determined", "courageous", "strong"
     ],
+    "angry": [
+        "fierce", "furious", "intense", "raging", "seething", "bitter",
+        "wrathful", "outraged", "fiery", "burning", "hostile", "vehement"
+    ],
+    "extreme": [
+        "radical", "daring", "bold", "intense", "explosive", "audacious",
+        "wild", "unrestrained", "ferocious", "relentless", "boundless", "savage"
+    ],
     "holiday": [
         "festive", "merry", "joyous", "celebratory", "cheerful", "bright",
         "wondrous", "magical", "traditional", "nostalgic"
@@ -70,6 +78,16 @@ POEM_TEMPLATES = {
         "Rise like the {element1}, {adj1} and strong,\nLet your spirit soar like {element2}.\nFace each challenge, each {element3},\nWith courage {adj2} and true.",
         
         "Within you lies the power of {element1},\n{adj1}, {adj2}, without end.\nLet {element2} guide your journey,\nAnd {element3} be your friend."
+    ],
+    "angry": [
+        "The {element1} burns with {adj1} rage,\nAs {element2} crushes all in sight.\nNo mercy for the {element3},\nIn this {adj2}, relentless night.",
+        
+        "How dare the {element1} stand so tall,\n{adj1} and {adj2} in its might.\nThe {element2} mocks the {element3},\nWith contempt so bright."
+    ],
+    "extreme": [
+        "The {element1} EXPLODES through boundaries,\n{adj1}, {adj2}, breaking all chains!\nThe {element2} SMASHES into {element3},\nNo rules or limits remain!",
+        
+        "BEHOLD the {adj1} {element1},\nDEFYING gravity and time!\nThe {element2} COLLIDES with {element3},\nIn a {adj2} paradigm!"
     ],
     "holiday": [
         "Celebrate with {element1} and cheer,\nThis {adj1} holiday time.\nWith {element2} and {element3} all around,\nEverything feels {adj2} and prime.",
@@ -296,6 +314,8 @@ def _create_prompt(analysis_results, poem_type, emphasis):
         "love": "Make the poem romantic and heartfelt, focusing on emotions and connections.",
         "funny": "Make the poem humorous and light-hearted, perhaps using clever wordplay.",
         "inspirational": "Create an uplifting poem that motivates and inspires, focusing on strength and perseverance.",
+        "angry": "Make the poem intense and passionate, expressing rage, frustration, and strong emotions. Use forceful language and imagery.",
+        "extreme": "Create a bold, intense poem that breaks conventions. Use ALL CAPS for emphasis, dramatic punctuation, and powerful imagery. Be daring and excessive!",
         "holiday": "Capture the festive spirit and joy of holiday occasions.",
         "birthday": "Include themes of celebration, growth, and personal milestones.",
         "anniversary": "Focus on themes of enduring love, commitment, and shared memories.",
