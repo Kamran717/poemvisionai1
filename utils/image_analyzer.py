@@ -2,6 +2,9 @@ import os
 import io
 import logging
 import random
+import requests
+import base64
+import json
 from PIL import Image, ImageStat
 import time
 
@@ -14,6 +17,9 @@ except (ImportError, Exception) as e:
 
 # Set up logging
 logger = logging.getLogger(__name__)
+
+# Google Vision API key
+GOOGLE_API_KEY = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "")
 
 def analyze_image(image_file):
     """
@@ -30,92 +36,223 @@ def analyze_image(image_file):
         # Reset file pointer to the beginning
         image_file.seek(0)
         
-        # Check if the API is available
-        if not VISION_API_AVAILABLE or not os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"):
-            logger.warning("Google Cloud Vision API not available. Using basic analysis.")
-            return _analyze_image_basic(image_file)
-        
-        # Read the image content once so it can be used for the API request
+        # Read the image content
         content = image_file.read()
         
-        # Create a client for the Vision API
-        client = vision.ImageAnnotatorClient()
+        # Use the REST API if we have an API key, otherwise try the client library
+        if GOOGLE_API_KEY and GOOGLE_API_KEY.startswith("AIza"):
+            logger.info("Using Google Vision REST API with API key")
+            return _analyze_image_rest_api(content)
+        elif VISION_API_AVAILABLE and os.path.exists(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "")):
+            logger.info("Using Google Vision client library with service account")
+            # Reset file pointer to the beginning for client library
+            image_file.seek(0)
+            content = image_file.read()
+            
+            # Create a client for the Vision API
+            client = vision.ImageAnnotatorClient()
+            
+            # Create the image object for the API
+            image = vision.Image(content=content)
+            
+            # Request various features
+            features = [
+                vision.Feature(type_=vision.Feature.Type.LABEL_DETECTION, max_results=15),
+                vision.Feature(type_=vision.Feature.Type.FACE_DETECTION, max_results=10),
+                vision.Feature(type_=vision.Feature.Type.OBJECT_LOCALIZATION, max_results=15),
+                vision.Feature(type_=vision.Feature.Type.LANDMARK_DETECTION, max_results=5),
+                vision.Feature(type_=vision.Feature.Type.IMAGE_PROPERTIES),
+                vision.Feature(type_=vision.Feature.Type.SAFE_SEARCH_DETECTION)
+            ]
+            
+            # Perform the API request
+            response = client.annotate_image({
+                'image': image,
+                'features': features,
+            })
+            
+            # Process the results
+            results = {}
+            
+            # Process labels
+            results['labels'] = []
+            for label in response.label_annotations:
+                results['labels'].append({
+                    'description': label.description,
+                    'score': round(label.score * 100, 2)
+                })
+            
+            # Process faces
+            results['faces'] = []
+            for face in response.face_annotations:
+                results['faces'].append({
+                    'joy': face.joy_likelihood.name,
+                    'sorrow': face.sorrow_likelihood.name,
+                    'anger': face.anger_likelihood.name,
+                    'surprise': face.surprise_likelihood.name,
+                    'headwear': face.headwear_likelihood.name
+                })
+            
+            # Process objects
+            results['objects'] = []
+            for obj in response.localized_object_annotations:
+                results['objects'].append({
+                    'name': obj.name,
+                    'score': round(obj.score * 100, 2)
+                })
+            
+            # Process landmarks
+            results['landmarks'] = []
+            for landmark in response.landmark_annotations:
+                results['landmarks'].append({
+                    'description': landmark.description,
+                    'score': round(landmark.score * 100, 2)
+                })
+            
+            # Process image properties (colors)
+            results['colors'] = []
+            if response.image_properties:
+                colors = response.image_properties.dominant_colors.colors
+                for color in colors[:5]:  # Top 5 colors
+                    rgb = color.color
+                    hex_color = f'#{rgb.red:02x}{rgb.green:02x}{rgb.blue:02x}'
+                    results['colors'].append({
+                        'hex': hex_color,
+                        'score': round(color.score * 100, 2)
+                    })
+            
+            # Process safe search
+            if response.safe_search_annotation:
+                results['safe_search'] = {
+                    'adult': response.safe_search_annotation.adult.name,
+                    'medical': response.safe_search_annotation.medical.name,
+                    'violence': response.safe_search_annotation.violence.name
+                }
+            
+            logger.debug(f"Image analysis results: {results}")
+            return results
+        else:
+            logger.warning("Google Cloud Vision API not available. Using basic analysis.")
+            image_file.seek(0)  # Reset the file pointer for basic analysis
+            return _analyze_image_basic(image_file)
+    
+    except Exception as e:
+        logger.error(f"Error analyzing image: {str(e)}", exc_info=True)
+        # If there's an error with the Vision API, fall back to basic analysis
+        image_file.seek(0)  # Make sure we're at the beginning of the file
+        return _analyze_image_basic(image_file)
+            
+def _analyze_image_rest_api(image_content):
+    """
+    Analyze an image using the Google Cloud Vision REST API with an API key.
+    
+    Args:
+        image_content: The binary content of the image file
         
-        # Create the image object for the API
-        image = vision.Image(content=content)
+    Returns:
+        dict: A dictionary containing the analysis results
+    """
+    try:
+        # Base64 encode the image
+        encoded_image = base64.b64encode(image_content).decode('utf-8')
         
-        # Request various features
-        features = [
-            vision.Feature(type_=vision.Feature.Type.LABEL_DETECTION, max_results=15),
-            vision.Feature(type_=vision.Feature.Type.FACE_DETECTION, max_results=10),
-            vision.Feature(type_=vision.Feature.Type.OBJECT_LOCALIZATION, max_results=15),
-            vision.Feature(type_=vision.Feature.Type.LANDMARK_DETECTION, max_results=5),
-            vision.Feature(type_=vision.Feature.Type.IMAGE_PROPERTIES),
-            vision.Feature(type_=vision.Feature.Type.SAFE_SEARCH_DETECTION)
-        ]
+        # Prepare the request
+        request_data = {
+            "requests": [
+                {
+                    "image": {
+                        "content": encoded_image
+                    },
+                    "features": [
+                        {"type": "LABEL_DETECTION", "maxResults": 15},
+                        {"type": "FACE_DETECTION", "maxResults": 10},
+                        {"type": "OBJECT_LOCALIZATION", "maxResults": 15},
+                        {"type": "LANDMARK_DETECTION", "maxResults": 5},
+                        {"type": "IMAGE_PROPERTIES"},
+                        {"type": "SAFE_SEARCH_DETECTION"}
+                    ]
+                }
+            ]
+        }
         
-        # Perform the API request
-        response = client.annotate_image({
-            'image': image,
-            'features': features,
-        })
+        # Make the API request
+        url = f"https://vision.googleapis.com/v1/images:annotate?key={GOOGLE_API_KEY}"
+        headers = {"Content-Type": "application/json"}
+        
+        response = requests.post(url, headers=headers, json=request_data)
+        
+        # Process the results
+        if response.status_code != 200:
+            logger.error(f"API error: {response.status_code} - {response.text}")
+            return _analyze_image_basic(io.BytesIO(image_content))
+            
+        # Parse the response
+        vision_data = response.json()
+        
+        # Extract the annotations
+        annotations = vision_data["responses"][0]
         
         # Process the results
         results = {}
         
         # Process labels
         results['labels'] = []
-        for label in response.label_annotations:
-            results['labels'].append({
-                'description': label.description,
-                'score': round(label.score * 100, 2)
-            })
+        if 'labelAnnotations' in annotations:
+            for label in annotations['labelAnnotations']:
+                results['labels'].append({
+                    'description': label['description'],
+                    'score': round(label['score'] * 100, 2)
+                })
         
         # Process faces
         results['faces'] = []
-        for face in response.face_annotations:
-            results['faces'].append({
-                'joy': face.joy_likelihood.name,
-                'sorrow': face.sorrow_likelihood.name,
-                'anger': face.anger_likelihood.name,
-                'surprise': face.surprise_likelihood.name,
-                'headwear': face.headwear_likelihood.name
-            })
+        if 'faceAnnotations' in annotations:
+            for face in annotations['faceAnnotations']:
+                results['faces'].append({
+                    'joy': face['joyLikelihood'],
+                    'sorrow': face['sorrowLikelihood'],
+                    'anger': face['angerLikelihood'],
+                    'surprise': face['surpriseLikelihood'],
+                    'headwear': face.get('headwearLikelihood', 'UNKNOWN')
+                })
         
         # Process objects
         results['objects'] = []
-        for obj in response.localized_object_annotations:
-            results['objects'].append({
-                'name': obj.name,
-                'score': round(obj.score * 100, 2)
-            })
+        if 'localizedObjectAnnotations' in annotations:
+            for obj in annotations['localizedObjectAnnotations']:
+                results['objects'].append({
+                    'name': obj['name'],
+                    'score': round(obj['score'] * 100, 2)
+                })
         
         # Process landmarks
         results['landmarks'] = []
-        for landmark in response.landmark_annotations:
-            results['landmarks'].append({
-                'description': landmark.description,
-                'score': round(landmark.score * 100, 2)
-            })
+        if 'landmarkAnnotations' in annotations:
+            for landmark in annotations['landmarkAnnotations']:
+                results['landmarks'].append({
+                    'description': landmark['description'],
+                    'score': round(landmark['score'] * 100, 2)
+                })
         
         # Process image properties (colors)
         results['colors'] = []
-        if response.image_properties:
-            colors = response.image_properties.dominant_colors.colors
+        if 'imagePropertiesAnnotation' in annotations:
+            colors = annotations['imagePropertiesAnnotation']['dominantColors']['colors']
             for color in colors[:5]:  # Top 5 colors
-                rgb = color.color
-                hex_color = f'#{rgb.red:02x}{rgb.green:02x}{rgb.blue:02x}'
+                rgb = color['color']
+                hex_color = f'#{rgb.get("red", 0):02x}{rgb.get("green", 0):02x}{rgb.get("blue", 0):02x}'
                 results['colors'].append({
                     'hex': hex_color,
-                    'score': round(color.score * 100, 2)
+                    'score': round(color['score'] * 100, 2)
                 })
         
         # Process safe search
-        if response.safe_search_annotation:
+        if 'safeSearchAnnotation' in annotations:
+            ss = annotations['safeSearchAnnotation']
             results['safe_search'] = {
-                'adult': response.safe_search_annotation.adult.name,
-                'medical': response.safe_search_annotation.medical.name,
-                'violence': response.safe_search_annotation.violence.name
+                'adult': ss.get('adult', 'UNKNOWN'),
+                'medical': ss.get('medical', 'UNKNOWN'),
+                'violence': ss.get('violence', 'UNKNOWN')
             }
         
         logger.debug(f"Image analysis results: {results}")
@@ -124,8 +261,7 @@ def analyze_image(image_file):
     except Exception as e:
         logger.error(f"Error analyzing image: {str(e)}", exc_info=True)
         # If there's an error with the Vision API, fall back to basic analysis
-        image_file.seek(0)  # Make sure we're at the beginning of the file
-        return _analyze_image_basic(image_file)
+        return _analyze_image_basic(io.BytesIO(image_content))
 
 def _analyze_image_basic(image_file):
     """
