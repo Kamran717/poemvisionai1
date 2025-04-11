@@ -149,25 +149,41 @@ def generate_poem(analysis_results, poem_type, emphasis):
         }
         
         # Make the API request
-        response = requests.post(
-            f"{GEMINI_API_URL}?key={GEMINI_API_KEY}",
-            headers=headers,
-            json=data
-        )
-        
-        # Process the response
-        if response.status_code == 200:
-            response_data = response.json()
+        try:
+            logger.info(f"Sending request to Gemini API with prompt of length {len(prompt)}")
+            response = requests.post(
+                f"{GEMINI_API_URL}?key={GEMINI_API_KEY}",
+                headers=headers,
+                json=data,
+                timeout=15  # Set a 15-second timeout
+            )
             
-            # Extract the poem from the response
-            if 'candidates' in response_data and len(response_data['candidates']) > 0:
-                generated_text = response_data['candidates'][0]['content']['parts'][0]['text']
-                return generated_text.strip()
-            else:
-                logger.error(f"Unexpected response structure: {response_data}")
+            # Process the response
+            if response.status_code == 200:
+                response_data = response.json()
+                logger.debug(f"Received successful response from Gemini API")
+                
+                # Extract the poem from the response
+                if 'candidates' in response_data and len(response_data['candidates']) > 0:
+                    if 'content' in response_data['candidates'][0] and 'parts' in response_data['candidates'][0]['content']:
+                        parts = response_data['candidates'][0]['content']['parts']
+                        if parts and 'text' in parts[0]:
+                            generated_text = parts[0]['text']
+                            return generated_text.strip()
+                
+                # If we get here, the response structure was unexpected
+                logger.error(f"Unexpected response structure: {json.dumps(response_data)[:500]}...")
                 return _generate_template_poem(analysis_results, poem_type, emphasis)
-        else:
-            logger.error(f"API error: {response.status_code} - {response.text}")
+            else:
+                logger.error(f"API error: {response.status_code} - {response.text[:200]}...")
+                # Log the request that was sent for debugging
+                logger.error(f"Request data: {json.dumps(data)[:500]}...")
+                return _generate_template_poem(analysis_results, poem_type, emphasis)
+        except requests.exceptions.Timeout:
+            logger.error("Gemini API request timed out")
+            return _generate_template_poem(analysis_results, poem_type, emphasis)
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Request exception when calling Gemini API: {str(e)}")
             return _generate_template_poem(analysis_results, poem_type, emphasis)
     
     except Exception as e:

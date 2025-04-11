@@ -11,13 +11,15 @@ import time
 # Set up logging
 logger = logging.getLogger(__name__)
 
-# Google Vision API key - try both environment variables
-GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "") or os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "")
+# Google Vision API key - get it from the correct environment variable
+GOOGLE_API_KEY = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "")
 
-# Check if the API key looks like a valid Google API key
+# Check if the API key looks like a valid Google API key (starts with AIza)
 if GOOGLE_API_KEY and GOOGLE_API_KEY.startswith("AIza"):
     logger.info("Google Vision API key detected")
     VISION_API_AVAILABLE = "REST"
+    # Log for debugging
+    logger.debug(f"Using Vision API key: {GOOGLE_API_KEY[:10]}...")
 else:
     try:
         from google.cloud import vision

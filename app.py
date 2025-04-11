@@ -46,38 +46,62 @@ def analyze_image_route():
         
         if image_file.filename == '':
             return jsonify({'error': 'No image selected'}), 400
+            
+        # Check file size - limit to 10MB
+        image_file.seek(0, os.SEEK_END)
+        file_size = image_file.tell()
+        if file_size > 10 * 1024 * 1024:
+            return jsonify({'error': 'Image too large. Please upload an image smaller than 10MB'}), 400
         
         # Generate a unique ID for this analysis
         analysis_id = str(uuid.uuid4())
         
-        # Create a temporary creation in the database
+        # Reset file pointer and read image data
+        image_file.seek(0)
         image_data = base64.b64encode(image_file.read()).decode('utf-8')
         
         # Analyze the image using Google Cloud Vision AI
-        image_file.seek(0)  # Reset the file pointer
-        analysis_results = analyze_image(image_file)
+        image_file.seek(0)  # Reset the file pointer again
+        logger.info(f"Analyzing image: {image_file.filename} ({file_size/1024:.1f} KB)")
+        
+        try:
+            analysis_results = analyze_image(image_file)
+            
+            # Check if we got valid analysis results
+            if not analysis_results or '_error' in analysis_results:
+                error_msg = analysis_results.get('_error', 'Unknown error during image analysis')
+                logger.error(f"Image analysis failed: {error_msg}")
+                return jsonify({'error': f'Error analyzing image: {error_msg}'}), 500
+                
+        except Exception as analysis_error:
+            logger.error(f"Exception during image analysis: {str(analysis_error)}", exc_info=True)
+            return jsonify({'error': 'Error analyzing image. Please try again with a different image.'}), 500
         
         # Create a temporary creation in the database
-        temp_creation = Creation(
-            image_data=image_data,
-            analysis_results=analysis_results,
-            share_code=f"temp_{analysis_id}"
-        )
-        db.session.add(temp_creation)
-        db.session.commit()
-        
-        # Store just the ID in the session
-        session[f'temp_creation_id_{analysis_id}'] = temp_creation.id
-        
-        return jsonify({
-            'success': True,
-            'analysisId': analysis_id,
-            'results': analysis_results
-        })
+        try:
+            temp_creation = Creation(
+                image_data=image_data,
+                analysis_results=analysis_results,
+                share_code=f"temp_{analysis_id}"
+            )
+            db.session.add(temp_creation)
+            db.session.commit()
+            
+            # Store just the ID in the session
+            session[f'temp_creation_id_{analysis_id}'] = temp_creation.id
+            
+            return jsonify({
+                'success': True,
+                'analysisId': analysis_id,
+                'results': analysis_results
+            })
+        except Exception as db_error:
+            logger.error(f"Database error: {str(db_error)}", exc_info=True)
+            return jsonify({'error': 'Error saving analysis results. Please try again.'}), 500
     
     except Exception as e:
-        logger.error(f"Error analyzing image: {str(e)}", exc_info=True)
-        return jsonify({'error': f'Failed to analyze image: {str(e)}'}), 500
+        logger.error(f"Unexpected error analyzing image: {str(e)}", exc_info=True)
+        return jsonify({'error': 'An unexpected error occurred. Please try again.'}), 500
 
 @app.route('/generate-poem', methods=['POST'])
 def generate_poem_route():
