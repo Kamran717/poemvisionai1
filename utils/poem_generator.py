@@ -2,6 +2,7 @@ import os
 import logging
 import requests
 import json
+import random
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -10,9 +11,87 @@ logger = logging.getLogger(__name__)
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
 
+# Poem adjectives by type
+POEM_ADJECTIVES = {
+    "default": [
+        "beautiful", "vibrant", "gentle", "serene", "colorful", "vivid",
+        "radiant", "peaceful", "delicate", "striking", "profound", "timeless"
+    ],
+    "love": [
+        "tender", "passionate", "romantic", "intimate", "affectionate",
+        "devoted", "cherished", "heartfelt", "adoring", "loving"
+    ],
+    "funny": [
+        "whimsical", "quirky", "silly", "playful", "amusing", "witty",
+        "comical", "humorous", "lighthearted", "ridiculous"
+    ],
+    "inspirational": [
+        "uplifting", "empowering", "motivating", "encouraging", "hopeful",
+        "triumphant", "resilient", "determined", "courageous", "strong"
+    ],
+    "holiday": [
+        "festive", "merry", "joyous", "celebratory", "cheerful", "bright",
+        "wondrous", "magical", "traditional", "nostalgic"
+    ],
+    "birthday": [
+        "festive", "joyful", "celebratory", "special", "memorable",
+        "milestone", "hopeful", "cheerful", "delightful", "happy"
+    ],
+    "anniversary": [
+        "enduring", "devoted", "faithful", "committed", "treasured",
+        "everlasting", "steadfast", "cherished", "timeless", "loving"
+    ]
+}
+
+# Poem templates by type
+POEM_TEMPLATES = {
+    "default": [
+        "In the world of {element1} and {element2},\nA {adj1} moment caught in time.\nThe {adj2} {element3} speaks to me,\nIn a language {adj3} and sublime.",
+        
+        "I gaze upon the {element1},\n{adj1} and {adj2} in the light.\nThe {element2} brings to mind\nThoughts both {adj3} and bright.",
+        
+        "This image shows a {adj1} scene,\nWhere {element1} meets {element2}.\nThe {element3} stands in {adj2} repose,\nA moment {adj3} and true.",
+        
+        "Look closely at the {element1},\nSo {adj1} in its grace.\nThe {element2} and {element3} combine,\nTo create a {adj2} space.",
+        
+        "From every angle, {adj1} beauty shines,\nThe {element1} tells a story untold.\nWith {element2} and {element3} intertwined,\nA {adj2} vision to behold."
+    ],
+    "love": [
+        "In your eyes, I see {element1},\nYour smile, like {element2}, {adj1} and bright.\nOur love, a {adj2} {element3},\nShines through the darkest night.",
+        
+        "Two hearts like {element1},\n{adj1}, {adj2}, forever true.\nLike {element2} and {element3} together,\nMy heart belongs to you."
+    ],
+    "funny": [
+        "The {element1} looked so {adj1},\nIt nearly made me sneeze.\nThe {element2} danced with {element3},\nWith {adj2} expertise.",
+        
+        "Oh {element1}, you're so {adj1},\nLike {element2} on a stick.\nYou make me laugh like {element3},\nIt's really quite {adj2}!"
+    ],
+    "inspirational": [
+        "Rise like the {element1}, {adj1} and strong,\nLet your spirit soar like {element2}.\nFace each challenge, each {element3},\nWith courage {adj2} and true.",
+        
+        "Within you lies the power of {element1},\n{adj1}, {adj2}, without end.\nLet {element2} guide your journey,\nAnd {element3} be your friend."
+    ],
+    "holiday": [
+        "Celebrate with {element1} and cheer,\nThis {adj1} holiday time.\nWith {element2} and {element3} all around,\nEverything feels {adj2} and prime.",
+        
+        "The season brings us {element1},\n{adj1} moments to treasure and keep.\n{element2} and {element3} fill the air,\nMaking memories {adj2} and deep."
+    ],
+    "birthday": [
+        "Another year, like {element1}, has passed,\nFilled with moments {adj1} and {adj2}.\nMay your new year bring {element2},\nAnd {element3} the whole year through.",
+        
+        "Today we celebrate your {element1},\nWith joy both {adj1} and {adj2}.\nMay {element2} and {element3} follow you,\nIn everything you do."
+    ],
+    "anniversary": [
+        "Years together, like {element1} and {element2},\nA bond both {adj1} and {adj2}.\nOur love, a {element3} that never fades,\nGrows stronger, between me and you.",
+        
+        "Our journey, like {element1},\nContinues {adj1} and {adj2}.\nWith {element2} and {element3} we've shared,\nOur love remains forever true."
+    ]
+}
+
 def generate_poem(analysis_results, poem_type, emphasis):
     """
     Generate a poem based on image analysis and user preferences using Google's Gemini API.
+    If the API is not available, generates a basic poem using templates.
     
     Args:
         analysis_results (dict): The results from the Google Cloud Vision AI analysis
@@ -25,8 +104,8 @@ def generate_poem(analysis_results, poem_type, emphasis):
     try:
         # Check if API key is available
         if not GEMINI_API_KEY:
-            logger.error("Gemini API key not found in environment variables")
-            return "Error: API key not configured. Please set the GEMINI_API_KEY environment variable."
+            logger.warning("Gemini API key not found in environment variables. Using template poem.")
+            return _generate_template_poem(analysis_results, poem_type, emphasis)
         
         # Create a detailed prompt based on the analysis and user preferences
         prompt = _create_prompt(analysis_results, poem_type, emphasis)
@@ -68,14 +147,93 @@ def generate_poem(analysis_results, poem_type, emphasis):
                 return generated_text.strip()
             else:
                 logger.error(f"Unexpected response structure: {response_data}")
-                return "Error: Unable to generate poem. Unexpected response structure."
+                return _generate_template_poem(analysis_results, poem_type, emphasis)
         else:
             logger.error(f"API error: {response.status_code} - {response.text}")
-            return f"Error: Unable to generate poem. API returned status code {response.status_code}."
+            return _generate_template_poem(analysis_results, poem_type, emphasis)
     
     except Exception as e:
         logger.error(f"Error generating poem: {str(e)}", exc_info=True)
-        return f"Error: Unable to generate poem. {str(e)}"
+        return _generate_template_poem(analysis_results, poem_type, emphasis)
+
+def _generate_template_poem(analysis_results, poem_type, emphasis):
+    """
+    Generate a poem based on templates when the API is not available.
+    
+    Args:
+        analysis_results (dict): The results from the image analysis
+        poem_type (str): The type of poem to generate
+        emphasis (list): List of elements to emphasize in the poem
+        
+    Returns:
+        str: The generated poem
+    """
+    # Extract elements from analysis to use in the poem
+    all_elements = []
+    
+    # Add labels
+    if 'labels' in analysis_results and analysis_results['labels']:
+        all_elements.extend([label['description'] for label in analysis_results['labels'][:8]])
+    
+    # Add objects
+    if 'objects' in analysis_results and analysis_results['objects']:
+        all_elements.extend([obj['name'] for obj in analysis_results['objects'][:5]])
+    
+    # Add landmarks
+    if 'landmarks' in analysis_results and analysis_results['landmarks']:
+        all_elements.extend([landmark['description'] for landmark in analysis_results['landmarks']])
+    
+    # If emphasis elements are provided, prioritize those
+    if emphasis:
+        emphasized_elements = emphasis.copy()
+        for element in all_elements:
+            if element not in emphasized_elements:
+                emphasized_elements.append(element)
+        all_elements = emphasized_elements
+    
+    # Ensure we have at least some elements to work with
+    if not all_elements:
+        all_elements = ["image", "moment", "beauty", "time", "art", "vision", "feeling"]
+    
+    # Get a few key elements for the poem
+    key_elements = all_elements[:min(4, len(all_elements))]
+    
+    # Sample from poem templates based on the poem type
+    return _apply_poem_template(key_elements, poem_type)
+
+def _apply_poem_template(key_elements, poem_type):
+    """
+    Apply a template to generate a poem based on the key elements and poem type.
+    
+    Args:
+        key_elements (list): List of key elements to include in the poem
+        poem_type (str): The type of poem to generate
+        
+    Returns:
+        str: The generated poem
+    """
+    # Get poem adjectives based on poem type
+    adjectives = POEM_ADJECTIVES.get(poem_type.lower(), POEM_ADJECTIVES["default"])
+    
+    # Get poem templates based on the poem type
+    templates = POEM_TEMPLATES.get(poem_type.lower(), POEM_TEMPLATES["default"])
+    
+    # Randomly select a template
+    template = random.choice(templates)
+    
+    # Replace placeholders with key elements and adjectives
+    for i, element in enumerate(key_elements):
+        if i < 4:  # Only use up to 4 elements
+            placeholder = f"{{element{i+1}}}"
+            template = template.replace(placeholder, element.lower())
+    
+    # Replace adjective placeholders
+    for i, adj in enumerate(random.sample(adjectives, min(4, len(adjectives)))):
+        if i < 4:  # Only use up to 4 adjectives
+            placeholder = f"{{adj{i+1}}}"
+            template = template.replace(placeholder, adj)
+    
+    return template
 
 def _create_prompt(analysis_results, poem_type, emphasis):
     """

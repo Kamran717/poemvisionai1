@@ -4,7 +4,8 @@ import logging
 # Set up logging for easier debugging
 logging.basicConfig(level=logging.DEBUG)
 
-from app import app, db  # noqa: F401
+from app import app  # noqa: F401
+from models import db  # noqa: F401
 
 if __name__ == "__main__":
     # Create all database tables if they don't exist
