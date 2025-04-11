@@ -1,0 +1,61 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h1 class="display-5 mb-3">
+                    <i class="fas fa-images me-2"></i> Creation Gallery
+                </h1>
+                <p class="lead">Browse recently created poems and get inspired!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    {% if creations %}
+        {% for creation in creations %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <small class="text-muted">{{ creation.created_at.strftime('%B %d, %Y') }}</small>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-3" style="max-height: 300px; overflow: hidden;">
+                        <img src="data:image/jpeg;base64,{{ creation.final_image_data }}" class="img-fluid rounded" alt="Creation">
+                    </div>
+                    <div>
+                        <small class="d-block text-muted mb-2">Poem Type: {{ creation.poem_type }}</small>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="/shared/{{ creation.share_code }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-eye me-1"></i> View Full Creation
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle me-2"></i>
+                No creations have been shared yet. Be the first to create one!
+            </div>
+            <div class="text-center mt-3">
+                <a href="/" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i> Create a Poem
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<div class="text-center mt-4 mb-5">
+    <a href="/" class="btn btn-outline-primary">
+        <i class="fas fa-arrow-left me-2"></i> Back to Home
+    </a>
+</div>
+{% endblock %}

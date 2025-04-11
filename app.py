@@ -4,13 +4,21 @@ from flask import Flask, render_template, request, jsonify, session
 import base64
 import uuid
 import json
+import string
+import random
 from utils.image_analyzer import analyze_image
 from utils.poem_generator import generate_poem
 from utils.image_manipulator import create_framed_image
+from models import db, Creation
 
 # Initialize Flask app
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
+
+# Set up database
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+db.init_app(app)
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -106,6 +114,7 @@ def create_final_image_route():
         # Get the image and poem data from the session
         image_data = session[f'image_{analysis_id}']
         poem = session[f'poem_{analysis_id}']
+        analysis_results = json.loads(session.get(f'analysis_{analysis_id}', '{}'))
         
         # Get the frame selection from the request
         frame_style = data.get('frameStyle', 'classic')
@@ -120,14 +129,64 @@ def create_final_image_route():
         # Convert the final image to base64 for sending to the client
         final_image_base64 = base64.b64encode(final_image).decode('utf-8')
         
+        # Generate a unique share code
+        share_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
+        
+        # Save the creation to the database
+        creation = Creation(
+            image_data=image_data,
+            analysis_results=analysis_results,
+            poem_text=poem,
+            frame_style=frame_style,
+            final_image_data=final_image_base64,
+            poem_type=data.get('poemType', 'free verse'),
+            emphasis=data.get('emphasis', []),
+            share_code=share_code
+        )
+        
+        db.session.add(creation)
+        db.session.commit()
+        
         return jsonify({
             'success': True,
-            'finalImage': final_image_base64
+            'finalImage': final_image_base64,
+            'shareCode': share_code,
+            'creationId': creation.id
         })
     
     except Exception as e:
         logger.error(f"Error creating final image: {str(e)}", exc_info=True)
         return jsonify({'error': f'Failed to create final image: {str(e)}'}), 500
+
+@app.route('/shared/<share_code>')
+def view_shared_creation(share_code):
+    """View a shared creation by its share code."""
+    try:
+        # Look up the creation in the database
+        creation = Creation.query.filter_by(share_code=share_code).first()
+        
+        if not creation:
+            return render_template('error.html', message="Creation not found or no longer available"), 404
+        
+        # Render the shared creation template
+        return render_template('shared.html', creation=creation)
+    
+    except Exception as e:
+        logger.error(f"Error viewing shared creation: {str(e)}", exc_info=True)
+        return render_template('error.html', message="An error occurred while loading this creation"), 500
+
+@app.route('/gallery')
+def gallery():
+    """View a gallery of recent creations."""
+    try:
+        # Get the most recent 20 creations
+        creations = Creation.query.order_by(Creation.created_at.desc()).limit(20).all()
+        
+        return render_template('gallery.html', creations=creations)
+    
+    except Exception as e:
+        logger.error(f"Error loading gallery: {str(e)}", exc_info=True)
+        return render_template('error.html', message="An error occurred while loading the gallery"), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
