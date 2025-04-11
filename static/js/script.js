@@ -163,12 +163,18 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
         .then(data => {
             // Hide loading indicator
             loadingAnalysis.classList.add('d-none');
             
             if (data.error) {
+                console.error('Server returned error:', data.error);
                 showUploadError(data.error);
                 analyzeImageBtn.disabled = false;
                 return;
@@ -176,6 +182,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Store the analysis ID
             state.analysisId = data.analysisId;
+            
+            // Check if results exist and are valid
+            if (!data.results || typeof data.results !== 'object') {
+                console.error('Invalid analysis results:', data.results);
+                showUploadError('Failed to process image analysis results. Please try again.');
+                analyzeImageBtn.disabled = false;
+                return;
+            }
             
             // Display the analysis results
             displayAnalysisResults(data.results);
@@ -186,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
             console.error('Error analyzing image:', error);
             loadingAnalysis.classList.add('d-none');
-            showUploadError('An error occurred while analyzing the image. Please try again.');
+            showUploadError('An error occurred while analyzing the image. Please try again. If this issue persists, try with a smaller image.');
             analyzeImageBtn.disabled = false;
         });
     });

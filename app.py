@@ -50,15 +50,24 @@ def analyze_image_route():
         # Generate a unique ID for this analysis
         analysis_id = str(uuid.uuid4())
         
-        # Save the uploaded image data in the session temporarily
+        # Create a temporary creation in the database
         image_data = base64.b64encode(image_file.read()).decode('utf-8')
-        session[f'image_{analysis_id}'] = image_data
         
         # Analyze the image using Google Cloud Vision AI
+        image_file.seek(0)  # Reset the file pointer
         analysis_results = analyze_image(image_file)
         
-        # Store the analysis results in the session
-        session[f'analysis_{analysis_id}'] = json.dumps(analysis_results)
+        # Create a temporary creation in the database
+        temp_creation = Creation(
+            image_data=image_data,
+            analysis_results=analysis_results,
+            share_code=f"temp_{analysis_id}"
+        )
+        db.session.add(temp_creation)
+        db.session.commit()
+        
+        # Store just the ID in the session
+        session[f'temp_creation_id_{analysis_id}'] = temp_creation.id
         
         return jsonify({
             'success': True,
@@ -77,11 +86,18 @@ def generate_poem_route():
         data = request.json
         analysis_id = data.get('analysisId')
         
-        if not analysis_id or f'analysis_{analysis_id}' not in session:
+        if not analysis_id or f'temp_creation_id_{analysis_id}' not in session:
             return jsonify({'error': 'Invalid or expired analysis ID'}), 400
         
-        # Get the analysis results from the session
-        analysis_results = json.loads(session[f'analysis_{analysis_id}'])
+        # Get the temporary creation from the database
+        temp_creation_id = session[f'temp_creation_id_{analysis_id}']
+        temp_creation = Creation.query.get(temp_creation_id)
+        
+        if not temp_creation:
+            return jsonify({'error': 'Analysis data not found'}), 400
+        
+        # Get analysis results from the database
+        analysis_results = temp_creation.analysis_results
         
         # Get user preferences from the request
         poem_type = data.get('poemType', 'free verse')
@@ -90,8 +106,11 @@ def generate_poem_route():
         # Generate the poem using the LLM
         poem = generate_poem(analysis_results, poem_type, emphasis)
         
-        # Store the generated poem in the session
-        session[f'poem_{analysis_id}'] = poem
+        # Update the temporary creation with the poem
+        temp_creation.poem_text = poem
+        temp_creation.poem_type = poem_type
+        temp_creation.emphasis = emphasis
+        db.session.commit()
         
         return jsonify({
             'success': True,
@@ -109,24 +128,23 @@ def create_final_image_route():
         data = request.json
         analysis_id = data.get('analysisId')
         
-        if not analysis_id:
+        if not analysis_id or f'temp_creation_id_{analysis_id}' not in session:
             return jsonify({'error': 'Invalid or expired analysis ID'}), 400
         
-        if f'image_{analysis_id}' not in session or f'poem_{analysis_id}' not in session:
-            return jsonify({'error': 'Image or poem data not found'}), 400
+        # Get the temporary creation from the database
+        temp_creation_id = session[f'temp_creation_id_{analysis_id}']
+        temp_creation = Creation.query.get(temp_creation_id)
         
-        # Get the image and poem data from the session
-        image_data = session[f'image_{analysis_id}']
-        poem = session[f'poem_{analysis_id}']
-        analysis_results = json.loads(session.get(f'analysis_{analysis_id}', '{}'))
+        if not temp_creation or not temp_creation.image_data or not temp_creation.poem_text:
+            return jsonify({'error': 'Image or poem data not found'}), 400
         
         # Get the frame selection from the request
         frame_style = data.get('frameStyle', 'classic')
         
         # Create the framed image with the poem
         final_image = create_framed_image(
-            base64.b64decode(image_data), 
-            poem, 
+            base64.b64decode(temp_creation.image_data), 
+            temp_creation.poem_text, 
             frame_style
         )
         
@@ -136,26 +154,17 @@ def create_final_image_route():
         # Generate a unique share code
         share_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
         
-        # Save the creation to the database
-        creation = Creation(
-            image_data=image_data,
-            analysis_results=analysis_results,
-            poem_text=poem,
-            frame_style=frame_style,
-            final_image_data=final_image_base64,
-            poem_type=data.get('poemType', 'free verse'),
-            emphasis=data.get('emphasis', []),
-            share_code=share_code
-        )
-        
-        db.session.add(creation)
+        # Create the final creation by updating the temporary one
+        temp_creation.frame_style = frame_style
+        temp_creation.final_image_data = final_image_base64
+        temp_creation.share_code = share_code  # Replace the temp share code with a permanent one
         db.session.commit()
         
         return jsonify({
             'success': True,
             'finalImage': final_image_base64,
             'shareCode': share_code,
-            'creationId': creation.id
+            'creationId': temp_creation.id
         })
     
     except Exception as e:
