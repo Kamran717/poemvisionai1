@@ -11,8 +11,8 @@ import time
 # Set up logging
 logger = logging.getLogger(__name__)
 
-# Google Vision API key - get it from the correct environment variable
-GOOGLE_API_KEY = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "")
+# Google Vision API key - prioritize the dedicated API key environment variable
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "") or os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "")
 
 # Check if the API key looks like a valid Google API key (starts with AIza)
 if GOOGLE_API_KEY and GOOGLE_API_KEY.startswith("AIza"):
@@ -187,15 +187,28 @@ def _analyze_image_rest_api(image_content):
         url = f"https://vision.googleapis.com/v1/images:annotate?key={GOOGLE_API_KEY}"
         headers = {"Content-Type": "application/json"}
         
-        response = requests.post(url, headers=headers, json=request_data)
+        # Log the request for debugging
+        logger.debug(f"Making Vision API request to: {url}")
+        logger.debug(f"Request headers: {headers}")
+        logger.debug(f"Request data length: {len(json.dumps(request_data))} characters")
         
-        # Process the results
-        if response.status_code != 200:
-            logger.error(f"API error: {response.status_code} - {response.text}")
-            return _analyze_image_basic(io.BytesIO(image_content))
+        # Make the API request with a timeout
+        try:
+            response = requests.post(url, headers=headers, json=request_data, timeout=15)
             
-        # Log the full response for debugging
-        logger.debug(f"Vision API raw response: {response.text[:1000]}...")
+            # Process the results
+            if response.status_code != 200:
+                logger.error(f"API error: {response.status_code} - {response.text}")
+                return _analyze_image_basic(io.BytesIO(image_content))
+                
+            # Log the full response for debugging
+            logger.debug(f"Vision API raw response: {response.text[:1000]}...")
+        except requests.exceptions.Timeout:
+            logger.error("Vision API request timed out after 15 seconds")
+            return _analyze_image_basic(io.BytesIO(image_content))
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Vision API request exception: {str(e)}")
+            return _analyze_image_basic(io.BytesIO(image_content))
             
         # Parse the response
         vision_data = response.json()

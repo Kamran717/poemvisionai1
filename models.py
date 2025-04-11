@@ -31,7 +31,7 @@ class Creation(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Store a unique share code for public sharing
-    share_code = db.Column(db.String(20), unique=True, nullable=True)
+    share_code = db.Column(db.String(50), unique=True, nullable=True)
     
     def __repr__(self):
         return f'<Creation {self.id}, created at {self.created_at}>'

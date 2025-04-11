@@ -53,8 +53,8 @@ def analyze_image_route():
         if file_size > 10 * 1024 * 1024:
             return jsonify({'error': 'Image too large. Please upload an image smaller than 10MB'}), 400
         
-        # Generate a unique ID for this analysis
-        analysis_id = str(uuid.uuid4())
+        # Generate a shorter unique ID for this analysis
+        analysis_id = str(uuid.uuid4()).split('-')[0]  # Just use the first part of the UUID
         
         # Reset file pointer and read image data
         image_file.seek(0)
@@ -82,7 +82,7 @@ def analyze_image_route():
             temp_creation = Creation(
                 image_data=image_data,
                 analysis_results=analysis_results,
-                share_code=f"temp_{analysis_id}"
+                share_code=f"temp{analysis_id}"  # Shorter share_code
             )
             db.session.add(temp_creation)
             db.session.commit()
