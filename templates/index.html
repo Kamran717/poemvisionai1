@@ -1,0 +1,330 @@
+{% extends 'layout.html' %}
+
+{% block extra_head %}
+    <script src="{{ url_for('static', filename='frames/frame_data.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/image-processor.js') }}" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-body text-center p-5">
+                <h1 class="display-4 mb-4">
+                    <i class="fas fa-image me-2"></i>
+                    <i class="fas fa-arrow-right mx-2"></i>
+                    <i class="fas fa-feather-alt me-2"></i>
+                    PoemVision
+                </h1>
+                <p class="lead">Upload an image and get a custom-generated poem based on what's in your picture.</p>
+                <p>Our AI analyzes your image and creates personalized poems that capture its essence.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <!-- Multi-step form -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <ul class="nav nav-pills card-header-pills" id="poemGeneratorTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="step1-tab" data-bs-toggle="pill" data-bs-target="#step1" type="button" role="tab" aria-selected="true">
+                            <i class="fas fa-upload me-2"></i>1. Upload Image
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link disabled" id="step2-tab" data-bs-toggle="pill" data-bs-target="#step2" type="button" role="tab" aria-selected="false">
+                            <i class="fas fa-cog me-2"></i>2. Analysis & Preferences
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link disabled" id="step3-tab" data-bs-toggle="pill" data-bs-target="#step3" type="button" role="tab" aria-selected="false">
+                            <i class="fas fa-feather-alt me-2"></i>3. Your Poem
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link disabled" id="step4-tab" data-bs-toggle="pill" data-bs-target="#step4" type="button" role="tab" aria-selected="false">
+                            <i class="fas fa-image me-2"></i>4. Final Creation
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="poemGeneratorTabContent">
+                    <!-- Step 1: Upload Image -->
+                    <div class="tab-pane fade show active" id="step1" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <div class="upload-area p-5 mb-3" id="uploadArea">
+                                            <i class="fas fa-cloud-upload-alt fa-4x mb-3 text-muted"></i>
+                                            <h5>Drag & Drop Image Here</h5>
+                                            <p class="text-muted">or</p>
+                                            <div class="mb-3">
+                                                <label for="imageInput" class="form-label visually-hidden">Select Image</label>
+                                                <input class="form-control" type="file" id="imageInput" accept="image/*">
+                                            </div>
+                                        </div>
+                                        <div id="uploadedImageContainer" class="d-none">
+                                            <img id="uploadedImage" class="img-fluid mb-3 rounded" alt="Uploaded Image">
+                                            <div>
+                                                <button id="changeImageBtn" class="btn btn-outline-secondary btn-sm">
+                                                    <i class="fas fa-sync-alt me-1"></i> Change Image
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Tips for Best Results</h5>
+                                        <ul class="list-group list-group-flush">
+                                            <li class="list-group-item">Clear, well-lit images work best</li>
+                                            <li class="list-group-item">Images with distinct subjects create more focused poems</li>
+                                            <li class="list-group-item">Our AI can recognize people, objects, scenes, and emotions</li>
+                                            <li class="list-group-item">Both color and black & white images are supported</li>
+                                            <li class="list-group-item">Maximum file size: 5MB</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-3">
+                            <div></div>
+                            <button id="analyzeImageBtn" class="btn btn-primary" disabled>
+                                <i class="fas fa-magic me-2"></i>Analyze Image
+                            </button>
+                        </div>
+                        <div id="uploadError" class="alert alert-danger mt-3 d-none"></div>
+                        <div id="loadingAnalysis" class="text-center py-4 d-none">
+                            <div class="spinner-border text-primary mb-3" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p>Analyzing your image... This may take a few moments.</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Analysis & Preferences -->
+                    <div class="tab-pane fade" id="step2" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">Image Analysis Results</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="analysisResults">
+                                            <div class="mb-3">
+                                                <h6><i class="fas fa-tags me-2"></i>Elements Detected</h6>
+                                                <div id="detectedLabels" class="mb-3"></div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <h6><i class="fas fa-cube me-2"></i>Objects Found</h6>
+                                                <div id="detectedObjects" class="mb-3"></div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <h6><i class="fas fa-smile me-2"></i>Faces & Emotions</h6>
+                                                <div id="detectedFaces" class="mb-3"></div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <h6><i class="fas fa-map-marker-alt me-2"></i>Locations/Landmarks</h6>
+                                                <div id="detectedLandmarks" class="mb-3"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">Poem Preferences</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="poemPreferencesForm">
+                                            <div class="mb-3">
+                                                <label for="poemTypeSelect" class="form-label">Poem Type</label>
+                                                <select id="poemTypeSelect" class="form-select">
+                                                    <option value="free verse">Free Verse</option>
+                                                    <option value="love">Love Poem</option>
+                                                    <option value="funny">Humorous</option>
+                                                    <option value="inspirational">Inspirational</option>
+                                                    <option value="holiday">Holiday</option>
+                                                    <option value="birthday">Birthday</option>
+                                                    <option value="anniversary">Anniversary</option>
+                                                    <option value="nature">Nature</option>
+                                                    <option value="friendship">Friendship</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Elements to Emphasize</label>
+                                                <div id="emphasisOptions" class="mb-3">
+                                                    <!-- Dynamically populated based on analysis results -->
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-3">
+                            <button id="backToStep1Btn" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back
+                            </button>
+                            <button id="generatePoemBtn" class="btn btn-primary">
+                                <i class="fas fa-feather-alt me-2"></i>Generate Poem
+                            </button>
+                        </div>
+                        <div id="loadingPoem" class="text-center py-4 d-none">
+                            <div class="spinner-border text-primary mb-3" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p>Crafting your custom poem... This may take a few moments.</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Generated Poem -->
+                    <div class="tab-pane fade" id="step3" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">Your Uploaded Image</h5>
+                                    </div>
+                                    <div class="card-body text-center">
+                                        <img id="poemStepImage" class="img-fluid rounded" alt="Your uploaded image">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">Your Generated Poem</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="generatedPoemContainer" class="p-3 border rounded bg-dark">
+                                            <pre id="generatedPoem" class="poem-text mb-0"></pre>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer">
+                                        <div class="d-flex justify-content-end">
+                                            <button id="regeneratePoemBtn" class="btn btn-outline-secondary btn-sm me-2">
+                                                <i class="fas fa-redo me-1"></i> Regenerate
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">Choose a Frame Style</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row" id="frameOptions">
+                                            <div class="col-4 col-md-2 mb-3">
+                                                <div class="frame-option text-center" data-frame="classic">
+                                                    <div class="frame-preview classic-frame mb-2">
+                                                        <div class="frame-preview-inner"></div>
+                                                    </div>
+                                                    <span>Classic</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-4 col-md-2 mb-3">
+                                                <div class="frame-option text-center" data-frame="elegant">
+                                                    <div class="frame-preview elegant-frame mb-2">
+                                                        <div class="frame-preview-inner"></div>
+                                                    </div>
+                                                    <span>Elegant</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-4 col-md-2 mb-3">
+                                                <div class="frame-option text-center" data-frame="vintage">
+                                                    <div class="frame-preview vintage-frame mb-2">
+                                                        <div class="frame-preview-inner"></div>
+                                                    </div>
+                                                    <span>Vintage</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-4 col-md-2 mb-3">
+                                                <div class="frame-option text-center" data-frame="minimalist">
+                                                    <div class="frame-preview minimalist-frame mb-2">
+                                                        <div class="frame-preview-inner"></div>
+                                                    </div>
+                                                    <span>Minimalist</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-4 col-md-2 mb-3">
+                                                <div class="frame-option text-center" data-frame="ornate">
+                                                    <div class="frame-preview ornate-frame mb-2">
+                                                        <div class="frame-preview-inner"></div>
+                                                    </div>
+                                                    <span>Ornate</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-4 col-md-2 mb-3">
+                                                <div class="frame-option text-center" data-frame="none">
+                                                    <div class="frame-preview none-frame mb-2">
+                                                        <div class="frame-preview-inner"></div>
+                                                    </div>
+                                                    <span>No Frame</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-3">
+                            <button id="backToStep2Btn" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back
+                            </button>
+                            <button id="createFinalBtn" class="btn btn-primary">
+                                <i class="fas fa-palette me-2"></i>Create Final Image
+                            </button>
+                        </div>
+                        <div id="loadingFinal" class="text-center py-4 d-none">
+                            <div class="spinner-border text-primary mb-3" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p>Creating your final image... This may take a few moments.</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Final Creation -->
+                    <div class="tab-pane fade" id="step4" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Your Custom Poem Creation</h5>
+                            </div>
+                            <div class="card-body text-center">
+                                <div class="mb-4">
+                                    <img id="finalCreation" class="img-fluid rounded shadow-lg" alt="Final creation with poem">
+                                </div>
+                                <div class="row justify-content-center">
+                                    <div class="col-md-6">
+                                        <div class="d-grid gap-2">
+                                            <a id="downloadBtn" href="#" class="btn btn-success" download="custom-poem.jpg">
+                                                <i class="fas fa-download me-2"></i>Download
+                                            </a>
+                                            <button id="startOverBtn" class="btn btn-outline-primary">
+                                                <i class="fas fa-redo me-2"></i>Create Another
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
