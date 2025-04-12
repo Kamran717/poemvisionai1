@@ -512,6 +512,33 @@ def _apply_poem_template(key_elements, poem_type, custom_terms=''):
             "seasonal": "holiday",
             "celebration": "birthday",
             "commemorative": "anniversary",
+            
+            # Religious type mappings
+            "islam": "religious-islam",
+            "muslim": "religious-islam",
+            "islamic": "religious-islam",
+            "quran": "religious-islam",
+            "christian": "religious-christian",
+            "christianity": "religious-christian",
+            "jesus": "religious-christian",
+            "bible": "religious-christian",
+            "judaism": "religious-judaism",
+            "jewish": "religious-judaism",
+            "torah": "religious-judaism",
+            "spiritual": "religious-general",
+            "divine": "religious-general",
+            "sacred": "religious-general",
+            
+            # Memorial type mappings
+            "memory": "memorial",
+            "remembrance": "memorial",
+            "tribute": "memorial",
+            "rip": "memorial",
+            "mourning": "memorial",
+            "grieving": "memorial",
+            "honoring": "memorial",
+            
+            # Fun format mappings
             "stars": "twinkle",
             "red": "roses",
             "joke": "knock-knock",
@@ -591,6 +618,17 @@ def _apply_poem_template(key_elements, poem_type, custom_terms=''):
                 "holiday": f"\nCelebrating with {', '.join(new_terms)},\nMakes this season bright.",
                 "birthday": f"\nHappy birthday to {new_terms[0] if new_terms else 'you'},\nAnother year to shine!",
                 "anniversary": f"\nWith {new_terms[0] if new_terms else 'you'} through the years,\nEach moment divine.",
+                
+                # Religious poem endings
+                "religious-islam": f"\nWith {new_terms[0] if new_terms else 'faith'} guiding our way,\nSubhanAllah, we pray.",
+                "religious-christian": f"\nIn {new_terms[0] if new_terms else 'Christ'} we find our peace,\nGod's love will never cease.",
+                "religious-judaism": f"\nRemembering {new_terms[0] if new_terms else 'tradition'} with reverence deep,\nThe covenant we keep.",
+                "religious-general": f"\nSpiritual light shines through {new_terms[0] if new_terms else 'all'},\nDivine grace touches our soul.",
+                
+                # Memorial poem ending
+                "memorial": f"\nIn loving memory of {', '.join(new_terms)},\nForever in our hearts you'll be.",
+                
+                # Fun format endings
                 "twinkle": f"\nTwinkle twinkle {new_terms[0] if new_terms else 'star'},\nHow I wonder what you are.",
                 "roses": f"\nRoses are red, violets are blue,\n{new_terms[0] if new_terms else 'You'} are special through and through.",
                 "haiku": "",  # Haiku has strict format, avoid changing
@@ -736,10 +774,23 @@ def _create_prompt(analysis_results, poem_type, emphasis, custom_terms='', custo
         "nature": "Create a sensory-rich nature poem in the tradition of Mary Oliver, William Wordsworth, and Robert Frost that reveals the profound beauty, wisdom, and tranquility found in the natural world. Use precise observations and reverent language to elevate the ordinary to the sublime.",
         "friendship": "Compose a heartfelt celebration of profound human connection that explores the depth, loyalty, and transformative power of true friendship. Weave together moments of joy, support through darkness, and the unique understanding that exists between kindred spirits.",
         "free verse": "Craft an organic, flowing masterpiece in the tradition of Walt Whitman, T.S. Eliot, and Pablo Neruda that breaks free from conventional rhyme schemes and meters. Allow rhythm to emerge naturally from emotional intensity and the inherent music of carefully chosen words.",
+        
+        # Religious poem instructions
+        "religious-islam": "Create a reverent Islamic poem that reflects the beauty of faith and divine guidance. Incorporate themes of tawhid (oneness of Allah), compassion, mercy, and the natural world as signs of Allah's creation. Use respectful language that honors Islamic traditions and values while finding spiritual meaning in the image.",
+        "religious-christian": "Compose a Christian poem that speaks to faith, grace, and spiritual connection. Incorporate themes of God's love, redemption, and the beauty of creation as reflections of divine presence. Use respectful language that honors Christian traditions while finding sacred meaning in everyday imagery.",
+        "religious-judaism": "Craft a Jewish poem that reflects on tradition, covenant, and the divine presence in the world. Incorporate themes of wisdom, legacy, community, and the beauty of creation as expressions of G-d's work. Use respectful language that honors Jewish traditions while finding sacred meaning in everyday imagery.",
+        "religious-general": "Create a spiritual poem that transcends specific religious traditions while honoring the universal human connection to the divine. Incorporate themes of wonder, gratitude, transcendence, and the search for meaning. Use inclusive language that respects diverse spiritual paths while finding sacred significance in the image.",
+        
+        # Memorial poem instructions
+        "memorial": "Compose a gentle, heartfelt poem that honors the memory of someone beloved. Create a tone of reverent remembrance, celebrating a life well-lived while acknowledging the poignancy of loss. Incorporate themes of legacy, enduring love, cherished memories, and the continuing presence of loved ones in our hearts. Balance expressions of grief with affirmations of the lasting impact of a meaningful life.",
+        
+        # Fun poem formats
         "twinkle": "Create a whimsical, melodic poem in the style of 'Twinkle, Twinkle, Little Star.' Maintain the rhythm and structure of the classic nursery rhyme, but personalize it based on the image elements. Incorporate the distinctive 'Twinkle, twinkle' repetition at the beginning and end while creating a sense of wonder and childlike curiosity.",
         "roses": "Craft a clever variation of the classic 'Roses are red, violets are blue' poem format. Start with the iconic opening lines, then subvert expectations with surprising, witty, or meaningful follow-up lines that relate to the image. Maintain the simple rhyme scheme while adding personality and charm.",
         "knock-knock": "Create a playful knock-knock joke in poem form, incorporating elements from the image. Begin with the traditional 'Knock, knock / Who's there?' format, then craft a punchline that cleverly relates to the visual elements. Add a brief poetic conclusion that ties the joke together with the image's mood or theme.",
         "pickup": "Compose an intentionally cheesy but charming pickup line poem that creatively incorporates elements from the image. Balance humor and genuine compliments while maintaining a playful, flirtatious tone. Create lines that are memorable, witty, and just the right amount of over-the-top to bring a smile.",
+        
+        # Classical forms
         "haiku": "Create a pristine haiku following the traditional 5-7-5 syllable structure. Capture a single, powerful moment with precise imagery and seasonal references in the spirit of Matsuo Bashō. Distill the essence of the image into three lines that reveal a profound truth through simplicity and careful observation.",
         "limerick": "Craft a playful limerick with the perfect AABBA rhyme scheme and bouncy anapestic meter. Channel Edward Lear's whimsy while maintaining technical precision in rhythm and rhyme. Create a humorous or absurd narrative that cleverly incorporates elements from the image.",
         "sonnet": "Compose an elegant Shakespearean sonnet with perfect iambic pentameter and the traditional ABABCDCDEFEFGG rhyme scheme. Explore a central theme or emotion through sophisticated imagery and thoughtful contemplation, concluding with a powerful final couplet that offers insight or resolution.",
