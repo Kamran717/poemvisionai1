@@ -146,10 +146,21 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         # Check if we're using the default font (which needs special handling)
         using_default_font = str(font) == str(ImageFont.load_default())
         
-        # Draw each line of the poem with proper alignment
+        # Draw each line of the poem with center alignment
         for i, line in enumerate(poem_lines):
-            # Left align text with proper margin (12% from left edge)
-            text_x = int(target_width * 0.12)
+            # Calculate text width for centering
+            try:
+                line_width = draw.textlength(line, font=font)
+            except:
+                # For older PIL versions that don't have textlength
+                try:
+                    line_width = font.getmask(line).getbbox()[2]
+                except:
+                    # Approximate width if all else fails
+                    line_width = len(line) * (poem_font_size * 0.6)
+                    
+            # Center align text horizontally
+            text_x = (target_width - line_width) // 2
             line_y = text_y + (i * poem_line_height)
             
             # For default font (which is small), create a much larger appearance
