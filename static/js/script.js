@@ -399,56 +399,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 badge.textContent = `${obj.name} (${obj.score}%)`;
                 detectedObjects.appendChild(badge);
                 
-                // Add Person objects to emphasis options but only add one checkbox
-                if (obj.name === 'Person' && obj.score >= 70) {
-                    // Only add Person once to emphasis options
-                    if (!document.getElementById('emphasis_Person')) {
-                        // Add to emphasis options with priority
-                        const option = document.createElement('div');
-                        option.classList.add('form-check', 'form-check-inline', 'emphasis-element');
-                        option.innerHTML = `
-                            <input class="form-check-input emphasis-checkbox" type="checkbox" value="Person" id="emphasis_Person" checked>
-                            <label class="form-check-label" for="emphasis_Person"><strong>Person</strong></label>
-                        `;
-                        // Insert Person as the first option
-                        if (emphasisOptions.firstChild) {
-                            emphasisOptions.insertBefore(option, emphasisOptions.firstChild);
-                        } else {
-                            emphasisOptions.appendChild(option);
-                        }
-                        // Always count Person as a visible element, but don't include in hidden count
-                        visibleElementsCount++;
-                    }
-                } else if (obj.name !== 'Person') {
-                    // Add other objects to emphasis options
-                    const option = document.createElement('div');
-                    option.classList.add('form-check', 'form-check-inline', 'emphasis-element');
-                    
-                    // Add hidden class based on visible elements count
-                    if (document.querySelectorAll('.emphasis-element:not(.emphasis-element-hidden)').length >= 4) {
-                        option.classList.add('emphasis-element-hidden');
-                    } else {
-                        visibleElementsCount++;
-                    }
-                    
-                    option.innerHTML = `
-                        <input class="form-check-input emphasis-checkbox" type="checkbox" value="${obj.name}" id="emphasis_${obj.name.replace(/\s+/g, '_')}">
-                        <label class="form-check-label" for="emphasis_${obj.name.replace(/\s+/g, '_')}">${obj.name}</label>
-                    `;
-                    emphasisOptions.appendChild(option);
-                    allEmphasisElements.push(option);
+                // Add all objects to emphasis options equally
+                const option = document.createElement('div');
+                option.classList.add('form-check', 'form-check-inline', 'emphasis-element');
+                
+                // Add hidden class based on visible elements count
+                if (document.querySelectorAll('.emphasis-element:not(.emphasis-element-hidden)').length >= 4) {
+                    option.classList.add('emphasis-element-hidden');
+                } else {
+                    visibleElementsCount++;
                 }
+                
+                option.innerHTML = `
+                    <input class="form-check-input emphasis-checkbox" type="checkbox" value="${obj.name}" id="emphasis_${obj.name.replace(/\s+/g, '_')}">
+                    <label class="form-check-label" for="emphasis_${obj.name.replace(/\s+/g, '_')}">${obj.name}</label>
+                `;
+                emphasisOptions.appendChild(option);
+                allEmphasisElements.push(option);
             });
             
-            // If people were detected, show a note about the count
+            // If people were detected, show a simplified note about the count
             if (personCount > 0) {
                 const personNote = document.createElement('div');
                 personNote.classList.add('mt-2', 'mb-2', 'small', 'text-info');
                 
                 if (personCount === 1) {
-                    personNote.innerHTML = '<strong>Note:</strong> One person detected as the main subject. The Person element is pre-selected for emphasis.';
+                    personNote.innerHTML = '<strong>Note:</strong> One person detected in the image.';
                 } else {
-                    personNote.innerHTML = `<strong>Note:</strong> ${personCount} people detected in the image. The Person element is pre-selected for emphasis.`;
+                    personNote.innerHTML = `<strong>Note:</strong> ${personCount} people detected in the image.`;
                 }
                 
                 detectedObjects.appendChild(personNote);
@@ -657,12 +635,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update the UI to show how many elements are selected
         const emphasisLabel = document.querySelector('label[for="emphasisOptions"]');
         if (emphasisLabel) {
-            emphasisLabel.innerHTML = `Elements to Emphasize <small class="text-muted">(${state.selectedEmphasis.length}/10 selected)</small>`;
+            emphasisLabel.innerHTML = `Elements to Emphasize <small class="text-muted">(${state.selectedEmphasis.length}/${state.maxEmphasisCount} selected)</small>`;
         }
         
         // Initial update of the state when displayAnalysisResults is called
-        // This ensures the Person checkbox is properly included in state.selectedEmphasis
-        // if it was pre-checked in the UI
+        // This ensures any pre-checked elements are properly included in state.selectedEmphasis
         
         // Log selected emphasis for debugging
         console.log("Selected emphasis elements:", state.selectedEmphasis);
