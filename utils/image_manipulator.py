@@ -159,16 +159,16 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
                     # Approximate width if all else fails
                     line_width = len(line) * (poem_font_size * 0.6)
                     
-            # Center align text horizontally with extra side padding (80% of width)
-            max_width = target_width * 0.8  # Use only 80% of width for text
-            if line_width > max_width:
-                # Scale down overflowing text
-                text_x = (target_width - max_width) // 2
-                # We'll need to scale the text down when drawing
-                scale_factor = max_width / line_width
-            else:
-                text_x = (target_width - line_width) // 2
-                scale_factor = 1.0
+            # Apply uniform padding on sides (80% of width for text area)
+            max_width = target_width * 0.8  # Use only 80% of width for all text
+            # All text will have same left margin, maintaining uniform appearance
+            text_x = (target_width - max_width) // 2
+            
+            # For lines shorter than max width, center them within the text area
+            if line_width < max_width:
+                # Calculate additional padding to center this line within text area
+                extra_padding = (max_width - line_width) // 2
+                text_x += extra_padding
                 
             line_y = text_y + (i * poem_line_height)
             
@@ -192,22 +192,18 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
                 # Finally draw the core text for maximum clarity
                 draw.text((text_x, line_y), line, fill=(0, 0, 0), font=font)
             else:
-                # If we need to scale down the text due to width constraints
-                if scale_factor < 1.0:
-                    # Draw smaller text by creating a smaller font
-                    scaled_font_size = int(poem_font_size * scale_factor)
-                    try:
-                        # Try to get the same font but smaller
-                        scaled_font = ImageFont.truetype(font.path, size=scaled_font_size)
-                        # Recalculate the position for proper centering with the new font
-                        try:
-                            scaled_width = draw.textlength(line, font=scaled_font)
-                        except:
-                            scaled_width = len(line) * (scaled_font_size * 0.6)
-                        scaled_x = (target_width - scaled_width) // 2
-                        draw.text((scaled_x, line_y), line, fill=(0, 0, 0), font=scaled_font)
-                    except:
-                        # If resizing the font fails, use the original but it might overflow
+                # If a line is too long, it might go beyond our 80% width
+                if line_width > max_width:
+                    # For lines that would overflow, truncate to fit or use ellipsis
+                    # Find approximate characters that would fit
+                    approx_chars_per_width = line_width / len(line)
+                    max_chars = int((max_width / approx_chars_per_width) - 3)  # -3 for ellipsis
+                    if max_chars > 3:  # If we can fit at least a few characters
+                        truncated_line = line[:max_chars] + "..."
+                        # Draw the truncated line
+                        draw.text((text_x, line_y), truncated_line, fill=(0, 0, 0), font=font)
+                    else:
+                        # Just draw it anyway and accept overflow
                         draw.text((text_x, line_y), line, fill=(0, 0, 0), font=font)
                 else:
                     # Draw normal text with the proper font
