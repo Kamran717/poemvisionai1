@@ -39,8 +39,6 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         
         # Calculate margins based on frame style
         frame_width = 20  # Default frame width
-        # Special handling for polaroid style
-        is_polaroid = False
         
         if frame_style == "elegant":
             frame_width = 30
@@ -48,9 +46,6 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
             frame_width = 10
         elif frame_style == "ornate":
             frame_width = 40
-        elif frame_style == "polaroid":
-            frame_width = 50  # Polaroid has thicker borders
-            is_polaroid = True
         
         # Create a new image with the calculated dimensions
         # Adding space for the frame and the poem
@@ -72,8 +67,7 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
             "elegant": (25, 25, 112),     # Midnight blue
             "vintage": (139, 69, 19),     # Saddle brown
             "minimalist": (200, 200, 200),# Light gray
-            "ornate": (128, 0, 0),        # Maroon
-            "polaroid": (240, 240, 240)   # Off-white for polaroid
+            "ornate": (128, 0, 0)         # Maroon
         }
         
         frame_color = frame_colors.get(frame_style, (50, 50, 50))
@@ -130,45 +124,6 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
                 # Fix rectangle coordinates format (x1, y1, x2, y2)
                 draw.rectangle((frame_width//2, i, frame_width, i + 10), fill=frame_color)
                 draw.rectangle((new_width - frame_width, i, new_width - frame_width//2, i + 10), fill=frame_color)
-                
-        elif frame_style == "polaroid":
-            # For polaroid style, the frame is a thick white border with a larger bottom area
-            # Draw a shadow effect to give that classic polaroid 3D look
-            shadow_color = (220, 220, 220)  # Light gray shadow
-            shadow_offset = 5
-            
-            # Create shadow effect on bottom and right edges
-            draw.rectangle(
-                (shadow_offset, shadow_offset, new_width, new_height),
-                fill=shadow_color,
-                outline=None
-            )
-            
-            # Draw the main polaroid frame over the shadow
-            draw.rectangle(
-                (0, 0, new_width - shadow_offset, new_height - shadow_offset),
-                fill=(255, 255, 255),  # Pure white
-                outline=None
-            )
-            
-            # Add the characteristic slight rotation of polaroid photos
-            # We'll simulate this by adding a small gray corner triangle
-            rotation_marker_size = 15
-            draw.polygon(
-                [(0, 0), (rotation_marker_size, 0), (0, rotation_marker_size)],
-                fill=(240, 240, 240)  # Very light gray
-            )
-            
-            # Draw faint decorative edge lines to simulate the layered look of polaroid film
-            inner_margin = 5
-            draw.rectangle(
-                (frame_width - inner_margin, frame_width - inner_margin, 
-                 new_width - frame_width + inner_margin - shadow_offset, 
-                 new_height - frame_width + inner_margin - shadow_offset),
-                fill=None,
-                outline=(245, 245, 245),  # Very faint gray
-                width=1
-            )
         
         # Add poem text below the image
         try:
@@ -209,27 +164,20 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         poem_bg_y = text_y - background_rect_padding*2
         poem_bg_height = (len(poem_lines) * poem_line_height) + (background_rect_padding * 4)
         
-        # Special handling for polaroid style
-        if is_polaroid:
-            # For polaroid style, we don't need a black background - text goes directly onto the white frame
-            # Instead, we'll add a handwritten-like effect with slightly darker text
-            # No backgrounds needed as polaroid has the characteristic white bottom section
-            pass
-        else:
-            # For other styles, add the contrast background
-            draw.rectangle(
-                (frame_width, poem_bg_y, new_width - frame_width, poem_bg_y + poem_bg_height),
-                fill=(30, 30, 30),  # Very dark gray/almost black background
-                outline=None
-            )
-            
-            # Add a thin border around the poem area for better visual definition
-            draw.rectangle(
-                (frame_width, poem_bg_y, new_width - frame_width, poem_bg_y + poem_bg_height),
-                fill=None,
-                outline=(120, 120, 120),
-                width=2
-            )
+        # Add the contrast background
+        draw.rectangle(
+            (frame_width, poem_bg_y, new_width - frame_width, poem_bg_y + poem_bg_height),
+            fill=(30, 30, 30),  # Very dark gray/almost black background
+            outline=None
+        )
+        
+        # Add a thin border around the poem area for better visual definition
+        draw.rectangle(
+            (frame_width, poem_bg_y, new_width - frame_width, poem_bg_y + poem_bg_height),
+            fill=None,
+            outline=(120, 120, 120),
+            width=2
+        )
         
         for i, line in enumerate(poem_lines):
             # Calculate text position for this line
@@ -237,55 +185,28 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
             text_x = (new_width - line_width) // 2
             line_y = text_y + (i * poem_line_height)
             
-            if is_polaroid:
-                # For polaroid style, we want to mimic handwritten text on the white frame
-                # Use dark gray text with a slight offset to create a shadow effect
-                # Polaroid typically has a slightly smaller text area
-                polaroid_text_color = (50, 50, 50)  # Dark gray for handwritten look
-                polaroid_shadow_color = (180, 180, 180)  # Light gray shadow
-                
-                # Add a subtle shadow for the handwritten effect
-                draw.text((text_x + 2, line_y + 2), line, fill=polaroid_shadow_color, font=font)
-                
-                # Draw the main text
-                draw.text((text_x, line_y), line, fill=polaroid_text_color, font=font)
-                
-                # Add a decorative element to make it look more like a polaroid
-                if i == len(poem_lines) - 1:  # Only on the last line
-                    # Add a date-like element at the bottom right
-                    date_text = "04.12.25"  # Use today's date format
-                    date_width = draw.textlength(date_text, font=font)
-                    date_x = new_width - frame_width - date_width - 20
-                    date_y = line_y + poem_line_height + 20
-                    
-                    # Draw the date with shadow
-                    draw.text((date_x + 1, date_y + 1), date_text, fill=polaroid_shadow_color, font=font)
-                    draw.text((date_x, date_y), date_text, fill=polaroid_text_color, font=font)
-                    
-            else:
-                # For other styles, use the existing high-contrast approach
-                # Create a background rectangle just for this line for better contrast
-                line_bg_padding = 20  # Increased padding around text
-                # Draw colored background for maximum contrast
-                draw.rectangle(
-                    (text_x - line_bg_padding, 
-                     line_y - line_bg_padding,
-                     text_x + line_width + line_bg_padding,
-                     line_y + poem_font_size + line_bg_padding),
-                    fill=(0, 0, 0),  # Black background
-                    outline=None
-                )
-                
-                # Draw text with bold effect by drawing it multiple times with slight offset
-                # White text on black background for maximum contrast
-                for offset in range(1, 3):  # Create bold effect
-                    draw.text((text_x - offset, line_y), line, fill=(255, 255, 255), font=font)
-                    draw.text((text_x + offset, line_y), line, fill=(255, 255, 255), font=font)
-                    draw.text((text_x, line_y - offset), line, fill=(255, 255, 255), font=font)
-                    draw.text((text_x, line_y + offset), line, fill=(255, 255, 255), font=font)
-                
-                # Draw the main text on top for boldness
-                draw.text((text_x, line_y), line, fill=(255, 255, 255), font=font)  # White text
+            # Create a background rectangle just for this line for better contrast
+            line_bg_padding = 20  # Increased padding around text
+            # Draw colored background for maximum contrast
+            draw.rectangle(
+                (text_x - line_bg_padding, 
+                 line_y - line_bg_padding,
+                 text_x + line_width + line_bg_padding,
+                 line_y + poem_font_size + line_bg_padding),
+                fill=(0, 0, 0),  # Black background
+                outline=None
+            )
+            
+            # Draw text with bold effect by drawing it multiple times with slight offset
+            # White text on black background for maximum contrast
+            for offset in range(1, 3):  # Create bold effect
+                draw.text((text_x - offset, line_y), line, fill=(255, 255, 255), font=font)
+                draw.text((text_x + offset, line_y), line, fill=(255, 255, 255), font=font)
+                draw.text((text_x, line_y - offset), line, fill=(255, 255, 255), font=font)
+                draw.text((text_x, line_y + offset), line, fill=(255, 255, 255), font=font)
+            
+            # Draw the main text on top for boldness
+            draw.text((text_x, line_y), line, fill=(255, 255, 255), font=font)  # White text
         
         # Convert the image to bytes
         output_buffer = io.BytesIO()
