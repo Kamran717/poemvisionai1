@@ -569,6 +569,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const finalImageSrc = `data:image/jpeg;base64,${data.finalImage}`;
             finalCreation.src = finalImageSrc;
             
+            // Ensure proper orientation for mobile devices
+            finalCreation.onload = function() {
+                // Force the browser to respect the intended orientation
+                finalCreation.style.width = 'auto';
+                finalCreation.style.height = 'auto';
+                finalCreation.style.maxWidth = '100%';
+                
+                // Apply special handling for mobile devices
+                if (window.innerWidth <= 768) {
+                    finalCreation.classList.add('mobile-display');
+                }
+            };
+            
             // Set up the download button properly with correct attributes
             downloadBtn.href = finalImageSrc;
             downloadBtn.setAttribute('download', 'my-custom-poem.jpg');

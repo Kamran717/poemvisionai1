@@ -67,7 +67,7 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         
         # Draw the frame
         draw.rectangle(
-            [(0, 0), (new_width, new_height)],
+            (0, 0, new_width, new_height),  # Using (x1, y1, x2, y2) format
             fill=(255, 255, 255),
             outline=frame_color,
             width=frame_width
@@ -100,12 +100,14 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
             # Draw ornate pattern along the frame
             pattern_spacing = 40
             for i in range(frame_width, new_width - frame_width, pattern_spacing):
-                draw.rectangle([(i, frame_width//2), (i + 10, frame_width)], fill=frame_color)
-                draw.rectangle([(i, new_height - frame_width), (i + 10, new_height - frame_width//2)], fill=frame_color)
+                # Fix rectangle coordinates format (x1, y1, x2, y2)
+                draw.rectangle((i, frame_width//2, i + 10, frame_width), fill=frame_color)
+                draw.rectangle((i, new_height - frame_width, i + 10, new_height - frame_width//2), fill=frame_color)
             
             for i in range(frame_width, new_height - frame_width, pattern_spacing):
-                draw.rectangle([(frame_width//2, i), (frame_width, i + 10)], fill=frame_color)
-                draw.rectangle([(new_width - frame_width, i), (new_width - frame_width//2, i + 10)], fill=frame_color)
+                # Fix rectangle coordinates format (x1, y1, x2, y2)
+                draw.rectangle((frame_width//2, i, frame_width, i + 10), fill=frame_color)
+                draw.rectangle((new_width - frame_width, i, new_width - frame_width//2, i + 10), fill=frame_color)
         
         # Add poem text below the image
         try:

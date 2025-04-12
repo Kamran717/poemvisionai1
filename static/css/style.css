@@ -175,6 +175,18 @@ main {
     height: auto;
 }
 
+.preserve-orientation {
+    image-orientation: from-image; /* Use EXIF data for orientation */
+}
+
+.final-image-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    max-width: 100%;
+}
+
 /* Final Image Container */
 #finalCreationContainer {
     background-color: var(--bs-dark);
@@ -207,6 +219,15 @@ main {
         object-position: center;
         margin: 0 auto;
         display: block;
+    }
+    
+    /* Additional mobile-specific class applied via JavaScript */
+    .mobile-display {
+        image-orientation: from-image !important;
+        -webkit-image-orientation: from-image !important;
+        object-fit: contain !important;
+        height: auto !important;
+        width: auto !important;
     }
     
     /* Increase padding for better spacing */
