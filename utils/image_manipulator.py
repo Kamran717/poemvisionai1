@@ -26,11 +26,36 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         # Calculate dimensions for the final image
         original_width, original_height = img.size
         
-        # Set a reasonable width (don't make it too wide)
-        target_width = min(original_width, 800)
+        # Set a width that can accommodate the text
+        # Increased width to prevent text truncation
+        target_width = min(original_width, 1000)
         
         # Format poem lines - only keep non-empty lines
-        poem_lines = [line for line in poem_text.strip().split("\n") if line.strip()]
+        raw_lines = [line for line in poem_text.strip().split("\n") if line.strip()]
+        
+        # Check for any excessively long lines that need wrapping
+        poem_lines = []
+        max_chars_per_line = 60  # Maximum characters per line for readability
+        
+        for line in raw_lines:
+            if len(line) > max_chars_per_line:
+                # Find a good breaking point near the middle
+                mid_point = max_chars_per_line
+                
+                # Look for a space to break at
+                while mid_point > max_chars_per_line // 2 and line[mid_point] != ' ':
+                    mid_point -= 1
+                
+                if mid_point <= max_chars_per_line // 2:
+                    # If we couldn't find a good breaking point, just use max length
+                    poem_lines.append(line[:max_chars_per_line])
+                    poem_lines.append(line[max_chars_per_line:])
+                else:
+                    # Break at the space
+                    poem_lines.append(line[:mid_point])
+                    poem_lines.append(line[mid_point+1:])  # Skip the space
+            else:
+                poem_lines.append(line)
         
         # Count lines for spacing calculation
         line_count = len(poem_lines)
