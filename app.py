@@ -213,10 +213,14 @@ def analyze_image_route():
                 # Create a new session for each attempt to avoid stale connections
                 db.session.close()
                 
+                # Check if user is logged in to assign creation to their account
+                user_id = session.get('user_id')
+                
                 temp_creation = Creation(
                     image_data=image_data,
                     analysis_results=analysis_results,
-                    share_code=f"temp{analysis_id}"  # Shorter share_code
+                    share_code=f"temp{analysis_id}",  # Shorter share_code
+                    user_id=user_id  # Will be None for non-logged in users
                 )
                 db.session.add(temp_creation)
                 db.session.commit()

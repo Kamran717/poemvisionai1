@@ -1,16 +1,27 @@
-{% extends 'layout.html' %}
+{% extends "layout.html" %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-body text-center">
-                <h1 class="display-4 text-danger mb-4">
-                    <i class="fas fa-exclamation-triangle me-3"></i>Error
-                </h1>
-                <p class="lead">{{ message }}</p>
-                <div class="mt-4">
-                    <a href="/" class="btn btn-primary">Return to Home</a>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="error-container py-5">
+                <i class="fas fa-exclamation-triangle fa-4x text-warning mb-4"></i>
+                <h2 class="mb-4">Oops! Something Went Wrong</h2>
+                
+                {% if message %}
+                <div class="alert alert-warning">
+                    {{ message }}
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    An unexpected error occurred. Please try again later.
+                </div>
+                {% endif %}
+                
+                <div class="mt-5">
+                    <a href="{{ url_for('index') }}" class="btn btn-primary">
+                        <i class="fas fa-home me-2"></i>Return to Home
+                    </a>
                 </div>
             </div>
         </div>
