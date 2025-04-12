@@ -295,24 +295,43 @@ def _create_prompt(analysis_results, poem_type, emphasis):
         objects_text = ", ".join([obj['name'] for obj in analysis_results['objects'][:5]])
         prompt += f"Specific objects visible include: {objects_text}. "
     
-    # Add information about faces and emotions
+    # Count people in the image from both faces and objects detection
+    people_count = 0
+    has_faces = False
     if 'faces' in analysis_results and analysis_results['faces']:
         faces_count = len(analysis_results['faces'])
-        if faces_count == 1:
-            prompt += "There is one person in the image"
-        elif faces_count > 1:
-            prompt += f"There are {faces_count} people in the image"
-            
-        # Add emotions if available
-        emotions = []
-        for face in analysis_results['faces']:
-            for emotion in ['joy', 'sorrow', 'anger', 'surprise']:
-                if face[emotion] in ['LIKELY', 'VERY_LIKELY']:
-                    emotions.append(emotion)
+        people_count += faces_count
+        has_faces = True
+    
+    # Additionally check for Person objects which might be detected even if faces aren't clear
+    person_objects = 0
+    if 'objects' in analysis_results and analysis_results['objects']:
+        person_objects = sum(1 for obj in analysis_results['objects'] if obj['name'] == 'Person')
+        # If we have more Person objects than faces, use that count instead
+        if person_objects > people_count:
+            people_count = person_objects
+    
+    # Add information about people and emotions
+    if people_count > 0:
+        # Mention people are the main focus of the image
+        if people_count == 1:
+            prompt += "There is one person in the image who is a central focus of the scene"
+        else:
+            prompt += f"There are {people_count} people in the image who are central to the scene"
         
-        if emotions:
-            emotions_text = ", ".join(emotions)
-            prompt += f" showing emotions of {emotions_text}. "
+        # Add emotions if available from face detection
+        if has_faces:
+            emotions = []
+            for face in analysis_results['faces']:
+                for emotion in ['joy', 'sorrow', 'anger', 'surprise']:
+                    if face[emotion] in ['LIKELY', 'VERY_LIKELY']:
+                        emotions.append(emotion)
+            
+            if emotions:
+                emotions_text = ", ".join(emotions)
+                prompt += f" showing emotions of {emotions_text}. "
+            else:
+                prompt += ". "
         else:
             prompt += ". "
     
