@@ -120,27 +120,12 @@
 
 {% block extra_js %}
 <script>
+    // Add the download button to the image
     document.addEventListener('DOMContentLoaded', function() {
-        // Copy link functionality - with error checking
-        const sharedUrlInput = document.getElementById('sharedUrlInput');
-        const copySharedLinkBtn = document.getElementById('copySharedLinkBtn');
-        
-        if (sharedUrlInput && copySharedLinkBtn) {
-            copySharedLinkBtn.addEventListener('click', function() {
-                sharedUrlInput.select();
-                document.execCommand('copy');
-                
-                // Visual feedback for copy button
-                copySharedLinkBtn.innerHTML = '<i class="fas fa-check"></i>';
-                setTimeout(() => {
-                    copySharedLinkBtn.innerHTML = '<i class="fas fa-copy"></i>';
-                }, 2000);
-            });
-        }
-        
-        // Make the download function work properly too
+        // Add download button directly to the page instead of via JS
         const finalImage = document.querySelector('#finalCreationContainer img');
         if (finalImage) {
+            // Create the download button
             const downloadLink = document.createElement('a');
             downloadLink.classList.add('btn', 'btn-success', 'mt-3');
             downloadLink.innerHTML = '<i class="fas fa-download me-2"></i>Download';
@@ -148,24 +133,40 @@
             downloadLink.setAttribute('download', 'shared-poem.jpg');
             finalImage.parentNode.appendChild(downloadLink);
         }
+        
+        // Handle copy button click if it exists
+        const copyBtn = document.getElementById('copySharedLinkBtn');
+        if (copyBtn) {
+            const sharedUrlInput = document.getElementById('sharedUrlInput');
+            if (sharedUrlInput) {
+                copyBtn.addEventListener('click', function() {
+                    sharedUrlInput.select();
+                    document.execCommand('copy');
+                    copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+                    setTimeout(() => {
+                        copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
+                    }, 2000);
+                });
+            }
+        }
     });
     
-    // Instagram sharing (copy and open)
+    // Safe Instagram sharing function
     function copyAndOpenInstagram() {
-        const sharedUrlInput = document.getElementById('sharedUrlInput');
-        if (sharedUrlInput) {
-            sharedUrlInput.select();
+        const urlInput = document.getElementById('sharedUrlInput');
+        if (urlInput) {
+            urlInput.select();
             document.execCommand('copy');
             alert('Link copied! Now you can paste it into Instagram.');
             window.open('https://www.instagram.com/', '_blank');
         }
     }
     
-    // TikTok sharing (copy and open)
+    // Safe TikTok sharing function
     function copyAndOpenTikTok() {
-        const sharedUrlInput = document.getElementById('sharedUrlInput');
-        if (sharedUrlInput) {
-            sharedUrlInput.select();
+        const urlInput = document.getElementById('sharedUrlInput');
+        if (urlInput) {
+            urlInput.select();
             document.execCommand('copy');
             alert('Link copied! Now you can paste it into TikTok.');
             window.open('https://www.tiktok.com/', '_blank');
