@@ -65,6 +65,26 @@ POEM_ADJECTIVES = {
     "pickup": [
         "charming", "flirty", "smooth", "humorous", "cheeky",
         "clever", "witty", "bold", "playful", "daring"
+    ],
+    "haiku": [
+        "simple", "elegant", "natural", "seasonal", "fleeting",
+        "profound", "observant", "concise", "thoughtful", "gentle"
+    ],
+    "limerick": [
+        "quirky", "playful", "humorous", "absurd", "rhythmic",
+        "cheeky", "ridiculous", "entertaining", "catchy", "bouncy"
+    ],
+    "sonnet": [
+        "elegant", "formal", "eloquent", "structured", "flowing",
+        "timeless", "romantic", "sophisticated", "traditional", "refined"
+    ],
+    "rap": [
+        "bold", "rhythmic", "urban", "expressive", "powerful",
+        "street", "dynamic", "intense", "authentic", "flowing"
+    ],
+    "nursery": [
+        "childlike", "playful", "innocent", "simple", "rhythmic",
+        "bouncy", "whimsical", "catchy", "cheerful", "melodic"
     ]
 }
 
@@ -140,6 +160,31 @@ POEM_TEMPLATES = {
         "Are you a {element1}? Because you've got me feeling {adj1}.\nIf {element2} could talk, they'd say you're {adj2}.\nI'd cross an ocean of {element3} just to meet someone like you.\nCall me cheesy, but this pickup line was inspired by your photo!",
         
         "Is your name {element1}? Because you're absolutely {adj1}.\nDo you believe in love at first {element2}?\nBecause my heart just went {adj2} when I saw you.\nI've been looking for {element3} all my life, but you're even better.\nThis poem is smoother than my actual pickup lines!"
+    ],
+    "haiku": [
+        "{element1} in light\n{element2} {adj1} and {adj2}\n{element3} remains",
+        
+        "{adj1} {element1}\n{element2} meets {element3}\n{adj2} moment now"
+    ],
+    "limerick": [
+        "There once was a {adj1} {element1},\nWho found itself next to {element2}.\nWith {adj2} delight,\nWhat a wonderful sight,\nAs it danced with a {adj3} {element3}!",
+        
+        "A {element1} so {adj1} and bright,\nGave {element2} an incredible fright.\nWith {element3} nearby,\nIt made them all sigh,\nIn a manner both {adj2} and light!"
+    ],
+    "sonnet": [
+        "The {adj1} {element1} stands in quiet grace,\nWhile {element2} moves in patterns yet unseen.\nThe {adj2} light reveals each perfect trace,\nOf {element3} that has forever been.\n\nThrough time and change some things remain the same,\nThe {adj3} beauty lasting through the years.\nNo words could ever truly frame,\nThe depth of what an image now appears.",
+        
+        "When first I saw the {adj1} {element1},\nI thought of how {element2} seemed to glow.\nThe {adj2} light made {element3} shine,\nIn ways that few would ever know.\n\nIn this brief moment captured here,\nA {adj3} world appears for all to see."
+    ],
+    "rap": [
+        "Yo! Check out the {element1}, so {adj1} and true,\nWith the {element2} in the back, I'm tellin' you!\nThis {adj2} {element3} is straight up fire,\nDroppin' beats and rhymes to inspire!",
+        
+        "Listen up! I've got the {adj1} flow,\nSeein' {element1} and {element2}, you already know!\nThe {adj2} {element3} is keepin' it real,\nThis image has got that authentic feel!"
+    ],
+    "nursery": [
+        "{adj1}, {adj1} {element1},\nHow does your {element2} grow?\nWith {adj2} {element3} and pretty bells,\nAll lined up in a row.",
+        
+        "{element1}, {element1}, {adj1} and bright,\nSitting with {element2} tonight.\nThe {adj2} {element3} went round and round,\nAs they all played out of sight."
     ]
 }
 
@@ -415,7 +460,12 @@ def _create_prompt(analysis_results, poem_type, emphasis):
         "twinkle": "Create a whimsical, melodic poem in the style of 'Twinkle, Twinkle, Little Star.' Maintain the rhythm and structure of the classic nursery rhyme, but personalize it based on the image elements. Incorporate the distinctive 'Twinkle, twinkle' repetition at the beginning and end while creating a sense of wonder and childlike curiosity.",
         "roses": "Craft a clever variation of the classic 'Roses are red, violets are blue' poem format. Start with the iconic opening lines, then subvert expectations with surprising, witty, or meaningful follow-up lines that relate to the image. Maintain the simple rhyme scheme while adding personality and charm.",
         "knock-knock": "Create a playful knock-knock joke in poem form, incorporating elements from the image. Begin with the traditional 'Knock, knock / Who's there?' format, then craft a punchline that cleverly relates to the visual elements. Add a brief poetic conclusion that ties the joke together with the image's mood or theme.",
-        "pickup": "Compose an intentionally cheesy but charming pickup line poem that creatively incorporates elements from the image. Balance humor and genuine compliments while maintaining a playful, flirtatious tone. Create lines that are memorable, witty, and just the right amount of over-the-top to bring a smile."
+        "pickup": "Compose an intentionally cheesy but charming pickup line poem that creatively incorporates elements from the image. Balance humor and genuine compliments while maintaining a playful, flirtatious tone. Create lines that are memorable, witty, and just the right amount of over-the-top to bring a smile.",
+        "haiku": "Create a pristine haiku following the traditional 5-7-5 syllable structure. Capture a single, powerful moment with precise imagery and seasonal references in the spirit of Matsuo Bashō. Distill the essence of the image into three lines that reveal a profound truth through simplicity and careful observation.",
+        "limerick": "Craft a playful limerick with the perfect AABBA rhyme scheme and bouncy anapestic meter. Channel Edward Lear's whimsy while maintaining technical precision in rhythm and rhyme. Create a humorous or absurd narrative that cleverly incorporates elements from the image.",
+        "sonnet": "Compose an elegant Shakespearean sonnet with perfect iambic pentameter and the traditional ABABCDCDEFEFGG rhyme scheme. Explore a central theme or emotion through sophisticated imagery and thoughtful contemplation, concluding with a powerful final couplet that offers insight or resolution.",
+        "rap": "Create a dynamic rap verse with sharp rhymes, deliberate flow, and authentic urban cadence. Incorporate wordplay, metaphors, and cultural references while maintaining a strong rhythmic structure. Capture the boldness, confidence, and expressive power characteristic of great hip-hop lyricism.",
+        "nursery": "Craft a delightful nursery rhyme with simple vocabulary, consistent meter, and memorable rhyming patterns. Infuse it with the innocent charm and rhythmic repetition found in classic children's verse. Create something that could be easily memorized and recited by young children."
     }
     
     if poem_type in poem_type_instructions:
