@@ -5,11 +5,16 @@ import random
 import requests
 import base64
 import json
+import hashlib
 from PIL import Image, ImageStat
 import time
+from functools import lru_cache
 
 # Set up logging
 logger = logging.getLogger(__name__)
+
+# Image analysis cache
+_analysis_cache = {}
 
 # Google Vision API key - prioritize the dedicated API key environment variable
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "") or os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "")
@@ -21,17 +26,12 @@ if GOOGLE_API_KEY and GOOGLE_API_KEY.startswith("AIza"):
     # Log for debugging
     logger.debug(f"Using Vision API key: {GOOGLE_API_KEY[:10]}...")
 else:
-    try:
-        from google.cloud import vision
-        VISION_API_AVAILABLE = "CLIENT"
-        logger.info("Google Vision client library available")
-    except (ImportError, Exception) as e:
-        VISION_API_AVAILABLE = False
-        logger.warning(f"Google Cloud Vision API not available: {str(e)}")
+    VISION_API_AVAILABLE = False
+    logger.warning("Google Cloud Vision API not available - using basic analysis only")
 
 def analyze_image(image_file):
     """
-    Analyze an image using Google Cloud Vision AI.
+    Analyze an image using Google Cloud Vision AI with caching.
     If the API is not available, provides basic analysis using PIL.
     
     Args:
@@ -47,108 +47,36 @@ def analyze_image(image_file):
         # Read the image content
         content = image_file.read()
         
-        # Use the appropriate method based on what's available
+        # Create a hash of the image content for cache lookup
+        content_hash = hashlib.md5(content).hexdigest()
+        
+        # Check if we have this image in the cache
+        if content_hash in _analysis_cache:
+            logger.info(f"Using cached analysis result for image hash: {content_hash[:8]}...")
+            return _analysis_cache[content_hash]
+        
+        # If not in cache, perform the analysis
         if VISION_API_AVAILABLE == "REST":
             logger.info("Using Google Vision REST API with API key")
-            return _analyze_image_rest_api(content)
-        elif VISION_API_AVAILABLE == "CLIENT" and os.path.exists(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "")):
-            logger.info("Using Google Vision client library with service account")
-            # Reset file pointer to the beginning for client library
-            image_file.seek(0)
-            content = image_file.read()
-            
-            # Create a client for the Vision API
-            client = vision.ImageAnnotatorClient()
-            
-            # Create the image object for the API
-            image = vision.Image(content=content)
-            
-            # Request various features
-            features = [
-                vision.Feature(type_=vision.Feature.Type.LABEL_DETECTION, max_results=15),
-                vision.Feature(type_=vision.Feature.Type.FACE_DETECTION, max_results=10),
-                vision.Feature(type_=vision.Feature.Type.OBJECT_LOCALIZATION, max_results=15),
-                vision.Feature(type_=vision.Feature.Type.LANDMARK_DETECTION, max_results=5),
-                vision.Feature(type_=vision.Feature.Type.IMAGE_PROPERTIES),
-                vision.Feature(type_=vision.Feature.Type.SAFE_SEARCH_DETECTION)
-            ]
-            
-            # Perform the API request
-            response = client.annotate_image({
-                'image': image,
-                'features': features,
-            })
-            
-            # Process the results
-            results = {}
-            
-            # Process labels
-            results['labels'] = []
-            for label in response.label_annotations:
-                results['labels'].append({
-                    'description': label.description,
-                    'score': round(label.score * 100, 2)
-                })
-            
-            # Process faces
-            results['faces'] = []
-            for face in response.face_annotations:
-                results['faces'].append({
-                    'joy': face.joy_likelihood.name,
-                    'sorrow': face.sorrow_likelihood.name,
-                    'anger': face.anger_likelihood.name,
-                    'surprise': face.surprise_likelihood.name,
-                    'headwear': face.headwear_likelihood.name
-                })
-            
-            # Process objects
-            results['objects'] = []
-            for obj in response.localized_object_annotations:
-                results['objects'].append({
-                    'name': obj.name,
-                    'score': round(obj.score * 100, 2)
-                })
-            
-            # Process landmarks
-            results['landmarks'] = []
-            for landmark in response.landmark_annotations:
-                results['landmarks'].append({
-                    'description': landmark.description,
-                    'score': round(landmark.score * 100, 2)
-                })
-            
-            # Process image properties (colors)
-            results['colors'] = []
-            if response.image_properties:
-                colors = response.image_properties.dominant_colors.colors
-                for color in colors[:5]:  # Top 5 colors
-                    rgb = color.color
-                    hex_color = f'#{rgb.red:02x}{rgb.green:02x}{rgb.blue:02x}'
-                    results['colors'].append({
-                        'hex': hex_color,
-                        'score': round(color.score * 100, 2)
-                    })
-            
-            # Process safe search
-            if response.safe_search_annotation:
-                results['safe_search'] = {
-                    'adult': response.safe_search_annotation.adult.name,
-                    'medical': response.safe_search_annotation.medical.name,
-                    'violence': response.safe_search_annotation.violence.name
-                }
-            
-            logger.debug(f"Image analysis results: {results}")
-            return results
+            results = _analyze_image_rest_api(content)
         else:
             logger.warning("Google Cloud Vision API not available. Using basic analysis.")
             image_file.seek(0)  # Reset the file pointer for basic analysis
-            return _analyze_image_basic(image_file)
+            results = _analyze_image_basic(image_file)
+        
+        # Store the results in the cache before returning
+        _analysis_cache[content_hash] = results
+        logger.info(f"Stored analysis result in cache with key: {content_hash[:8]}...")
+        
+        logger.debug(f"Image analysis results: {results}")
+        return results
     
     except Exception as e:
         logger.error(f"Error analyzing image: {str(e)}", exc_info=True)
         # If there's an error with the Vision API, fall back to basic analysis
         image_file.seek(0)  # Make sure we're at the beginning of the file
-        return _analyze_image_basic(image_file)
+        results = _analyze_image_basic(image_file)
+        return results
             
 def _analyze_image_rest_api(image_content):
     """

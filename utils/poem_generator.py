@@ -3,9 +3,13 @@ import logging
 import requests
 import json
 import random
+import hashlib
 
 # Set up logging
 logger = logging.getLogger(__name__)
+
+# Poem generation cache
+_poem_cache = {}
 
 # Get the API key from environment variable
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
