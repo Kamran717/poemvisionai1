@@ -28,7 +28,7 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         # Determine poem text size and layout
         padding = 40  # Padding around the image and text
         poem_height = 0
-        poem_font_size = 72  # Increased by 100% from 36 to 72 for better readability
+        poem_font_size = 100  # Significantly larger text for maximum readability
         
         # Create a larger canvas for the framed image with poem
         # The height is increased to accommodate the poem text below the image
@@ -144,14 +144,22 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         # Stronger contrast for better readability
         background_rect_padding = 10  # Padding around text
         
-        # Draw a background rectangle for the entire poem area
-        # for better text contrast and readability
-        poem_bg_y = text_y - background_rect_padding
-        poem_bg_height = (len(poem_lines) * poem_line_height) + (background_rect_padding * 2)
+        # Draw a solid black background for the entire poem area
+        # for maximum readability and contrast with white text
+        poem_bg_y = text_y - background_rect_padding*2
+        poem_bg_height = (len(poem_lines) * poem_line_height) + (background_rect_padding * 4)
         draw.rectangle(
             (frame_width, poem_bg_y, new_width - frame_width, poem_bg_y + poem_bg_height),
-            fill=(248, 248, 248),  # Very light gray background
+            fill=(30, 30, 30),  # Very dark gray/almost black background
             outline=None
+        )
+        
+        # Add a thin border around the poem area for better visual definition
+        draw.rectangle(
+            (frame_width, poem_bg_y, new_width - frame_width, poem_bg_y + poem_bg_height),
+            fill=None,
+            outline=(120, 120, 120),
+            width=2
         )
         
         for i, line in enumerate(poem_lines):
@@ -161,18 +169,27 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
             line_y = text_y + (i * poem_line_height)
             
             # Create a background rectangle just for this line for better contrast
-            line_bg_padding = 10
+            line_bg_padding = 20  # Increased padding around text
+            # Draw colored background for maximum contrast
             draw.rectangle(
                 (text_x - line_bg_padding, 
                  line_y - line_bg_padding,
                  text_x + line_width + line_bg_padding,
                  line_y + poem_font_size + line_bg_padding),
-                fill=(250, 250, 250),  # Almost white background
+                fill=(0, 0, 0),  # Black background
                 outline=None
             )
             
-            # Draw the main text with improved contrast - no need for shadows with the background
-            draw.text((text_x, line_y), line, fill=(0, 0, 0), font=font)  # Pure black text
+            # Draw text with bold effect by drawing it multiple times with slight offset
+            # White text on black background for maximum contrast
+            for offset in range(1, 3):  # Create bold effect
+                draw.text((text_x - offset, line_y), line, fill=(255, 255, 255), font=font)
+                draw.text((text_x + offset, line_y), line, fill=(255, 255, 255), font=font)
+                draw.text((text_x, line_y - offset), line, fill=(255, 255, 255), font=font)
+                draw.text((text_x, line_y + offset), line, fill=(255, 255, 255), font=font)
+            
+            # Draw the main text on top for boldness
+            draw.text((text_x, line_y), line, fill=(255, 255, 255), font=font)  # White text
         
         # Convert the image to bytes
         output_buffer = io.BytesIO()
