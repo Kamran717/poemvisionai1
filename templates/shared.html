@@ -111,7 +111,7 @@
                         
                         <div class="d-flex justify-content-center gap-2 flex-wrap">
                             <!-- WhatsApp -->
-                            <a href="https://wa.me/?text={{ 'Check out this custom poem I found: ' + url_for('view_shared_creation', share_code=creation.share_code, _external=True)|urlencode }}" target="_blank" class="btn btn-success share-btn" title="Share on WhatsApp">
+                            <a href="https://wa.me/?text={{ 'Check out my custom poem generated from Poem Vision AI: ' + url_for('view_shared_creation', share_code=creation.share_code, _external=True)|urlencode }}" target="_blank" class="btn btn-success share-btn" title="Share on WhatsApp">
                                 <i class="fab fa-whatsapp fa-lg"></i>
                             </a>
                             
@@ -131,17 +131,17 @@
                             </button>
                             
                             <!-- Twitter/X -->
-                            <a href="https://twitter.com/intent/tweet?text={{ 'Check out this custom poem generated from an image with Poem Vision AI:' | urlencode }}&url={{ url_for('view_shared_creation', share_code=creation.share_code, _external=True) | urlencode }}" target="_blank" class="btn btn-info share-btn" title="Share on Twitter/X">
+                            <a href="https://twitter.com/intent/tweet?text={{ 'Check out my custom poem generated from Poem Vision AI:' | urlencode }}&url={{ url_for('view_shared_creation', share_code=creation.share_code, _external=True) | urlencode }}" target="_blank" class="btn btn-info share-btn" title="Share on Twitter/X">
                                 <i class="fab fa-twitter fa-lg"></i>
                             </a>
                             
                             <!-- Pinterest -->
-                            <a href="https://pinterest.com/pin/create/button/?url={{ url_for('view_shared_creation', share_code=creation.share_code, _external=True) | urlencode }}&description={{ 'Custom AI-generated poem based on an image from Poem Vision AI' | urlencode }}" target="_blank" class="btn btn-danger share-btn" title="Share on Pinterest">
+                            <a href="https://pinterest.com/pin/create/button/?url={{ url_for('view_shared_creation', share_code=creation.share_code, _external=True) | urlencode }}&description={{ 'Check out my custom poem generated from Poem Vision AI' | urlencode }}" target="_blank" class="btn btn-danger share-btn" title="Share on Pinterest">
                                 <i class="fab fa-pinterest fa-lg"></i>
                             </a>
                             
                             <!-- Email -->
-                            <a href="mailto:?subject={{ 'Check out my custom poem from Poem Vision AI' | urlencode }}&body={{ ('I found this custom poem created from an image using Poem Vision AI! Check it out here: ' + url_for('view_shared_creation', share_code=creation.share_code, _external=True)) | urlencode }}" class="btn btn-secondary share-btn" title="Share via Email">
+                            <a href="mailto:?subject={{ 'Check out my custom poem from Poem Vision AI' | urlencode }}&body={{ ('Check out my custom poem generated from Poem Vision AI: ' + url_for('view_shared_creation', share_code=creation.share_code, _external=True)) | urlencode }}" class="btn btn-secondary share-btn" title="Share via Email">
                                 <i class="fas fa-envelope fa-lg"></i>
                             </a>
                         </div>
@@ -149,11 +149,8 @@
                 </div>
 
                 <div class="text-center">
-                    <a href="/" class="btn btn-primary me-2">
+                    <a href="/" class="btn btn-primary">
                         <i class="fas fa-plus me-1"></i> Create Your Own
-                    </a>
-                    <a href="/gallery" class="btn btn-outline-secondary">
-                        <i class="fas fa-images me-1"></i> View Gallery
                     </a>
                 </div>
             </div>
