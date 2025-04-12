@@ -90,7 +90,11 @@ except Exception as e:
 @app.route('/')
 def index():
     """Render the main page of the application."""
-    return render_template('index.html')
+    # Check if user is logged in
+    user_id = session.get('user_id')
+    user = User.query.get(user_id) if user_id else None
+    
+    return render_template('index.html', user=user)
 
 @app.route('/analyze-image', methods=['POST'])
 def analyze_image_route():

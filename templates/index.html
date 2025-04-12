@@ -20,6 +20,27 @@
                 </h1>
                 <p class="lead">Upload an image and get a custom-generated poem based on what's in your picture.</p>
                 <p>Our AI analyzes your image and creates personalized poems that capture its essence.</p>
+                
+                {% if not session.get('user_id') %}
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Create an account</strong> to save your poem creations and access more features!
+                    <div class="mt-2">
+                        <a href="{{ url_for('signup') }}" class="btn btn-sm btn-primary me-2">Sign Up</a>
+                        <a href="{{ url_for('login') }}" class="btn btn-sm btn-outline-primary">Login</a>
+                    </div>
+                </div>
+                {% elif user and not user.is_premium %}
+                <div class="alert alert-primary" role="alert">
+                    <i class="fas fa-star me-2"></i>
+                    <strong>Upgrade to Premium</strong> to unlock all poem types, frames, and unlimited storage!
+                    <div class="mt-2">
+                        <a href="{{ url_for('upgrade_membership') }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-arrow-up me-1"></i> Upgrade Now
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
