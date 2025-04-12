@@ -166,16 +166,14 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
                     # Approximate width if all else fails
                     line_width = len(line) * (poem_font_size * 0.6)
                     
-            # Apply uniform padding on sides (80% of width for text area)
-            max_width = target_width * 0.8  # Use only 80% of width for all text
-            # All text will have same left margin, maintaining uniform appearance
-            text_x = (target_width - max_width) // 2
+            # Always center align all text for each line individually
+            # This ensures perfect centering regardless of line length
+            text_x = (target_width - line_width) // 2
             
-            # For lines shorter than max width, center them within the text area
-            if line_width < max_width:
-                # Calculate additional padding to center this line within text area
-                extra_padding = (max_width - line_width) // 2
-                text_x += extra_padding
+            # Ensure text doesn't get too close to edges (minimum side margin)
+            min_side_margin = int(target_width * 0.1)  # 10% minimum margin on each side
+            if text_x < min_side_margin:
+                text_x = min_side_margin
                 
             line_y = text_y + (i * poem_line_height)
             
