@@ -513,10 +513,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Update the selected emphasis elements
     function updateSelectedEmphasis() {
-        state.selectedEmphasis = [];
-        document.querySelectorAll('.emphasis-checkbox:checked').forEach(checkbox => {
-            state.selectedEmphasis.push(checkbox.value);
-        });
+        // Get all checked checkboxes
+        const checkedBoxes = [...document.querySelectorAll('.emphasis-checkbox:checked')];
+        
+        // If more than 10 elements are selected, uncheck the last selected one
+        if (checkedBoxes.length > 10) {
+            // Get the most recently changed checkbox (likely the last one checked)
+            const lastChecked = checkedBoxes[checkedBoxes.length - 1];
+            lastChecked.checked = false;
+            
+            // Show a message to the user about the limit
+            alert('You can only select up to 10 elements to emphasize in your poem.');
+            
+            // Remove the last one from our checked collection
+            checkedBoxes.pop();
+        }
+        
+        // Update our state with the (limited) selection
+        state.selectedEmphasis = checkedBoxes.map(checkbox => checkbox.value);
         
         // Update badge highlighting
         document.querySelectorAll('.element-badge').forEach(badge => {
@@ -527,6 +541,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 badge.classList.remove('selected');
             }
         });
+        
+        // Update the UI to show how many elements are selected
+        const emphasisLabel = document.querySelector('label[for="emphasisOptions"]');
+        if (emphasisLabel) {
+            emphasisLabel.innerHTML = `Elements to Emphasize <small class="text-muted">(${state.selectedEmphasis.length}/10 selected)</small>`;
+        }
         
         // Initial update of the state when displayAnalysisResults is called
         // This ensures the Person checkbox is properly included in state.selectedEmphasis
@@ -549,6 +569,15 @@ document.addEventListener('DOMContentLoaded', function() {
         // Gather poem preferences
         const poemType = poemTypeSelect.value;
         
+        // Get custom prompt and category
+        const customPromptInput = document.getElementById('customPromptInput');
+        const customPromptCategory = document.getElementById('customPromptCategory');
+        
+        const customPromptData = {
+            terms: customPromptInput ? customPromptInput.value.trim() : '',
+            category: customPromptCategory ? customPromptCategory.value : ''
+        };
+        
         // Send the request to generate a poem
         fetch('/generate-poem', {
             method: 'POST',
@@ -558,7 +587,8 @@ document.addEventListener('DOMContentLoaded', function() {
             body: JSON.stringify({
                 analysisId: state.analysisId,
                 poemType: poemType,
-                emphasis: state.selectedEmphasis
+                emphasis: state.selectedEmphasis,
+                customPrompt: customPromptData
             })
         })
         .then(response => response.json())

@@ -275,22 +275,22 @@ def generate_poem(analysis_results, poem_type, emphasis, custom_terms='', custom
                 
                 # If we get here, the response structure was unexpected
                 logger.error(f"Unexpected response structure: {json.dumps(response_data)[:500]}...")
-                return _generate_template_poem(analysis_results, poem_type, emphasis)
+                return _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
             else:
                 logger.error(f"API error: {response.status_code} - {response.text[:200]}...")
                 # Log the request that was sent for debugging
                 logger.error(f"Request data: {json.dumps(data)[:500]}...")
-                return _generate_template_poem(analysis_results, poem_type, emphasis)
+                return _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
         except requests.exceptions.Timeout:
             logger.error("Gemini API request timed out")
-            return _generate_template_poem(analysis_results, poem_type, emphasis)
+            return _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
         except requests.exceptions.RequestException as e:
             logger.error(f"Request exception when calling Gemini API: {str(e)}")
-            return _generate_template_poem(analysis_results, poem_type, emphasis)
+            return _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
     
     except Exception as e:
         logger.error(f"Error generating poem: {str(e)}", exc_info=True)
-        return _generate_template_poem(analysis_results, poem_type, emphasis)
+        return _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
 
 def _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms='', custom_category=''):
     """
@@ -328,6 +328,16 @@ def _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms=
             if element not in emphasized_elements:
                 emphasized_elements.append(element)
         all_elements = emphasized_elements
+    
+    # Add custom terms if provided
+    if custom_terms:
+        # Split by commas and clean up each term
+        custom_term_list = [term.strip() for term in custom_terms.split(',')]
+        
+        # Add these terms to the front of the elements list to prioritize them
+        for term in custom_term_list:
+            if term and term not in all_elements:
+                all_elements.insert(0, term)
     
     # Ensure we have at least some elements to work with
     if not all_elements:
