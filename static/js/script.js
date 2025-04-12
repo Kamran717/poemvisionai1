@@ -323,11 +323,17 @@ document.addEventListener('DOMContentLoaded', function() {
         // Display labels
         const detectedLabels = document.getElementById('detectedLabels');
         detectedLabels.innerHTML = '';
+        
+        // Clear the emphasis options before adding new ones
+        emphasisOptions.innerHTML = '';
 
         // Keep track of all emphasis elements for visibility management
         const allEmphasisElements = [];
         let visibleElementsCount = 0;
         let totalElementsCount = 0;
+        
+        // Set max emphasis count for this session (limit to 4)
+        state.maxEmphasisCount = 4;
 
         if (results.labels && results.labels.length > 0) {
             results.labels.forEach((label, index) => {
@@ -399,7 +405,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (!document.getElementById('emphasis_Person')) {
                         // Add to emphasis options with priority
                         const option = document.createElement('div');
-                        option.classList.add('form-check', 'form-check-inline');
+                        option.classList.add('form-check', 'form-check-inline', 'emphasis-element');
                         option.innerHTML = `
                             <input class="form-check-input emphasis-checkbox" type="checkbox" value="Person" id="emphasis_Person" checked>
                             <label class="form-check-label" for="emphasis_Person"><strong>Person</strong></label>
@@ -410,16 +416,27 @@ document.addEventListener('DOMContentLoaded', function() {
                         } else {
                             emphasisOptions.appendChild(option);
                         }
+                        // Always count Person as a visible element, but don't include in hidden count
+                        visibleElementsCount++;
                     }
                 } else if (obj.name !== 'Person') {
                     // Add other objects to emphasis options
                     const option = document.createElement('div');
-                    option.classList.add('form-check', 'form-check-inline');
+                    option.classList.add('form-check', 'form-check-inline', 'emphasis-element');
+                    
+                    // Add hidden class based on visible elements count
+                    if (document.querySelectorAll('.emphasis-element:not(.emphasis-element-hidden)').length >= 4) {
+                        option.classList.add('emphasis-element-hidden');
+                    } else {
+                        visibleElementsCount++;
+                    }
+                    
                     option.innerHTML = `
                         <input class="form-check-input emphasis-checkbox" type="checkbox" value="${obj.name}" id="emphasis_${obj.name.replace(/\s+/g, '_')}">
                         <label class="form-check-label" for="emphasis_${obj.name.replace(/\s+/g, '_')}">${obj.name}</label>
                     `;
                     emphasisOptions.appendChild(option);
+                    allEmphasisElements.push(option);
                 }
             });
             
@@ -469,12 +486,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     // Add to emphasis options
                     const option = document.createElement('div');
-                    option.classList.add('form-check', 'form-check-inline');
+                    option.classList.add('form-check', 'form-check-inline', 'emphasis-element');
+                    
+                    // Add hidden class based on visible elements count
+                    if (document.querySelectorAll('.emphasis-element:not(.emphasis-element-hidden)').length >= 4) {
+                        option.classList.add('emphasis-element-hidden');
+                    } else {
+                        visibleElementsCount++;
+                    }
+                    
                     option.innerHTML = `
                         <input class="form-check-input emphasis-checkbox" type="checkbox" value="${emotion}" id="emphasis_${emotion}">
                         <label class="form-check-label" for="emphasis_${emotion}">${emotion.charAt(0).toUpperCase() + emotion.slice(1)}</label>
                     `;
                     emphasisOptions.appendChild(option);
+                    allEmphasisElements.push(option);
                 });
             } else {
                 detectedFaces.textContent = `${results.faces.length} ${results.faces.length === 1 ? 'face' : 'faces'} detected.`;
@@ -496,12 +522,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Add to emphasis options
                 const option = document.createElement('div');
-                option.classList.add('form-check', 'form-check-inline');
+                option.classList.add('form-check', 'form-check-inline', 'emphasis-element');
+                
+                // Add hidden class based on visible elements count
+                if (document.querySelectorAll('.emphasis-element:not(.emphasis-element-hidden)').length >= 4) {
+                    option.classList.add('emphasis-element-hidden');
+                } else {
+                    visibleElementsCount++;
+                }
+                
                 option.innerHTML = `
                     <input class="form-check-input emphasis-checkbox" type="checkbox" value="${landmark.description}" id="emphasis_${landmark.description.replace(/\s+/g, '_')}">
                     <label class="form-check-label" for="emphasis_${landmark.description.replace(/\s+/g, '_')}">${landmark.description}</label>
                 `;
                 emphasisOptions.appendChild(option);
+                allEmphasisElements.push(option);
             });
         } else {
             detectedLandmarks.textContent = 'No landmarks detected.';
@@ -523,6 +558,40 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.emphasis-checkbox').forEach(checkbox => {
             checkbox.addEventListener('change', updateSelectedEmphasis);
         });
+        
+        // Add a "Show More" button if there are hidden elements
+        const hiddenElements = document.querySelectorAll('.emphasis-element-hidden');
+        if (hiddenElements.length > 0) {
+            const showMoreBtn = document.createElement('button');
+            showMoreBtn.textContent = 'Show All Elements';
+            showMoreBtn.classList.add('show-more-btn', 'mt-2');
+            showMoreBtn.setAttribute('id', 'showMoreEmphasisBtn');
+            
+            // Track if elements are currently shown or hidden
+            let elementsShown = false;
+            
+            showMoreBtn.addEventListener('click', function() {
+                const hiddenElements = document.querySelectorAll('.emphasis-element-hidden');
+                
+                if (!elementsShown) {
+                    // Show all hidden elements
+                    hiddenElements.forEach(el => {
+                        el.classList.remove('emphasis-element-hidden');
+                    });
+                    showMoreBtn.textContent = 'Show Fewer Elements';
+                    elementsShown = true;
+                } else {
+                    // Hide elements again
+                    hiddenElements.forEach(el => {
+                        el.classList.add('emphasis-element-hidden');
+                    });
+                    showMoreBtn.textContent = 'Show All Elements';
+                    elementsShown = false;
+                }
+            });
+            
+            emphasisOptions.parentNode.insertBefore(showMoreBtn, emphasisOptions.nextSibling);
+        }
         
         // Make sure our initial state includes any pre-checked boxes (like Person)
         updateSelectedEmphasis();
