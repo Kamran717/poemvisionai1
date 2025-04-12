@@ -549,18 +549,17 @@ document.addEventListener('DOMContentLoaded', function() {
             let elementsShown = false;
             
             showMoreBtn.addEventListener('click', function() {
-                const hiddenElements = document.querySelectorAll('.emphasis-element-hidden');
-                
                 if (!elementsShown) {
                     // Show all hidden elements
-                    hiddenElements.forEach(el => {
+                    document.querySelectorAll('.emphasis-element-hidden').forEach(el => {
                         el.classList.remove('emphasis-element-hidden');
                     });
                     showMoreBtn.textContent = 'Show Fewer Elements';
                     elementsShown = true;
                 } else {
-                    // Hide elements again
-                    hiddenElements.forEach(el => {
+                    // Hide elements again (except the first 4)
+                    const allElements = Array.from(document.querySelectorAll('.emphasis-element'));
+                    allElements.slice(4).forEach(el => {
                         el.classList.add('emphasis-element-hidden');
                     });
                     showMoreBtn.textContent = 'Show All Elements';

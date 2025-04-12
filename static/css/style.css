@@ -52,12 +52,21 @@ main {
     border-radius: 5px;
     padding: 8px;
     background-color: rgba(111, 66, 193, 0.05);
+    color: var(--bs-body-color); /* Ensure text color respects theme */
 }
 
 #poemTypeSelect:focus {
     border-color: #6f42c1;
     box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.4);
     background-color: rgba(111, 66, 193, 0.1);
+}
+
+/* Ensure dropdown options are visible */
+#poemTypeSelect option, 
+#poemTypeSelect optgroup {
+    color: #212529; /* Dark text for light background */
+    background-color: #fff;
+    padding: 5px;
 }
 
 /* Upload Area Styles */
