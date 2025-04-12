@@ -571,7 +571,7 @@ document.addEventListener('DOMContentLoaded', function() {
             emphasisOptions.parentNode.insertBefore(showMoreBtn, emphasisOptions.nextSibling);
         }
         
-        // Make sure our initial state includes any pre-checked boxes (like Person)
+        // Make sure our initial state includes any pre-checked boxes
         updateSelectedEmphasis();
     }
 
