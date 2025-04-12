@@ -184,39 +184,106 @@
                                                 <!-- Counter will be inserted here by JavaScript -->
                                             </div>
                                             
-                                            <!-- Personalization Section - Dark Theme Design -->
-                                            <div class="mb-4 p-4">
-                                                <h4 class="mb-2 text-info fw-bold">Make It More Personal</h4>
-                                                <p class="text-light opacity-75 mb-3">Add a few words, names, or feelings you'd like us to include in your poem.</p>
+                                            <!-- Personalization Section - Structured Input Design -->
+                                            <div class="mb-4 p-4 bg-dark rounded-3 border border-secondary">
+                                                <h4 class="mb-3 text-info fw-bold">Make It More Personal</h4>
+                                                <p class="text-light opacity-75 mb-4">Add specific elements you'd like us to include in your poem.</p>
                                                 
-                                                <div class="mb-4 position-relative">
-                                                    <textarea class="form-control bg-dark text-light border-secondary rounded-3" 
-                                                        id="customPromptInput" 
-                                                        rows="3" 
-                                                        maxlength="300" 
-                                                        placeholder="e.g., My daughter Ava, joy, Paris at night"></textarea>
-                                                    <div class="position-absolute top-0 end-0 mt-2 me-2">
-                                                        <span class="character-counter badge bg-dark text-light opacity-75">0/300</span>
+                                                <div class="row mb-4" id="structuredPromptInputs">
+                                                    <!-- Name Input -->
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="customName" class="form-label text-light">Name (person or pet)</label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text bg-dark text-info border-secondary">
+                                                                <i class="fas fa-user"></i>
+                                                            </span>
+                                                            <input type="text" class="form-control bg-dark text-light border-secondary" 
+                                                                id="customName" 
+                                                                placeholder="e.g., Sarah, My dog Max"
+                                                                maxlength="50">
+                                                        </div>
+                                                        <div class="form-text text-muted">Who should the poem mention?</div>
+                                                    </div>
+                                                    
+                                                    <!-- Place Input -->
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="customPlace" class="form-label text-light">Place</label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text bg-dark text-info border-secondary">
+                                                                <i class="fas fa-map-marker-alt"></i>
+                                                            </span>
+                                                            <input type="text" class="form-control bg-dark text-light border-secondary" 
+                                                                id="customPlace" 
+                                                                placeholder="e.g., Paris, the beach, our backyard"
+                                                                maxlength="50">
+                                                        </div>
+                                                        <div class="form-text text-muted">Where is this taking place?</div>
+                                                    </div>
+                                                    
+                                                    <!-- Emotion Input -->
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="customEmotion" class="form-label text-light">Emotion</label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text bg-dark text-info border-secondary">
+                                                                <i class="fas fa-heart"></i>
+                                                            </span>
+                                                            <select class="form-select bg-dark text-light border-secondary" id="customEmotion">
+                                                                <option value="">Select emotion (optional)</option>
+                                                                <option value="joy">Joy</option>
+                                                                <option value="love">Love</option>
+                                                                <option value="gratitude">Gratitude</option>
+                                                                <option value="peace">Peace</option>
+                                                                <option value="excitement">Excitement</option>
+                                                                <option value="hope">Hope</option>
+                                                                <option value="nostalgia">Nostalgia</option>
+                                                                <option value="longing">Longing</option>
+                                                                <option value="melancholy">Melancholy</option>
+                                                                <option value="serenity">Serenity</option>
+                                                                <option value="wonder">Wonder</option>
+                                                                <option value="awe">Awe</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="form-text text-muted">What feeling should be expressed?</div>
+                                                    </div>
+                                                    
+                                                    <!-- Action Input -->
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="customAction" class="form-label text-light">Action</label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text bg-dark text-info border-secondary">
+                                                                <i class="fas fa-running"></i>
+                                                            </span>
+                                                            <input type="text" class="form-control bg-dark text-light border-secondary" 
+                                                                id="customAction" 
+                                                                placeholder="e.g., dancing, laughing, sailing"
+                                                                maxlength="50">
+                                                        </div>
+                                                        <div class="form-text text-muted">What activity is happening?</div>
                                                     </div>
                                                 </div>
                                                 
+                                                <!-- Additional free-form input -->
                                                 <div class="mb-4">
-                                                    <h6 class="text-light mb-3">Need ideas? Try adding:</h6>
-                                                    <ul class="text-light opacity-75">
-                                                        <li class="mb-2">Someone's name (e.g. Sarah, Grandpa Joe)</li>
-                                                        <li class="mb-2">A place (e.g. beach, Eiffel Tower, our backyard)</li>
-                                                        <li class="mb-2">A memory or event (e.g. our wedding day, graduation)</li>
-                                                        <li class="mb-2">A feeling (e.g. love, happiness, longing)</li>
-                                                        <li class="mb-2">A special word (e.g. miracle, golden, forever)</li>
-                                                    </ul>
+                                                    <label for="customPromptInput" class="form-label text-light">Additional Details (optional)</label>
+                                                    <div class="position-relative">
+                                                        <textarea class="form-control bg-dark text-light border-secondary rounded-3" 
+                                                            id="customPromptInput" 
+                                                            rows="2" 
+                                                            maxlength="200" 
+                                                            placeholder="Any other details you'd like to include"></textarea>
+                                                        <div class="position-absolute top-0 end-0 mt-2 me-2">
+                                                            <span class="character-counter badge bg-dark text-light opacity-75">0/200</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                                 
-                                                <p class="text-light opacity-75 small fst-italic">
-                                                    Your words will guide the AI to craft a more meaningful, custom poem based on the image and your prompt.
-                                                </p>
+                                                <div class="alert alert-info p-2 small">
+                                                    <i class="fas fa-info-circle me-2"></i>
+                                                    Your personalization will guide our AI to craft a more meaningful, custom poem based on the image and your inputs.
+                                                </div>
                                                 
-                                                <!-- Hidden category field - now using a single text input approach -->
-                                                <input type="hidden" id="customPromptCategory" value="custom">
+                                                <!-- Hidden category field -->
+                                                <input type="hidden" id="customPromptCategory" value="structured">
                                             </div>
                                         </form>
                                     </div>

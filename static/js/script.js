@@ -657,13 +657,22 @@ document.addEventListener('DOMContentLoaded', function() {
         // Gather poem preferences
         const poemType = poemTypeSelect.value;
         
-        // Get custom prompt and category
+        // Get structured custom prompt inputs
+        const customName = document.getElementById('customName');
+        const customPlace = document.getElementById('customPlace');
+        const customEmotion = document.getElementById('customEmotion');
+        const customAction = document.getElementById('customAction');
         const customPromptInput = document.getElementById('customPromptInput');
         const customPromptCategory = document.getElementById('customPromptCategory');
         
+        // Build a structured prompt object
         const customPromptData = {
-            terms: customPromptInput ? customPromptInput.value.trim() : '',
-            category: customPromptCategory ? customPromptCategory.value : ''
+            category: customPromptCategory ? customPromptCategory.value : 'structured',
+            name: customName ? customName.value.trim() : '',
+            place: customPlace ? customPlace.value.trim() : '',
+            emotion: customEmotion ? customEmotion.value : '',
+            action: customAction ? customAction.value.trim() : '',
+            additional: customPromptInput ? customPromptInput.value.trim() : ''
         };
         
         // Send the request to generate a poem
