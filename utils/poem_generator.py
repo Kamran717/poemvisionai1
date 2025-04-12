@@ -300,6 +300,7 @@ def _create_prompt(analysis_results, poem_type, emphasis):
     has_faces = False
     
     # First check faces detected by the API
+    faces_count = 0  # Initialize the variable to avoid "possibly unbound" error
     if 'faces' in analysis_results and analysis_results['faces']:
         faces_count = len(analysis_results['faces'])
         people_count = faces_count
