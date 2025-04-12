@@ -383,6 +383,221 @@ def gallery():
         logger.error(f"Error loading gallery: {str(e)}", exc_info=True)
         return render_template('error.html', message="An error occurred while loading the gallery"), 500
 
+# Authentication and Membership Routes
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Log in a user"""
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
+        
+        # Validate inputs
+        if not email or not password:
+            return jsonify({'error': 'Please provide both email and password.'}), 400
+        
+        # Find the user
+        user = User.query.filter_by(email=email).first()
+        
+        # Check if user exists and password is correct
+        if user and user.check_password(password):
+            # Store user ID in session
+            session['user_id'] = user.id
+            return jsonify({'success': True, 'redirect': url_for('index')})
+        else:
+            return jsonify({'error': 'Login failed. Please check your email and password.'}), 401
+    
+    return render_template('login.html')
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    """Register a new user"""
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
+        
+        # Validate inputs
+        if not username or not email or not password:
+            return jsonify({'error': 'Please fill in all required fields.'}), 400
+        
+        if password != confirm_password:
+            return jsonify({'error': 'Passwords do not match.'}), 400
+        
+        # Check if email or username already exists
+        if User.query.filter_by(email=email).first():
+            return jsonify({'error': 'Email already registered. Please use a different email or log in.'}), 400
+        
+        if User.query.filter_by(username=username).first():
+            return jsonify({'error': 'Username already taken. Please choose a different username.'}), 400
+        
+        # Create new user
+        new_user = User(username=username, email=email)
+        new_user.set_password(password)
+        
+        # Set to free tier by default
+        new_user.is_premium = False
+        
+        try:
+            db.session.add(new_user)
+            db.session.commit()
+            
+            # Log the user in
+            session['user_id'] = new_user.id
+            return jsonify({'success': True, 'redirect': url_for('index')})
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error creating user: {str(e)}", exc_info=True)
+            return jsonify({'error': 'An error occurred while creating your account. Please try again.'}), 500
+    
+    return render_template('signup.html')
+
+@app.route('/logout')
+def logout():
+    """Log out a user"""
+    # Remove user ID from session
+    session.pop('user_id', None)
+    return redirect(url_for('index'))
+
+@app.route('/profile')
+def profile():
+    """View user profile and creations"""
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+    
+    if not user:
+        session.pop('user_id', None)  # Clear invalid session
+        return redirect(url_for('login'))
+    
+    # Get user's creations
+    user_creations = get_user_creations(user_id, limit=20)
+    
+    # Get user's membership plan
+    plan = get_user_plan(user_id)
+    
+    return render_template('profile.html', user=user, creations=user_creations, plan=plan)
+
+@app.route('/membership')
+def membership_plans():
+    """View membership plans and pricing"""
+    # Check if user is logged in
+    user_id = session.get('user_id')
+    user = User.query.get(user_id) if user_id else None
+    
+    # Get available plans
+    plans = Membership.query.all()
+    
+    return render_template('membership.html', plans=plans, user=user)
+
+@app.route('/upgrade', methods=['GET', 'POST'])
+def upgrade_membership():
+    """Upgrade to premium membership"""
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+    
+    if not user:
+        session.pop('user_id', None)  # Clear invalid session
+        return redirect(url_for('login'))
+    
+    # If user is already premium
+    if user.is_premium:
+        return redirect(url_for('profile'))
+    
+    if request.method == 'POST':
+        # This would be integrated with Stripe or another payment provider
+        # For now, we'll simulate a successful payment
+        payment_method = 'credit_card'
+        transaction_id = f'demo_transaction_{random.randint(1000, 9999)}'
+        
+        # Process the payment
+        result = process_payment(user_id, payment_method, transaction_id)
+        
+        if result['success']:
+            return jsonify({'success': True, 'redirect': url_for('profile')})
+        else:
+            return jsonify({'error': f'Payment processing failed: {result["message"]}'}), 500
+    
+    # Get premium plan details
+    premium_plan = Membership.query.filter_by(name='Premium').first()
+    
+    return render_template('upgrade.html', plan=premium_plan, user=user)
+
+@app.route('/api/check-access', methods=['POST'])
+def check_access():
+    """API endpoint to check if a user has access to premium features"""
+    try:
+        data = request.json
+        feature_type = data.get('type')  # 'poem_type' or 'frame'
+        feature_id = data.get('id')
+        
+        # Get user ID from session
+        user_id = session.get('user_id')
+        
+        # Check access based on feature type
+        if feature_type == 'poem_type':
+            has_access = check_poem_type_access(user_id, feature_id)
+        elif feature_type == 'frame':
+            has_access = check_frame_access(user_id, feature_id)
+        else:
+            return jsonify({'error': 'Invalid feature type'}), 400
+        
+        return jsonify({
+            'has_access': has_access,
+            'is_premium': bool(user_id and User.query.get(user_id) and User.query.get(user_id).is_premium)
+        })
+    
+    except Exception as e:
+        logger.error(f"Error checking access: {str(e)}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/available-poem-types')
+def api_available_poem_types():
+    """API endpoint to get available poem types for the current user"""
+    try:
+        # Get user ID from session
+        user_id = session.get('user_id')
+        
+        # Get available poem types
+        poem_types = get_available_poem_types(user_id)
+        
+        return jsonify({
+            'poem_types': poem_types,
+            'is_premium': bool(user_id and User.query.get(user_id) and User.query.get(user_id).is_premium)
+        })
+    
+    except Exception as e:
+        logger.error(f"Error getting available poem types: {str(e)}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/available-frames')
+def api_available_frames():
+    """API endpoint to get available frames for the current user"""
+    try:
+        # Get user ID from session
+        user_id = session.get('user_id')
+        
+        # Get available frames
+        frames = get_available_frames(user_id)
+        
+        return jsonify({
+            'frames': frames,
+            'is_premium': bool(user_id and User.query.get(user_id) and User.query.get(user_id).is_premium)
+        })
+    
+    except Exception as e:
+        logger.error(f"Error getting available frames: {str(e)}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
 # Helper function to deduplicate and simplify elements for emphasis
 def deduplicate_elements(analysis_results):
     """
