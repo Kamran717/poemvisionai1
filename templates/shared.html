@@ -118,58 +118,165 @@
 </div>
 {% endblock %}
 
+{% block extra_head %}
+{{ super() }}
+<style>
+    /* Add a download button directly in the HTML instead of via JavaScript */
+    .download-btn {
+        display: inline-block;
+        margin-top: 1rem;
+        background-color: #28a745;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 0.25rem;
+        text-decoration: none;
+        font-weight: 500;
+        transition: background-color 0.2s;
+    }
+    
+    .download-btn:hover {
+        background-color: #218838;
+        color: white;
+        text-decoration: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">Shared Creation</h3>
+                <small class="text-muted">Created on {{ creation.created_at.strftime('%B %d, %Y') }}</small>
+            </div>
+            <div class="card-body">
+                <div class="row justify-content-center">
+                    <div class="col-md-10 col-lg-8">
+                        <div id="finalCreationContainer" class="text-center mb-4">
+                            <img src="data:image/jpeg;base64,{{ creation.final_image_data }}" class="img-fluid rounded shadow" alt="Final Creation">
+                            <!-- Direct HTML download button instead of JavaScript-created -->
+                            <a href="data:image/jpeg;base64,{{ creation.final_image_data }}" 
+                               class="download-btn" 
+                               download="shared-poem.jpg">
+                                <i class="fas fa-download me-2"></i>Download
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Share Section -->
+                <div class="card mt-4 mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Share This Creation</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-8 mx-auto">
+                                <div class="input-group">
+                                    <input type="text" id="sharedUrlInput" class="form-control" readonly value="{{ url_for('view_shared_creation', share_code=creation.share_code, _external=True) }}">
+                                    <button onclick="copyShareLink()" class="btn btn-outline-secondary">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-center gap-2 flex-wrap">
+                            <!-- WhatsApp -->
+                            <a href="https://wa.me/?text={{ 'Check out this custom poem I found: ' + url_for('view_shared_creation', share_code=creation.share_code, _external=True)|urlencode }}" target="_blank" class="btn btn-success share-btn" title="Share on WhatsApp">
+                                <i class="fab fa-whatsapp fa-lg"></i>
+                            </a>
+                            
+                            <!-- Instagram (will open Instagram, user needs to paste) -->
+                            <button onclick="copyAndOpenSocial('instagram')" class="btn btn-danger share-btn" title="Share on Instagram">
+                                <i class="fab fa-instagram fa-lg"></i>
+                            </button>
+                            
+                            <!-- Facebook -->
+                            <a href="https://www.facebook.com/sharer/sharer.php?u={{ url_for('view_shared_creation', share_code=creation.share_code, _external=True)|urlencode }}" target="_blank" class="btn btn-primary share-btn" title="Share on Facebook">
+                                <i class="fab fa-facebook fa-lg"></i>
+                            </a>
+                            
+                            <!-- TikTok (will open TikTok, user needs to paste) -->
+                            <button onclick="copyAndOpenSocial('tiktok')" class="btn btn-dark share-btn" title="Share on TikTok">
+                                <i class="fab fa-tiktok fa-lg"></i>
+                            </button>
+                            
+                            <!-- Twitter/X -->
+                            <a href="https://twitter.com/intent/tweet?text={{ 'Check out this custom poem generated from an image with Poem Vision AI:' | urlencode }}&url={{ url_for('view_shared_creation', share_code=creation.share_code, _external=True) | urlencode }}" target="_blank" class="btn btn-info share-btn" title="Share on Twitter/X">
+                                <i class="fab fa-twitter fa-lg"></i>
+                            </a>
+                            
+                            <!-- Pinterest -->
+                            <a href="https://pinterest.com/pin/create/button/?url={{ url_for('view_shared_creation', share_code=creation.share_code, _external=True) | urlencode }}&description={{ 'Custom AI-generated poem based on an image from Poem Vision AI' | urlencode }}" target="_blank" class="btn btn-danger share-btn" title="Share on Pinterest">
+                                <i class="fab fa-pinterest fa-lg"></i>
+                            </a>
+                            
+                            <!-- Email -->
+                            <a href="mailto:?subject={{ 'Check out my custom poem from Poem Vision AI' | urlencode }}&body={{ ('I found this custom poem created from an image using Poem Vision AI! Check it out here: ' + url_for('view_shared_creation', share_code=creation.share_code, _external=True)) | urlencode }}" class="btn btn-secondary share-btn" title="Share via Email">
+                                <i class="fas fa-envelope fa-lg"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <a href="/" class="btn btn-primary me-2">
+                        <i class="fas fa-plus me-1"></i> Create Your Own
+                    </a>
+                    <a href="/gallery" class="btn btn-outline-secondary">
+                        <i class="fas fa-images me-1"></i> View Gallery
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
 {% block extra_js %}
 <script>
-    // Add the download button to the image
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add download button directly to the page instead of via JS
-        const finalImage = document.querySelector('#finalCreationContainer img');
-        if (finalImage) {
-            // Create the download button
-            const downloadLink = document.createElement('a');
-            downloadLink.classList.add('btn', 'btn-success', 'mt-3');
-            downloadLink.innerHTML = '<i class="fas fa-download me-2"></i>Download';
-            downloadLink.href = finalImage.src;
-            downloadLink.setAttribute('download', 'shared-poem.jpg');
-            finalImage.parentNode.appendChild(downloadLink);
-        }
-        
-        // Handle copy button click if it exists
-        const copyBtn = document.getElementById('copySharedLinkBtn');
-        if (copyBtn) {
-            const sharedUrlInput = document.getElementById('sharedUrlInput');
-            if (sharedUrlInput) {
-                copyBtn.addEventListener('click', function() {
-                    sharedUrlInput.select();
-                    document.execCommand('copy');
-                    copyBtn.innerHTML = '<i class="fas fa-check"></i>';
-                    setTimeout(() => {
-                        copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
-                    }, 2000);
-                });
-            }
-        }
-    });
-    
-    // Safe Instagram sharing function
-    function copyAndOpenInstagram() {
-        const urlInput = document.getElementById('sharedUrlInput');
-        if (urlInput) {
-            urlInput.select();
+    // Simple function to copy the share link
+    function copyShareLink() {
+        const input = document.getElementById('sharedUrlInput');
+        if (input) {
+            input.select();
             document.execCommand('copy');
-            alert('Link copied! Now you can paste it into Instagram.');
-            window.open('https://www.instagram.com/', '_blank');
+            
+            // Visual feedback
+            const button = document.querySelector('.input-group .btn');
+            if (button) {
+                button.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(() => {
+                    button.innerHTML = '<i class="fas fa-copy"></i>';
+                }, 2000);
+            }
         }
     }
     
-    // Safe TikTok sharing function
-    function copyAndOpenTikTok() {
-        const urlInput = document.getElementById('sharedUrlInput');
-        if (urlInput) {
-            urlInput.select();
+    // Function to copy link and open a social media site
+    function copyAndOpenSocial(site) {
+        const input = document.getElementById('sharedUrlInput');
+        if (input) {
+            input.select();
             document.execCommand('copy');
-            alert('Link copied! Now you can paste it into TikTok.');
-            window.open('https://www.tiktok.com/', '_blank');
+            
+            let url = '';
+            let message = '';
+            
+            if (site === 'instagram') {
+                url = 'https://www.instagram.com/';
+                message = 'Link copied! Now you can paste it into Instagram.';
+            } else if (site === 'tiktok') {
+                url = 'https://www.tiktok.com/';
+                message = 'Link copied! Now you can paste it into TikTok.';
+            }
+            
+            if (url) {
+                alert(message);
+                window.open(url, '_blank');
+            }
         }
     }
 </script>

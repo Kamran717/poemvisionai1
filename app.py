@@ -1,6 +1,8 @@
 import os
 import logging
-from flask import Flask, render_template, request, jsonify, session
+import functools
+from datetime import datetime, timedelta
+from flask import Flask, render_template, request, jsonify, session, make_response
 import base64
 import uuid
 import json
@@ -15,6 +17,44 @@ from models import db, Creation
 # Set up logging first so we can use it everywhere
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+# Simple in-memory cache for shared views
+_view_cache = {}
+
+def cache_view(timeout=3600):  # Default cache of 1 hour
+    """Cache decorator for view functions"""
+    def decorator(f):
+        @functools.wraps(f)
+        def wrapper(*args, **kwargs):
+            # Create a cache key from the function name and arguments
+            # For shared views, this would be the share_code
+            cache_key = f"{f.__name__}:{str(kwargs)}"
+            
+            # Try to get from cache first
+            cached_response = _view_cache.get(cache_key)
+            if cached_response:
+                expiry_time, response = cached_response
+                if datetime.now() < expiry_time:
+                    logger.debug(f"Cache hit for {cache_key}")
+                    return response
+                # Remove expired cache entries
+                del _view_cache[cache_key]
+            
+            # Generate the response
+            response = f(*args, **kwargs)
+            
+            # Cache the response if it's not an error
+            if isinstance(response, tuple):
+                # Response with status code
+                if response[1] == 200:
+                    _view_cache[cache_key] = (datetime.now() + timedelta(seconds=timeout), response)
+            else:
+                # Regular response
+                _view_cache[cache_key] = (datetime.now() + timedelta(seconds=timeout), response)
+            
+            return response
+        return wrapper
+    return decorator
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -307,6 +347,7 @@ def create_final_image_route():
         return jsonify({'error': f'Failed to create final image: {str(e)}'}), 500
 
 @app.route('/shared/<share_code>')
+@cache_view(timeout=3600)  # Cache shared views for 1 hour
 def view_shared_creation(share_code):
     """View a shared creation by its share code."""
     try:
@@ -324,6 +365,7 @@ def view_shared_creation(share_code):
         return render_template('error.html', message="An error occurred while loading this creation"), 500
 
 @app.route('/gallery')
+@cache_view(timeout=300)  # Cache gallery for 5 minutes
 def gallery():
     """View a gallery of recent creations."""
     try:
