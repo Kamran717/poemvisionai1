@@ -336,25 +336,31 @@ def generate_poem(analysis_results, poem_type, emphasis, custom_terms='', custom
                 return poem
         except requests.exceptions.Timeout:
             logger.error("Gemini API request timed out")
+            # Create a timeout-specific cache key
+            timeout_key = hashlib.md5(f"timeout:{poem_type}:{str(emphasis)}:{custom_terms}".encode('utf-8')).hexdigest()
             poem = _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
             # Store in cache before returning
-            _poem_cache[cache_key] = poem
-            logger.info(f"Stored timeout fallback poem in cache with key: {cache_key[:8]}...")
+            _poem_cache[timeout_key] = poem
+            logger.info(f"Stored timeout fallback poem in cache with key: {timeout_key[:8]}...")
             return poem
         except requests.exceptions.RequestException as e:
             logger.error(f"Request exception when calling Gemini API: {str(e)}")
+            # Create a request error-specific cache key
+            error_key = hashlib.md5(f"reqerror:{poem_type}:{str(emphasis)}:{custom_terms}".encode('utf-8')).hexdigest()
             poem = _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
             # Store in cache before returning
-            _poem_cache[cache_key] = poem
-            logger.info(f"Stored request error fallback poem in cache with key: {cache_key[:8]}...")
+            _poem_cache[error_key] = poem
+            logger.info(f"Stored request error fallback poem in cache with key: {error_key[:8]}...")
             return poem
     
     except Exception as e:
         logger.error(f"Error generating poem: {str(e)}", exc_info=True)
+        # Create a simple cache key for the error fallback case
+        simple_key = hashlib.md5(f"{poem_type}:{str(emphasis)}:{custom_terms}".encode('utf-8')).hexdigest()
         poem = _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
         # Store in cache before returning
-        _poem_cache[cache_key] = poem
-        logger.info(f"Stored general error fallback poem in cache with key: {cache_key[:8]}...")
+        _poem_cache[simple_key] = poem
+        logger.info(f"Stored general error fallback poem in cache with key: {simple_key[:8]}...")
         return poem
 
 def _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms='', custom_category=''):

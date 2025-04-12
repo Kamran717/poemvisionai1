@@ -35,16 +35,17 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         # Format poem lines
         poem_lines = poem_text.strip().split("\n")
         
-        # Increase font size dramatically to match example
-        # Using a much larger font size (60-70pt) based on the example
-        poem_font_size = max(60, int(target_width * 0.08))
+        # Increase font size dramatically to exactly match the example image
+        # The example shows very large text (72-80pt based on image width)
+        poem_font_size = max(72, int(target_width * 0.10))
         
-        # Calculate line height - in the example there's good spacing between lines
-        poem_line_height = int(poem_font_size * 1.3)
+        # Calculate line height - in the example there's much more spacing between lines
+        # with clean whitespace between each line of the poem
+        poem_line_height = int(poem_font_size * 1.5)
         
         # Calculate poem area height - much larger to accommodate bigger text
-        # The example shows the text taking up most of the white area
-        poem_padding = 80
+        # The example shows more whitespace at top and bottom
+        poem_padding = 100
         poem_height = (len(poem_lines) * poem_line_height) + poem_padding * 2
         
         # Create a new image with white background
@@ -91,11 +92,15 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
             font = ImageFont.load_default()
         
         # Set starting position for the poem text
-        # In the example, there's a good amount of spacing after the image
+        # In the example, the text starts with more whitespace after the image
         text_y = int(image_area_height + poem_padding)
         
         # Draw each line of the poem with large text
         for i, line in enumerate(poem_lines):
+            # Skip empty lines but maintain spacing
+            if not line.strip():
+                continue
+                
             # Calculate text width for centering
             try:
                 line_width = draw.textlength(line, font=font)
@@ -106,8 +111,9 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
                 except:
                     line_width = len(line) * (poem_font_size * 0.6)
             
-            # Center each line of text like in the example
-            text_x = (new_width - line_width) // 2
+            # Left align text with a left margin like in the example
+            # The example shows left-aligned text with a margin
+            text_x = int(new_width * 0.15)  # About 15% margin from left edge
             line_y = text_y + (i * poem_line_height)
             
             # Draw the poem text in pure black like in the example
