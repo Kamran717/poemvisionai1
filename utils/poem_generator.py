@@ -49,6 +49,22 @@ POEM_ADJECTIVES = {
     "anniversary": [
         "enduring", "devoted", "faithful", "committed", "treasured",
         "everlasting", "steadfast", "cherished", "timeless", "loving"
+    ],
+    "twinkle": [
+        "sparkling", "twinkling", "shining", "glimmering", "glistening",
+        "gleaming", "dazzling", "luminous", "magical", "bright"
+    ],
+    "roses": [
+        "vivid", "colorful", "charming", "playful", "classic", 
+        "romantic", "witty", "clever", "traditional", "catchy"
+    ],
+    "knock-knock": [
+        "funny", "cheeky", "silly", "playful", "jolly", "comical",
+        "witty", "ridiculous", "amusing", "quirky"
+    ],
+    "pickup": [
+        "charming", "flirty", "smooth", "humorous", "cheeky",
+        "clever", "witty", "bold", "playful", "daring"
     ]
 }
 
@@ -104,6 +120,26 @@ POEM_TEMPLATES = {
         "Years together, like {element1} and {element2},\nA bond both {adj1} and {adj2}.\nOur love, a {element3} that never fades,\nGrows stronger, between me and you.",
         
         "Our journey, like {element1},\nContinues {adj1} and {adj2}.\nWith {element2} and {element3} we've shared,\nOur love remains forever true."
+    ],
+    "twinkle": [
+        "Twinkle, twinkle, {element1},\nHow I wonder what you are.\nUp above the {element2} so high,\nLike a {adj1} {element3} in the sky.\nTwinkle, twinkle, {element1},\nHow {adj2} you really are.",
+        
+        "Twinkle, twinkle, little {element1},\n{adj1} wonder in the night.\nOver {element2}, beyond {element3},\nSuch a {adj2}, {adj3} sight.\nTwinkle, twinkle, little {element1},\nGuide us with your gentle light."
+    ],
+    "roses": [
+        "Roses are red,\n{element1}s are {adj1},\nWhen I see {element2},\nI think of you.\nWith {element3} so {adj2},\nAnd moments so true,\nLife is better,\nWith you in the crew.",
+        
+        "Roses are red,\n{element1}s are blue,\n{element2} is {adj1},\nAnd so are you.\nWith {element3} around,\nAnd skies so {adj2},\nThis poem sounds better,\nThan it probably should do."
+    ],
+    "knock-knock": [
+        "Knock, knock!\nWho's there?\n{element1}.\n{element1} who?\n{element1} you glad I didn't say {element2}?\nThe {element3} is {adj1} and {adj2},\nJust like this silly rhyme!",
+        
+        "Knock, knock!\nWho's there?\n{element1} and {element2}.\n{element1} and {element2} who?\nI didn't know {element3} could be so {adj1} and {adj2}!\nNow that's a joke you won't forget!"
+    ],
+    "pickup": [
+        "Are you a {element1}? Because you've got me feeling {adj1}.\nIf {element2} could talk, they'd say you're {adj2}.\nI'd cross an ocean of {element3} just to meet someone like you.\nCall me cheesy, but this pickup line was inspired by your photo!",
+        
+        "Is your name {element1}? Because you're absolutely {adj1}.\nDo you believe in love at first {element2}?\nBecause my heart just went {adj2} when I saw you.\nI've been looking for {element3} all my life, but you're even better.\nThis poem is smoother than my actual pickup lines!"
     ]
 }
 
@@ -375,7 +411,11 @@ def _create_prompt(analysis_results, poem_type, emphasis):
         "anniversary": "Craft an exquisite tribute to enduring love and commitment in the tradition of Elizabeth Barrett Browning and Pablo Neruda. Explore the depth of shared experiences, the beauty of lasting connection, and the precious nature of time spent together.",
         "nature": "Create a sensory-rich nature poem in the tradition of Mary Oliver, William Wordsworth, and Robert Frost that reveals the profound beauty, wisdom, and tranquility found in the natural world. Use precise observations and reverent language to elevate the ordinary to the sublime.",
         "friendship": "Compose a heartfelt celebration of profound human connection that explores the depth, loyalty, and transformative power of true friendship. Weave together moments of joy, support through darkness, and the unique understanding that exists between kindred spirits.",
-        "free verse": "Craft an organic, flowing masterpiece in the tradition of Walt Whitman, T.S. Eliot, and Pablo Neruda that breaks free from conventional rhyme schemes and meters. Allow rhythm to emerge naturally from emotional intensity and the inherent music of carefully chosen words."
+        "free verse": "Craft an organic, flowing masterpiece in the tradition of Walt Whitman, T.S. Eliot, and Pablo Neruda that breaks free from conventional rhyme schemes and meters. Allow rhythm to emerge naturally from emotional intensity and the inherent music of carefully chosen words.",
+        "twinkle": "Create a whimsical, melodic poem in the style of 'Twinkle, Twinkle, Little Star.' Maintain the rhythm and structure of the classic nursery rhyme, but personalize it based on the image elements. Incorporate the distinctive 'Twinkle, twinkle' repetition at the beginning and end while creating a sense of wonder and childlike curiosity.",
+        "roses": "Craft a clever variation of the classic 'Roses are red, violets are blue' poem format. Start with the iconic opening lines, then subvert expectations with surprising, witty, or meaningful follow-up lines that relate to the image. Maintain the simple rhyme scheme while adding personality and charm.",
+        "knock-knock": "Create a playful knock-knock joke in poem form, incorporating elements from the image. Begin with the traditional 'Knock, knock / Who's there?' format, then craft a punchline that cleverly relates to the visual elements. Add a brief poetic conclusion that ties the joke together with the image's mood or theme.",
+        "pickup": "Compose an intentionally cheesy but charming pickup line poem that creatively incorporates elements from the image. Balance humor and genuine compliments while maintaining a playful, flirtatious tone. Create lines that are memorable, witty, and just the right amount of over-the-top to bring a smile."
     }
     
     if poem_type in poem_type_instructions:
