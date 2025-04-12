@@ -170,6 +170,9 @@ main {
 #finalCreation {
     max-width: 100%;
     max-height: 70vh;
+    object-fit: contain;
+    width: auto;
+    height: auto;
 }
 
 /* Final Image Container */
@@ -192,5 +195,22 @@ main {
     
     .poem-text {
         font-size: 16px;
+    }
+    
+    /* Ensure the final image displays properly on mobile */
+    #finalCreation {
+        max-width: 100% !important;
+        max-height: 100% !important;
+        width: auto !important;
+        height: auto !important;
+        transform: none !important; /* Prevent any rotation */
+        object-position: center;
+        margin: 0 auto;
+        display: block;
+    }
+    
+    /* Increase padding for better spacing */
+    #step4 .card-body {
+        padding: 1rem;
     }
 }

@@ -28,7 +28,7 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         # Determine poem text size and layout
         padding = 40  # Padding around the image and text
         poem_height = 0
-        poem_font_size = 36  # Increased from 24 to 36 for better readability
+        poem_font_size = 72  # Increased by 100% from 36 to 72 for better readability
         
         # Create a larger canvas for the framed image with poem
         # The height is increased to accommodate the poem text below the image
@@ -136,7 +136,7 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         
         # Draw each line of the poem with improved visibility
         text_color = (0, 0, 0)  # Black text
-        text_shadow_color = (150, 150, 150)  # Light gray shadow for better contrast
+        text_shadow_color = (230, 230, 230)  # Lighter shadow for stronger contrast
         
         for i, line in enumerate(poem_lines):
             # Calculate text position for this line
@@ -144,10 +144,15 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
             text_x = (new_width - line_width) // 2
             line_y = text_y + (i * poem_line_height)
             
-            # First draw a subtle shadow/outline to improve readability
-            draw.text((text_x+1, line_y+1), line, fill=text_shadow_color, font=font)
+            # Draw a stronger shadow/outline to improve readability
+            # Draw shadow in multiple positions for better visibility
+            shadow_offset = 2  # Increased shadow offset for stronger effect
+            draw.text((text_x+shadow_offset, line_y+shadow_offset), line, fill=text_shadow_color, font=font)
+            draw.text((text_x+shadow_offset, line_y-shadow_offset), line, fill=text_shadow_color, font=font)
+            draw.text((text_x-shadow_offset, line_y+shadow_offset), line, fill=text_shadow_color, font=font)
+            draw.text((text_x-shadow_offset, line_y-shadow_offset), line, fill=text_shadow_color, font=font)
             
-            # Then draw the main text
+            # Then draw the main text on top
             draw.text((text_x, line_y), line, fill=text_color, font=font)
         
         # Convert the image to bytes
