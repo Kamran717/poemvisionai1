@@ -1,15 +1,39 @@
 import io
 import logging
 import os
+import hashlib
+import functools
 from PIL import Image, ImageDraw, ImageFont
 
 # Set up logging
 logger = logging.getLogger(__name__)
 
+# Cache for framed images to improve performance
+# This prevents regenerating the same image multiple times
+IMAGE_CACHE = {}
+
+# Maximum number of images to keep in cache to prevent memory issues
+MAX_CACHE_SIZE = 50
+
+# Function to trim cache if it gets too large
+def trim_cache():
+    """
+    Remove oldest entries from cache if it exceeds the maximum size.
+    """
+    global IMAGE_CACHE
+    if len(IMAGE_CACHE) > MAX_CACHE_SIZE:
+        # Sort keys by time added and keep only the newest MAX_CACHE_SIZE entries
+        logger.info(f"Trimming image cache from {len(IMAGE_CACHE)} to {MAX_CACHE_SIZE} entries")
+        # Simple approach: just clear half the cache when it gets full
+        keys_to_remove = list(IMAGE_CACHE.keys())[:(len(IMAGE_CACHE) - MAX_CACHE_SIZE)]
+        for key in keys_to_remove:
+            del IMAGE_CACHE[key]
+
 def create_framed_image(image_bytes, poem_text, frame_style="classic"):
     """
     Create a minimalist image with the poem text below it.
     Matches the example design with large, spaced text with the image dominant.
+    Implements caching to avoid regenerating the same image multiple times.
     
     Args:
         image_bytes: The binary data of the image
@@ -19,6 +43,20 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
     Returns:
         bytes: The binary data of the created image with poem
     """
+    # Create a cache key based on the input parameters
+    # Use blake2b hash for faster hashing of large binary data
+    cache_key = hashlib.blake2b(digest_size=16)
+    cache_key.update(image_bytes)
+    cache_key.update(poem_text.encode('utf-8'))
+    cache_key.update(frame_style.encode('utf-8'))
+    key = cache_key.hexdigest()
+    
+    # Check if we have this image already cached
+    if key in IMAGE_CACHE:
+        logger.info(f"Using cached framed image for key: {key[:8]}...")
+        return IMAGE_CACHE[key]
+    
+    # Not in cache, generate the image
     try:
         # Load the image
         img = Image.open(io.BytesIO(image_bytes))
@@ -229,7 +267,18 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         # Save the final image with high quality
         output = io.BytesIO()
         final_img.save(output, format="JPEG", quality=95)
-        return output.getvalue()
+        
+        # Get the image data
+        result = output.getvalue()
+        
+        # Store in cache for future use
+        IMAGE_CACHE[key] = result
+        logger.info(f"Stored framed image in cache with key: {key[:8]}...")
+        
+        # Check if we need to trim the cache
+        trim_cache()
+        
+        return result
     
     except Exception as e:
         logger.error(f"Error creating final image: {str(e)}")
