@@ -31,6 +31,11 @@ main {
     color: #34A853;
 }
 
+.brand-text .ai-purple {
+    color: #6f42c1; /* Bootstrap 5 primary purple color */
+    font-weight: 700;
+}
+
 .brand-text .regular {
     color: inherit;
 }
