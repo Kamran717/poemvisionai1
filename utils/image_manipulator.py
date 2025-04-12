@@ -33,7 +33,8 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         # Create a larger canvas for the framed image with poem
         # The height is increased to accommodate the poem text below the image
         poem_lines = poem_text.strip().split("\n")
-        poem_line_height = poem_font_size + 12  # Font size plus line spacing
+        # Ensure line height is 1.5 times the font size for readability
+        poem_line_height = int(poem_font_size * 1.5)  # 1.5x font size for better line spacing
         poem_height = (len(poem_lines) * poem_line_height) + (padding * 2)
         
         # Calculate margins based on frame style
@@ -111,9 +112,9 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         
         # Add poem text below the image
         try:
-            # Try to load one of several potential fonts, in order of preference
-            try_fonts = ["DejaVuSerif.ttf", "DejaVuSans.ttf", "LiberationSerif-Regular.ttf", 
-                         "Times New Roman.ttf", "arial.ttf", "Arial.ttf"]
+            # Try to load one of several potential sans-serif fonts for better screen readability
+            try_fonts = ["DejaVuSans.ttf", "arial.ttf", "Arial.ttf", "Helvetica.ttf", "Verdana.ttf",
+                        "LiberationSans-Regular.ttf", "DejaVuSerif.ttf", "LiberationSerif-Regular.ttf"]
             
             font = None
             for font_name in try_fonts:
@@ -140,22 +141,38 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         text_color = (0, 0, 0)  # Black text
         text_shadow_color = (230, 230, 230)  # Lighter shadow for stronger contrast
         
+        # Stronger contrast for better readability
+        background_rect_padding = 10  # Padding around text
+        
+        # Draw a background rectangle for the entire poem area
+        # for better text contrast and readability
+        poem_bg_y = text_y - background_rect_padding
+        poem_bg_height = (len(poem_lines) * poem_line_height) + (background_rect_padding * 2)
+        draw.rectangle(
+            (frame_width, poem_bg_y, new_width - frame_width, poem_bg_y + poem_bg_height),
+            fill=(248, 248, 248),  # Very light gray background
+            outline=None
+        )
+        
         for i, line in enumerate(poem_lines):
             # Calculate text position for this line
             line_width = draw.textlength(line, font=font)
             text_x = (new_width - line_width) // 2
             line_y = text_y + (i * poem_line_height)
             
-            # Draw a stronger shadow/outline to improve readability
-            # Draw shadow in multiple positions for better visibility
-            shadow_offset = 2  # Increased shadow offset for stronger effect
-            draw.text((text_x+shadow_offset, line_y+shadow_offset), line, fill=text_shadow_color, font=font)
-            draw.text((text_x+shadow_offset, line_y-shadow_offset), line, fill=text_shadow_color, font=font)
-            draw.text((text_x-shadow_offset, line_y+shadow_offset), line, fill=text_shadow_color, font=font)
-            draw.text((text_x-shadow_offset, line_y-shadow_offset), line, fill=text_shadow_color, font=font)
+            # Create a background rectangle just for this line for better contrast
+            line_bg_padding = 10
+            draw.rectangle(
+                (text_x - line_bg_padding, 
+                 line_y - line_bg_padding,
+                 text_x + line_width + line_bg_padding,
+                 line_y + poem_font_size + line_bg_padding),
+                fill=(250, 250, 250),  # Almost white background
+                outline=None
+            )
             
-            # Then draw the main text on top
-            draw.text((text_x, line_y), line, fill=text_color, font=font)
+            # Draw the main text with improved contrast - no need for shadows with the background
+            draw.text((text_x, line_y), line, fill=(0, 0, 0), font=font)  # Pure black text
         
         # Convert the image to bytes
         output_buffer = io.BytesIO()
