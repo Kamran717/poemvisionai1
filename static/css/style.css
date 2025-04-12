@@ -9,6 +9,32 @@ main {
     flex: 1;
 }
 
+/* Google-like brand colors */
+.brand-text {
+    font-weight: bold;
+    display: inline-block;
+}
+
+.brand-text .blue {
+    color: #4285F4;
+}
+
+.brand-text .red {
+    color: #EA4335;
+}
+
+.brand-text .yellow {
+    color: #FBBC05;
+}
+
+.brand-text .green {
+    color: #34A853;
+}
+
+.brand-text .regular {
+    color: inherit;
+}
+
 /* Upload Area Styles */
 .upload-area {
     border: 2px dashed var(--bs-secondary);
