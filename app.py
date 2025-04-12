@@ -281,11 +281,38 @@ def generate_poem_route():
         poem_type = data.get('poemType', 'free verse')
         emphasis = data.get('emphasis', [])
         
-        # Get custom prompt info if provided
+        # Get structured custom prompt info if provided
         custom_prompt = data.get('customPrompt', {})
-        custom_terms = custom_prompt.get('terms', '')
         custom_category = custom_prompt.get('category', '')
         
+        # Check if we're using structured prompt format
+        if custom_category == 'structured':
+            # Extract structured fields
+            name = custom_prompt.get('name', '')
+            place = custom_prompt.get('place', '')
+            emotion = custom_prompt.get('emotion', '')
+            action = custom_prompt.get('action', '')
+            additional = custom_prompt.get('additional', '')
+            
+            # Combine structured fields into a formatted prompt
+            structured_terms = []
+            if name:
+                structured_terms.append(f"Name: {name}")
+            if place:
+                structured_terms.append(f"Place: {place}")
+            if emotion:
+                structured_terms.append(f"Emotion: {emotion}")
+            if action:
+                structured_terms.append(f"Action: {action}")
+            if additional:
+                structured_terms.append(f"Additional details: {additional}")
+                
+            custom_terms = "; ".join(structured_terms)
+            logger.debug(f"Structured prompt created: {custom_terms}")
+        else:
+            # Legacy format - single text field
+            custom_terms = custom_prompt.get('terms', '')
+            
         # Generate the poem using the LLM with custom prompt if provided
         if custom_terms:
             # Pass the custom prompt data to the poem generator

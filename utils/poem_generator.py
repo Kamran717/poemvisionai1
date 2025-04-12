@@ -905,25 +905,65 @@ Think deeply about the essential qualities that make {poem_type} poetry powerful
         emphasis_text = ", ".join(emphasis)
         prompt += f"Please emphasize these elements in the poem: {emphasis_text}. "
         
-    # Add custom terms if provided
+    # Handle structured or traditional custom prompt format
     if custom_terms:
-        # Clean up the terms (remove extra spaces, etc.)
-        cleaned_terms = custom_terms.strip()
+        # Check if we have a structured prompt (contains field identifiers)
+        if custom_category == 'structured' and any(x in custom_terms for x in ['Name:', 'Place:', 'Emotion:', 'Action:']):
+            # Structured format with specific fields - parse it
+            prompt += "This poem should incorporate the following personalized details:\n\n"
+            
+            # Split by semicolons to get each field
+            structured_fields = custom_terms.split(';')
+            
+            for field in structured_fields:
+                field = field.strip()
+                if field:
+                    if field.startswith('Name:'):
+                        name_value = field.replace('Name:', '').strip()
+                        if name_value:
+                            prompt += f"- Include this specific name or person: '{name_value}'. Make them a central character in the poem.\n"
+                    
+                    elif field.startswith('Place:'):
+                        place_value = field.replace('Place:', '').strip()
+                        if place_value:
+                            prompt += f"- Set the poem in or mention this specific place: '{place_value}'.\n"
+                    
+                    elif field.startswith('Emotion:'):
+                        emotion_value = field.replace('Emotion:', '').strip()
+                        if emotion_value:
+                            prompt += f"- Convey this specific emotion throughout the poem: '{emotion_value}'.\n"
+                    
+                    elif field.startswith('Action:'):
+                        action_value = field.replace('Action:', '').strip()
+                        if action_value:
+                            prompt += f"- Include this specific action or activity: '{action_value}'.\n"
+                    
+                    elif field.startswith('Additional details:'):
+                        additional_value = field.replace('Additional details:', '').strip()
+                        if additional_value:
+                            prompt += f"- Also incorporate these additional details: '{additional_value}'.\n"
+            
+            prompt += "\nThese personalized elements should be woven naturally throughout the poem, making it feel custom-created for these specific details.\n"
         
-        # Different instructions based on the category
-        category_descriptions = {
-            'names': "people who are meaningful to the recipient",
-            'places': "locations or places that have significance",
-            'emotions': "emotional states or feelings",
-            'activities': "activities or actions",
-            'other': "custom elements"
-        }
-        
-        # Get the category description or use a default
-        category_desc = category_descriptions.get(custom_category, "personal elements")
-        
-        # Add to prompt
-        prompt += f"It is very important to incorporate these specific {category_desc}: '{cleaned_terms}' into the poem. Make these terms central to the theme and meaning of the poem. "
+        else:
+            # Traditional free-form custom prompt
+            # Clean up the terms (remove extra spaces, etc.)
+            cleaned_terms = custom_terms.strip()
+            
+            # Different instructions based on the category
+            category_descriptions = {
+                'names': "people who are meaningful to the recipient",
+                'places': "locations or places that have significance",
+                'emotions': "emotional states or feelings",
+                'activities': "activities or actions",
+                'other': "custom elements"
+            }
+            
+            # Get the category description or use a default
+            category_desc = category_descriptions.get(custom_category, "personal elements")
+            
+            # Add to prompt
+            prompt += f"It is very important to incorporate these specific {category_desc}: '{cleaned_terms}' into the poem. Make these terms central to the theme and meaning of the poem. "
     
     # Add specific instructions based on poem type
     poem_type_instructions = {
