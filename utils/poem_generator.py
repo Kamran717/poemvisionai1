@@ -246,6 +246,20 @@ POEM_TEMPLATES = {
         "In loving memory of days with {element1},\nNow {adj1} in our hearts you stay.\nYour smile, like {element2}, we remember,\nIn a {adj2}, gentle way.\nThrough {element3} your spirit lingers,\nThough from earth you've gone away.",
         
         "We remember you through {element1},\n{adj1} memories that never fade.\nLike {element2}, your light still shines,\n{adj2} love that you conveyed.\nIn {element3} we feel your presence,\nThe legacy of life you made."
+    ],
+    
+    # Farewell poem templates
+    "farewell": [
+        "As paths diverge like {element1},\nI bid farewell with thoughts {adj1} and true.\nOur memories, bright as {element2},\nRemain {adj2} through and through.\nMay {element3} guide your journey ahead,\nUntil our paths cross anew.",
+        
+        "The time has come to say goodbye,\nLike {element1}, {adj1} yet bittersweet.\nThe {element2} reminds me of our days,\nWith moments {adj2} and fleet.\nThrough {element3} I send my parting wish,\nFor fortune you will meet."
+    ],
+    
+    # Newborn poem templates
+    "newborn": [
+        "Welcome little one, like {element1},\nSo {adj1} and new to this world.\nYour eyes shine brighter than {element2},\nAs your story becomes {adj2} unfurled.\nLike {element3}, full of wonder and promise,\nA precious life has been uncurled.",
+        
+        "A miracle arrives like {element1},\n{adj1} and perfect in every way.\nTiny fingers reach for {element2},\nIn a {adj2}, gentle sway.\nWith {element3} watching over you,\nYou grow stronger each new day."
     ]
 }
 
@@ -538,6 +552,22 @@ def _apply_poem_template(key_elements, poem_type, custom_terms=''):
             "grieving": "memorial",
             "honoring": "memorial",
             
+            # Farewell type mappings
+            "goodbye": "farewell",
+            "parting": "farewell",
+            "adieu": "farewell",
+            "departure": "farewell",
+            "leaving": "farewell",
+            "separation": "farewell",
+            
+            # Newborn type mappings
+            "baby": "newborn",
+            "infant": "newborn",
+            "birth": "newborn",
+            "arrival": "newborn",
+            "new life": "newborn",
+            "blessing": "newborn",
+            
             # Fun format mappings
             "stars": "twinkle",
             "red": "roses",
@@ -627,6 +657,12 @@ def _apply_poem_template(key_elements, poem_type, custom_terms=''):
                 
                 # Memorial poem ending
                 "memorial": f"\nIn loving memory of {', '.join(new_terms)},\nForever in our hearts you'll be.",
+                
+                # Farewell poem ending
+                "farewell": f"\nAs we bid farewell to {', '.join(new_terms)},\nOur memories forever stay.",
+                
+                # Newborn poem ending
+                "newborn": f"\nWelcoming {', '.join(new_terms)} with joy and love,\nOn this special blessed day.",
                 
                 # Fun format endings
                 "twinkle": f"\nTwinkle twinkle {new_terms[0] if new_terms else 'star'},\nHow I wonder what you are.",
@@ -774,6 +810,11 @@ def _create_prompt(analysis_results, poem_type, emphasis, custom_terms='', custo
         "nature": "Create a sensory-rich nature poem in the tradition of Mary Oliver, William Wordsworth, and Robert Frost that reveals the profound beauty, wisdom, and tranquility found in the natural world. Use precise observations and reverent language to elevate the ordinary to the sublime.",
         "friendship": "Compose a heartfelt celebration of profound human connection that explores the depth, loyalty, and transformative power of true friendship. Weave together moments of joy, support through darkness, and the unique understanding that exists between kindred spirits.",
         "free verse": "Craft an organic, flowing masterpiece in the tradition of Walt Whitman, T.S. Eliot, and Pablo Neruda that breaks free from conventional rhyme schemes and meters. Allow rhythm to emerge naturally from emotional intensity and the inherent music of carefully chosen words.",
+        
+        # Farewell poem instructions
+        "farewell": "Craft a poignant farewell poem in the tradition of Robert Frost, Emily Dickinson, and Rabindranath Tagore that captures the bittersweet nature of parting. Balance feelings of sadness and loss with gratitude for shared memories and hope for future reunions. Express the depth of affection that remains despite physical separation.",
+        
+        "newborn": "Compose a gentle, joyful celebration of new life that captures the wonder, innocence, and infinite potential of a newborn child. Blend tender observations with profound reflections on the miracle of birth, the beginning of a unique journey, and the pure love that surrounds a new arrival.",
         
         # Religious poem instructions
         "religious-islam": "Create a reverent Islamic poem that reflects the beauty of faith and divine guidance. Incorporate themes of tawhid (oneness of Allah), compassion, mercy, and the natural world as signs of Allah's creation. Use respectful language that honors Islamic traditions and values while finding spiritual meaning in the image.",
