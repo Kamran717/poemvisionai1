@@ -50,25 +50,80 @@ def index():
 def analyze_image_route():
     """Analyze the uploaded image using Google Cloud Vision AI."""
     try:
-        # Get the uploaded image from the request
-        if 'image' not in request.files:
-            logger.error("No image file in request")
-            return jsonify({'error': 'No image uploaded. Please try again.'}), 400
+        # Log request content type to help debug
+        logger.info(f"Request content type: {request.content_type}")
         
-        image_file = request.files['image']
+        # Image can be in form data or direct JSON post with base64
+        image_file = None
+        image_data = None
+        file_size = 0
         
-        if image_file.filename == '':
-            logger.error("Empty filename in uploaded file")
-            return jsonify({'error': 'No image selected. Please try again.'}), 400
-        
-        # Log received file type
-        logger.info(f"Received image type: {image_file.content_type}")
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            # Handle form uploads
+            if 'image' not in request.files:
+                logger.error("No image file in multipart request")
+                return jsonify({'error': 'No image uploaded. Please try again.'}), 400
             
-        # Check file size - limit to 5MB
-        image_file.seek(0, os.SEEK_END)
-        file_size = image_file.tell()
-        logger.info(f"Upload file size: {file_size/1024/1024:.2f}MB")
+            image_file = request.files['image']
+            
+            if image_file.filename == '':
+                logger.error("Empty filename in uploaded file")
+                return jsonify({'error': 'No image selected. Please try again.'}), 400
+            
+            # Log received file type
+            logger.info(f"Received image type: {image_file.content_type}")
+                
+            # Check file size - limit to 5MB
+            image_file.seek(0, os.SEEK_END)
+            file_size = image_file.tell()
+            logger.info(f"Upload file size: {file_size/1024/1024:.2f}MB")
+            
+            # Reset file pointer for processing
+            image_file.seek(0)
+            
+            # Read image data
+            image_data = base64.b64encode(image_file.read()).decode('utf-8')
+            
+        elif request.content_type and 'application/json' in request.content_type:
+            # Handle direct JSON posts with base64 data
+            try:
+                json_data = request.get_json()
+                
+                if not json_data or 'image' not in json_data:
+                    logger.error("No image data in JSON request")
+                    return jsonify({'error': 'No image data provided. Please try again.'}), 400
+                
+                # Get the base64 image string, removing data URL prefix if present
+                base64_image = json_data['image']
+                if ',' in base64_image:
+                    base64_image = base64_image.split(',')[1]
+                
+                # Check size of base64 data
+                estimated_size = len(base64_image) * 3 / 4  # Rough estimation
+                file_size = estimated_size
+                logger.info(f"Estimated upload size from base64: {estimated_size/1024/1024:.2f}MB")
+                
+                if estimated_size > 5 * 1024 * 1024:  # 5MB limit
+                    return jsonify({'error': 'Image size exceeds the 5MB limit. Please choose a smaller image.'}), 400
+                
+                # Store the base64 data
+                image_data = base64_image
+                
+                # Create a file-like object for analysis
+                import io
+                image_bytes = base64.b64decode(base64_image)
+                image_file = io.BytesIO(image_bytes)
+                # Add a placeholder filename attribute for logging
+                image_file.filename = "mobile_upload.jpg"
+                
+            except Exception as e:
+                logger.error(f"Error processing JSON image data: {str(e)}", exc_info=True)
+                return jsonify({'error': 'Invalid image data. Please try again.'}), 400
+        else:
+            logger.error(f"Unsupported content type: {request.content_type}")
+            return jsonify({'error': 'Unsupported upload method. Please try again.'}), 400
         
+        # Check file size - limit to 5MB (final check)
         if file_size > 5 * 1024 * 1024:  # 5MB limit
             return jsonify({'error': 'Image size exceeds the 5MB limit. Please choose a smaller image.'}), 400
         

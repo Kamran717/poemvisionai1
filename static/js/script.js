@@ -85,8 +85,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Handle image upload via file input - don't make uploadArea click the input directly
-    // This avoids issues on some mobile browsers
+    // Mobile camera input handling
+    const takePhotoBtn = document.getElementById('takePhotoBtn');
+    const cameraInput = document.createElement('input');
+    cameraInput.type = 'file';
+    cameraInput.accept = 'image/*';
+    cameraInput.capture = 'environment';
+    cameraInput.style.display = 'none';
+    document.body.appendChild(cameraInput);
+    
+    // Add click handlers that won't bubble
+    takePhotoBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        cameraInput.click();
+    });
+    
     const uploadButton = document.querySelector('label[for="imageInput"]');
     if (uploadButton) {
         uploadButton.addEventListener('click', function(e) {
@@ -96,13 +109,22 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Still allow clicking anywhere in the upload area (for desktop)
     uploadArea.addEventListener('click', function(e) {
-        // Only trigger the file input click if the click wasn't on the button
-        if (!e.target.closest('label[for="imageInput"]')) {
+        // Only trigger the file input click if the click wasn't on one of our buttons
+        if (!e.target.closest('label[for="imageInput"]') && 
+            !e.target.closest('#takePhotoBtn')) {
             imageInput.click();
         }
     });
 
+    // Handle file selection from gallery
     imageInput.addEventListener('change', function() {
+        if (this.files.length) {
+            handleImageFile(this.files[0]);
+        }
+    });
+    
+    // Handle file capture from camera
+    cameraInput.addEventListener('change', function() {
         if (this.files.length) {
             handleImageFile(this.files[0]);
         }
@@ -136,7 +158,54 @@ document.addEventListener('DOMContentLoaded', function() {
             uploadedImageContainer.classList.remove('d-none');
             analyzeImageBtn.disabled = false;
         };
+        reader.onerror = function(err) {
+            console.error("FileReader error:", err);
+            showUploadError('Error reading the image file. Please try a different image or method.');
+        };
         reader.readAsDataURL(file);
+    }
+    
+    // Fallback for direct data URI handling (useful for some mobile browsers)
+    function handleImageDataUri(dataUri) {
+        // Reset any previous errors
+        uploadError.classList.add('d-none');
+        
+        // Some validation on the data URI
+        if (!dataUri.startsWith('data:image/')) {
+            showUploadError('Invalid image format. Please upload a JPEG or PNG image.');
+            return;
+        }
+        
+        // Rough size estimation for data URI
+        const estimatedSize = Math.ceil((dataUri.length * 3) / 4);
+        if (estimatedSize > 5 * 1024 * 1024) { // 5MB limit
+            showUploadError('Image size exceeds the 5MB limit. Please choose a smaller image.');
+            return;
+        }
+        
+        // Create a blob from the data URI for later use
+        try {
+            const arr = dataUri.split(',');
+            const mime = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            
+            state.image = new Blob([u8arr], { type: mime });
+        } catch (e) {
+            console.error("Error converting data URI to Blob:", e);
+        }
+        
+        // Display the image preview
+        uploadedImage.src = dataUri;
+        state.imageBase64 = dataUri;
+        uploadArea.classList.add('d-none');
+        uploadedImageContainer.classList.remove('d-none');
+        analyzeImageBtn.disabled = false;
     }
 
     // Display upload error message
@@ -157,7 +226,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Analyze the uploaded image
     analyzeImageBtn.addEventListener('click', function() {
-        if (!state.image) {
+        if (!state.image && !state.imageBase64) {
             showUploadError('Please upload an image first.');
             return;
         }
@@ -166,15 +235,40 @@ document.addEventListener('DOMContentLoaded', function() {
         loadingAnalysis.classList.remove('d-none');
         analyzeImageBtn.disabled = true;
         
-        // Create a FormData object to send the image
-        const formData = new FormData();
-        formData.append('image', state.image);
+        let fetchOptions = {};
+        
+        // Try to use FormData if we have a Blob/File (more reliable)
+        if (state.image instanceof Blob) {
+            console.log("Sending image as FormData");
+            const formData = new FormData();
+            formData.append('image', state.image);
+            
+            fetchOptions = {
+                method: 'POST',
+                body: formData
+            };
+        } 
+        // Fall back to JSON with base64 if we only have imageBase64 (for some mobile browsers)
+        else if (state.imageBase64) {
+            console.log("Sending image as base64 JSON");
+            fetchOptions = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    image: state.imageBase64
+                })
+            };
+        } else {
+            showUploadError('Invalid image data. Please try uploading again.');
+            loadingAnalysis.classList.add('d-none');
+            analyzeImageBtn.disabled = false;
+            return;
+        }
         
         // Send the image to the server for analysis
-        fetch('/analyze-image', {
-            method: 'POST',
-            body: formData
-        })
+        fetch('/analyze-image', fetchOptions)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
