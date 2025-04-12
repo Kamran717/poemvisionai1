@@ -26,15 +26,15 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         original_width, original_height = img.size
         
         # Determine poem text size and layout
-        padding = 40  # Padding around the image and text
+        padding = 30  # Reduced padding around the image and text
         poem_height = 0
-        poem_font_size = 200  # MUCH larger text size for maximum readability
+        poem_font_size = 240  # MUCH larger text size for maximum readability
         
         # Create a larger canvas for the framed image with poem
         # The height is increased to accommodate the poem text below the image
         poem_lines = poem_text.strip().split("\n")
-        # Ensure line height is 1.5 times the font size for readability
-        poem_line_height = int(poem_font_size * 1.5)  # 1.5x font size for better line spacing
+        # Ensure line height is 1.2 times the font size for better spacing and compactness
+        poem_line_height = int(poem_font_size * 1.2)  # Reduced line spacing for compactness
         poem_height = (len(poem_lines) * poem_line_height) + (padding * 2)
         
         # Calculate margins based on frame style
@@ -161,7 +161,7 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         
         # Calculate the area for poem text
         poem_bg_y = text_y - background_rect_padding*2
-        poem_bg_height = (len(poem_lines) * poem_line_height) + (background_rect_padding * 4)
+        poem_bg_height = (len(poem_lines) * poem_line_height) + (background_rect_padding * 2)  # Reduce vertical spacing
         
         # Find the longest line to ensure all text fits within a symmetrical area
         max_line_width = 0
@@ -169,8 +169,8 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
             line_width = draw.textlength(line, font=font)
             max_line_width = max(max_line_width, line_width)
         
-        # Add padding around the longest line
-        poem_area_width = max_line_width + (padding * 4)
+        # Add minimal padding around the longest line for a more compact look
+        poem_area_width = max_line_width + (padding * 2)  # Reduced horizontal padding
         poem_bg_x1 = (new_width - poem_area_width) // 2
         poem_bg_x2 = poem_bg_x1 + poem_area_width
         
@@ -202,15 +202,24 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
             text_x = (new_width - line_width) // 2
             line_y = text_y + (i * poem_line_height)
             
-            # Draw text with a bolder appearance for improved readability
+            # Draw text with a much bolder appearance for improved readability
             # Use pure black text on white background for maximum contrast and clarity
             
             # Create bold effect by drawing the text multiple times with slight offsets
-            for offset in range(1, 2):  # Smaller offset for a more refined bold effect
+            for offset in range(1, 3):  # Increased range for bolder effect
+                # Draw horizontal offsets (left and right)
                 draw.text((text_x - offset, line_y), line, fill=(0, 0, 0), font=font)
                 draw.text((text_x + offset, line_y), line, fill=(0, 0, 0), font=font)
+                
+                # Draw vertical offsets (up and down)
                 draw.text((text_x, line_y - offset), line, fill=(0, 0, 0), font=font)
                 draw.text((text_x, line_y + offset), line, fill=(0, 0, 0), font=font)
+                
+                # Draw diagonal offsets for even more boldness
+                draw.text((text_x - offset, line_y - offset), line, fill=(0, 0, 0), font=font)
+                draw.text((text_x + offset, line_y + offset), line, fill=(0, 0, 0), font=font)
+                draw.text((text_x - offset, line_y + offset), line, fill=(0, 0, 0), font=font)
+                draw.text((text_x + offset, line_y - offset), line, fill=(0, 0, 0), font=font)
             
             # Draw the main text - pure black with high contrast against white
             draw.text((text_x, line_y), line, fill=(0, 0, 0), font=font)
