@@ -9,7 +9,8 @@ logger = logging.getLogger(__name__)
 
 # Get the API key from environment variable
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
+# Updated to use v1 API instead of v1beta since the endpoint has changed
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent"
 
 # Poem adjectives by type
 POEM_ADJECTIVES = {

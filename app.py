@@ -59,11 +59,11 @@ def analyze_image_route():
         if image_file.filename == '':
             return jsonify({'error': 'No image selected'}), 400
             
-        # Check file size - limit to 10MB
+        # Check file size - limit to 5MB
         image_file.seek(0, os.SEEK_END)
         file_size = image_file.tell()
-        if file_size > 10 * 1024 * 1024:
-            return jsonify({'error': 'Image too large. Please upload an image smaller than 10MB'}), 400
+        if file_size > 5 * 1024 * 1024:  # 5MB limit
+            return jsonify({'error': 'Image size exceeds the 5MB limit. Please choose a smaller image.'}), 400
         
         # Generate a shorter unique ID for this analysis
         analysis_id = str(uuid.uuid4()).split('-')[0]  # Just use the first part of the UUID
