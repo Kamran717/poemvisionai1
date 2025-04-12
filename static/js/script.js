@@ -563,8 +563,18 @@ document.addEventListener('DOMContentLoaded', function() {
             const finalImageSrc = `data:image/jpeg;base64,${data.finalImage}`;
             finalCreation.src = finalImageSrc;
             
-            // Set up the download button
+            // Set up the download button properly with correct attributes
             downloadBtn.href = finalImageSrc;
+            downloadBtn.setAttribute('download', 'my-custom-poem.jpg');
+            
+            // Also store the data for sharing
+            state.finalImageSrc = finalImageSrc;
+            if (data.shareCode) {
+                console.log('Share code received:', data.shareCode);
+                state.shareCode = data.shareCode;
+            } else {
+                console.error('No share code received from server');
+            }
             
             // Move to the next step
             goToStep(4);
@@ -607,4 +617,77 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Select the first frame option by default
     frameOptions[0].classList.add('selected');
+    
+    // Sharing functionality
+    const shareUrlInput = document.getElementById('shareUrlInput');
+    const copyLinkBtn = document.getElementById('copyLinkBtn');
+    const shareWhatsApp = document.getElementById('shareWhatsApp');
+    const shareInstagram = document.getElementById('shareInstagram');
+    const shareFacebook = document.getElementById('shareFacebook');
+    const shareTikTok = document.getElementById('shareTikTok');
+    
+    // Function to handle sharing when the creation is complete
+    function setupSharing(shareCode) {
+        const shareUrl = `${window.location.origin}/shared/${shareCode}`;
+        
+        // Set the share URL in the input
+        shareUrlInput.value = shareUrl;
+        
+        // Copy link button
+        copyLinkBtn.addEventListener('click', function() {
+            shareUrlInput.select();
+            document.execCommand('copy');
+            
+            // Visual feedback
+            copyLinkBtn.innerHTML = '<i class="fas fa-check"></i>';
+            setTimeout(() => {
+                copyLinkBtn.innerHTML = '<i class="fas fa-copy"></i>';
+            }, 2000);
+        });
+        
+        // WhatsApp sharing
+        shareWhatsApp.addEventListener('click', function() {
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent('Check out my custom poem generated from an image: ' + shareUrl)}`;
+            window.open(whatsappUrl, '_blank');
+        });
+        
+        // Instagram doesn't support direct sharing links, open Instagram and instruct to paste
+        shareInstagram.addEventListener('click', function() {
+            alert('Instagram requires manual sharing. We\'ve copied the link for you to paste into Instagram.');
+            shareUrlInput.select();
+            document.execCommand('copy');
+            
+            // Try to open Instagram
+            window.open('https://www.instagram.com/', '_blank');
+        });
+        
+        // Facebook sharing
+        shareFacebook.addEventListener('click', function() {
+            const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+            window.open(facebookUrl, '_blank');
+        });
+        
+        // TikTok doesn't have a direct sharing API, open TikTok and instruct to paste
+        shareTikTok.addEventListener('click', function() {
+            alert('TikTok requires manual sharing. We\'ve copied the link for you to paste into TikTok.');
+            shareUrlInput.select();
+            document.execCommand('copy');
+            
+            // Try to open TikTok
+            window.open('https://www.tiktok.com/', '_blank');
+        });
+    }
+    
+    // Watch for changes to the state's shareCode
+    Object.defineProperty(state, 'shareCode', {
+        set: function(newShareCode) {
+            this._shareCode = newShareCode;
+            if (newShareCode) {
+                setupSharing(newShareCode);
+            }
+        },
+        get: function() {
+            return this._shareCode;
+        }
+    });
 });

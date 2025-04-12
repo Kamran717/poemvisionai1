@@ -318,11 +318,55 @@
                                     <img id="finalCreation" class="img-fluid rounded shadow-lg" alt="Final creation with poem">
                                 </div>
                                 <div class="row justify-content-center">
-                                    <div class="col-md-6">
-                                        <div class="d-grid gap-2">
+                                    <div class="col-md-8">
+                                        <div class="d-grid gap-2 mb-3">
                                             <a id="downloadBtn" href="#" class="btn btn-success" download="custom-poem.jpg">
                                                 <i class="fas fa-download me-2"></i>Download
                                             </a>
+                                        </div>
+                                        
+                                        <!-- Share Section -->
+                                        <div class="card mb-3">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">Share Your Creation</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row mb-3">
+                                                    <div class="col-12">
+                                                        <div class="input-group">
+                                                            <input type="text" id="shareUrlInput" class="form-control" readonly>
+                                                            <button id="copyLinkBtn" class="btn btn-outline-secondary">
+                                                                <i class="fas fa-copy"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="d-flex justify-content-center gap-2">
+                                                    <!-- WhatsApp -->
+                                                    <button id="shareWhatsApp" class="btn btn-success share-btn">
+                                                        <i class="fab fa-whatsapp fa-lg"></i>
+                                                    </button>
+                                                    
+                                                    <!-- Instagram (will open Instagram, user needs to paste) -->
+                                                    <button id="shareInstagram" class="btn btn-danger share-btn">
+                                                        <i class="fab fa-instagram fa-lg"></i>
+                                                    </button>
+                                                    
+                                                    <!-- Facebook -->
+                                                    <button id="shareFacebook" class="btn btn-primary share-btn">
+                                                        <i class="fab fa-facebook fa-lg"></i>
+                                                    </button>
+                                                    
+                                                    <!-- TikTok (will open TikTok, user needs to paste) -->
+                                                    <button id="shareTikTok" class="btn btn-dark share-btn">
+                                                        <i class="fab fa-tiktok fa-lg"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="d-grid">
                                             <button id="startOverBtn" class="btn btn-outline-primary">
                                                 <i class="fas fa-redo me-2"></i>Create Another
                                             </button>

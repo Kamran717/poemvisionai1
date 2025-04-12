@@ -49,7 +49,48 @@
                     </div>
                 </div>
                 
-                <div class="text-center mt-4">
+                <!-- Share Section -->
+                <div class="card mt-4 mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Share This Creation</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-8 mx-auto">
+                                <div class="input-group">
+                                    <input type="text" id="sharedUrlInput" class="form-control" readonly value="{{ url_for('view_shared_creation', share_code=creation.share_code, _external=True) }}">
+                                    <button id="copySharedLinkBtn" class="btn btn-outline-secondary">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-center gap-2">
+                            <!-- WhatsApp -->
+                            <a href="https://wa.me/?text={{ 'Check out this custom poem I found: ' + url_for('view_shared_creation', share_code=creation.share_code, _external=True)|urlencode }}" target="_blank" class="btn btn-success share-btn">
+                                <i class="fab fa-whatsapp fa-lg"></i>
+                            </a>
+                            
+                            <!-- Instagram (will open Instagram, user needs to paste) -->
+                            <button onclick="copyAndOpenInstagram()" class="btn btn-danger share-btn">
+                                <i class="fab fa-instagram fa-lg"></i>
+                            </button>
+                            
+                            <!-- Facebook -->
+                            <a href="https://www.facebook.com/sharer/sharer.php?u={{ url_for('view_shared_creation', share_code=creation.share_code, _external=True)|urlencode }}" target="_blank" class="btn btn-primary share-btn">
+                                <i class="fab fa-facebook fa-lg"></i>
+                            </a>
+                            
+                            <!-- TikTok (will open TikTok, user needs to paste) -->
+                            <button onclick="copyAndOpenTikTok()" class="btn btn-dark share-btn">
+                                <i class="fab fa-tiktok fa-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center">
                     <a href="/" class="btn btn-primary me-2">
                         <i class="fas fa-plus me-1"></i> Create Your Own
                     </a>
