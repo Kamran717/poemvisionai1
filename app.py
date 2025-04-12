@@ -6,6 +6,7 @@ import uuid
 import json
 import string
 import random
+import re
 from utils.image_analyzer import analyze_image
 from utils.poem_generator import generate_poem
 from utils.image_manipulator import create_framed_image
@@ -142,6 +143,7 @@ def analyze_image_route():
         logger.info(f"Analyzing image: {image_file.filename} ({file_size/1024:.1f} KB)")
         
         try:
+            # Get raw analysis results from Google Vision API
             analysis_results = analyze_image(image_file)
             
             # Check if we got valid analysis results
@@ -149,6 +151,9 @@ def analyze_image_route():
                 error_msg = analysis_results.get('_error', 'Unknown error during image analysis')
                 logger.error(f"Image analysis failed: {error_msg}")
                 return jsonify({'error': f'Error analyzing image: {error_msg}'}), 500
+            
+            # Clean up and deduplicate the analysis results to avoid redundant terms
+            analysis_results = deduplicate_elements(analysis_results)
                 
         except Exception as analysis_error:
             logger.error(f"Exception during image analysis: {str(analysis_error)}", exc_info=True)
@@ -320,6 +325,119 @@ def gallery():
     except Exception as e:
         logger.error(f"Error loading gallery: {str(e)}", exc_info=True)
         return render_template('error.html', message="An error occurred while loading the gallery"), 500
+
+# Helper function to deduplicate and simplify elements for emphasis
+def deduplicate_elements(analysis_results):
+    """
+    Clean up analysis results to remove redundant and similar terms.
+    
+    Args:
+        analysis_results (dict): The analysis results from Google Vision AI
+        
+    Returns:
+        dict: Modified analysis results with cleaned lists
+    """
+    if not analysis_results:
+        return analysis_results
+    
+    # Copy the results to avoid modifying the original
+    results = analysis_results.copy()
+    
+    # Create a mapping of similar terms to normalize them
+    term_mapping = {
+        # Transportation/vehicles
+        'watercraft': 'boat', 'yacht': 'boat', 'superyacht': 'boat', 'motorboat': 'boat',
+        'naval architecture': 'boat', 'sailboat': 'boat', 'ship': 'boat',
+        'boats and boating--equipment and supplies': 'boat equipment',
+        'automobile': 'car', 'vehicle': 'car', 'motor vehicle': 'car',
+        
+        # Clothing
+        'miniskirt': 'skirt', 'pants': 'clothing', 'jeans': 'clothing',
+        'shirt': 'clothing', 't-shirt': 'clothing', 'jacket': 'clothing',
+        'outerwear': 'clothing', 'dress': 'clothing', 'hat': 'headwear',
+        'cap': 'headwear', 'footwear': 'shoes', 'sneakers': 'shoes',
+        
+        # Animals
+        'puppy': 'dog', 'canine': 'dog', 'kitten': 'cat', 'feline': 'cat',
+        
+        # Nature
+        'flower': 'flowers', 'tree': 'trees', 'plant': 'plants',
+        'cloud': 'sky', 'sunset': 'sky', 'sunrise': 'sky',
+        
+        # Activities
+        'recreation': 'leisure', 'vacation': 'leisure', 'travel': 'leisure',
+        'trip': 'journey', 'tour': 'journey',
+        
+        # Emotions
+        'joy': 'happiness', 'smile': 'happiness', 'happy': 'happiness',
+        'sorrow': 'sadness', 'sad': 'sadness',
+        'anger': 'angry', 'furious': 'angry',
+        
+        # Locations
+        'beach': 'shore', 'coast': 'shore', 'seaside': 'shore',
+        'mountain': 'mountains', 'hill': 'mountains',
+        
+        # Food
+        'meal': 'food', 'dinner': 'food', 'lunch': 'food', 'breakfast': 'food',
+        'dish': 'food', 'cuisine': 'food',
+        
+        # Generic
+        'photograph': 'photo', 'picture': 'photo', 'image': 'photo'
+    }
+    
+    # Function to normalize a term using the mapping
+    def normalize_term(term):
+        # Convert to lowercase for consistent matching
+        term_lower = term.lower()
+        # Direct matches
+        if term_lower in term_mapping:
+            return term_mapping[term_lower]
+        # Partial matches (for compound terms)
+        for key, value in term_mapping.items():
+            if key in term_lower:
+                return value
+        # Keep original if no mapping
+        return term
+    
+    # Process labels
+    if 'labels' in results and results['labels']:
+        normalized_labels = []
+        seen_terms = set()
+        
+        for label in results['labels']:
+            norm_term = normalize_term(label['description'])
+            # Only add if we haven't seen this normalized term yet
+            if norm_term not in seen_terms:
+                seen_terms.add(norm_term)
+                # Use the normalized term but keep original score
+                normalized_labels.append({
+                    'description': norm_term.title(),  # Capitalize first letter
+                    'score': label['score']
+                })
+        
+        # Replace with the deduplicated list
+        results['labels'] = normalized_labels
+    
+    # Process objects
+    if 'objects' in results and results['objects']:
+        normalized_objects = []
+        seen_terms = set()
+        
+        for obj in results['objects']:
+            norm_term = normalize_term(obj['name'])
+            # Only add if we haven't seen this normalized term yet
+            if norm_term not in seen_terms:
+                seen_terms.add(norm_term)
+                # Use the normalized term but keep original score
+                normalized_objects.append({
+                    'name': norm_term.title(),  # Capitalize first letter
+                    'score': obj['score']
+                })
+        
+        # Replace with the deduplicated list
+        results['objects'] = normalized_objects
+    
+    return results
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
