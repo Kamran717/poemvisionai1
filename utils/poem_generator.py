@@ -71,6 +71,15 @@ POEM_ADJECTIVES = {
         "reflective", "honoring", "remembering", "eternal", "respectful", "cherished",
         "commemorative", "treasured", "heartfelt", "solemn", "dignified", "enduring"
     ],
+    # New categories
+    "farewell": [
+        "bittersweet", "poignant", "wistful", "gentle", "nostalgic", "reflective", 
+        "hopeful", "tender", "grateful", "meaningful", "enduring", "soulful"
+    ],
+    "newborn": [
+        "precious", "innocent", "tender", "pure", "miraculous", "delicate", 
+        "joyful", "hopeful", "gentle", "wondrous", "fragile", "blessed"
+    ],
     "birthday": [
         "festive", "joyful", "celebratory", "special", "memorable",
         "milestone", "hopeful", "cheerful", "delightful", "happy"
@@ -321,11 +330,16 @@ def generate_poem(analysis_results, poem_type, emphasis, custom_terms='', custom
         prompt = _create_prompt(analysis_results, poem_type, emphasis, custom_terms, custom_category)
         logger.debug(f"Generated prompt: {prompt}")
         
-        # Prepare the API request
+        # Prepare the API request with enhanced parameters for poetry generation
         headers = {
             "Content-Type": "application/json",
         }
         
+        # Specifically tune parameters for poetry:
+        # - Increased temperature for more creative language
+        # - Higher topK to consider more diverse word choices
+        # - Slightly reduced topP to focus on more likely language constructs for poetry
+        # - Increased maxOutputTokens to allow for longer, more expressive poems
         data = {
             "contents": [{
                 "parts": [{
@@ -333,11 +347,19 @@ def generate_poem(analysis_results, poem_type, emphasis, custom_terms='', custom
                 }]
             }],
             "generationConfig": {
-                "temperature": 0.7,
-                "topK": 40,
-                "topP": 0.95,
-                "maxOutputTokens": 800,
-            }
+                "temperature": 0.85,  # Higher temperature for more creative, diverse outputs
+                "topK": 60,           # Consider more options for each token
+                "topP": 0.92,         # Slightly more focused than default
+                "maxOutputTokens": 1000, # More space for poetic expression
+                "stopSequences": ["Title:", "--", "###"], # Prevent the model from adding titles or separators
+            },
+            "safetySettings": [
+                # Keep these relatively permissive for poetic expression while preventing harmful content
+                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"}
+            ]
         }
         
         # Make the API request - try the main endpoint first, then the fallback
@@ -361,38 +383,138 @@ def generate_poem(analysis_results, poem_type, emphasis, custom_terms='', custom
                     timeout=15
                 )
             
-            # Process the response
+            # Process the response with enhanced error handling and parsing
             if response.status_code == 200:
-                response_data = response.json()
-                logger.debug(f"Received successful response from Gemini API")
-                
-                # Extract the poem from the response
-                # Check both response formats - v1beta and v1 have slightly different structures
-                if 'candidates' in response_data and len(response_data['candidates']) > 0:
-                    if 'content' in response_data['candidates'][0] and 'parts' in response_data['candidates'][0]['content']:
-                        parts = response_data['candidates'][0]['content']['parts']
-                        if parts and 'text' in parts[0]:
-                            generated_text = parts[0]['text']
-                            poem = generated_text.strip()
+                try:
+                    response_data = response.json()
+                    logger.debug(f"Received successful response from Gemini API")
+                    
+                    # Extract the poem from the response
+                    # Handling multiple possible response formats
+                    
+                    # Format 1: v1beta API format
+                    if 'candidates' in response_data and len(response_data['candidates']) > 0:
+                        if 'content' in response_data['candidates'][0] and 'parts' in response_data['candidates'][0]['content']:
+                            parts = response_data['candidates'][0]['content']['parts']
+                            if parts and 'text' in parts[0]:
+                                generated_text = parts[0]['text']
+                                # Clean up the poem - remove any title-like elements
+                                poem_lines = generated_text.strip().split('\n')
+                                
+                                # If the first line looks like a title (short, possibly followed by empty line)
+                                if len(poem_lines) > 2 and len(poem_lines[0]) < 50 and not poem_lines[1].strip():
+                                    poem_lines = poem_lines[2:]  # Skip potential title and blank line
+                                
+                                # Join the remaining lines
+                                poem = '\n'.join(poem_lines).strip()
+                                
+                                # Post-process: clean up extra quotation marks at beginning/end that the model sometimes adds
+                                poem = poem.strip('"')
+                                
+                                # Store in cache before returning
+                                _poem_cache[cache_key] = poem
+                                logger.info(f"Stored poem in cache with key: {cache_key[:8]}...")
+                                return poem
+                    
+                    # Format 2: Alternative API format
+                    elif 'result' in response_data and 'response' in response_data['result']:
+                        generated_text = response_data['result']['response'].strip()
+                        # Clean up the poem - remove any title-like elements
+                        poem_lines = generated_text.strip().split('\n')
+                        
+                        # If the first line looks like a title (short, possibly followed by empty line)
+                        if len(poem_lines) > 2 and len(poem_lines[0]) < 50 and not poem_lines[1].strip():
+                            poem_lines = poem_lines[2:]  # Skip potential title and blank line
+                        
+                        # Join the remaining lines
+                        poem = '\n'.join(poem_lines).strip()
+                        
+                        # Post-process: clean up extra quotation marks at beginning/end that the model sometimes adds
+                        poem = poem.strip('"')
+                        
+                        # Store in cache before returning
+                        _poem_cache[cache_key] = poem
+                        logger.info(f"Stored poem in cache with key: {cache_key[:8]}...")
+                        return poem
+                    
+                    # Format 3: Direct text in the response (simplified format)
+                    elif 'text' in response_data:
+                        generated_text = response_data['text'].strip()
+                        # Clean up the poem - remove any title-like elements
+                        poem_lines = generated_text.strip().split('\n')
+                        
+                        # If the first line looks like a title (short, possibly followed by empty line)
+                        if len(poem_lines) > 2 and len(poem_lines[0]) < 50 and not poem_lines[1].strip():
+                            poem_lines = poem_lines[2:]  # Skip potential title and blank line
+                        
+                        # Join the remaining lines
+                        poem = '\n'.join(poem_lines).strip()
+                        
+                        # Post-process: clean up extra quotation marks at beginning/end that the model sometimes adds
+                        poem = poem.strip('"')
+                        
+                        # Store in cache before returning
+                        _poem_cache[cache_key] = poem
+                        logger.info(f"Stored poem in cache with key: {cache_key[:8]}...")
+                        return poem
+                    
+                    # More flexible search through the response for text content
+                    else:
+                        # Dump the response to string and search for it
+                        response_str = json.dumps(response_data)
+                        possible_poems = []
+                        
+                        # Look for common patterns in the response that might contain the poem
+                        for key in ['text', 'content', 'message', 'poem', 'generated']:
+                            if f'"{key}":' in response_str:
+                                # Extract the content after this key
+                                start_idx = response_str.find(f'"{key}":') + len(f'"{key}":')
+                                if response_str[start_idx].strip() == '"':
+                                    # It's a string value
+                                    end_idx = response_str.find('"', start_idx + 1)
+                                    while end_idx > 0 and response_str[end_idx-1] == '\\':
+                                        end_idx = response_str.find('"', end_idx + 1)
+                                    if end_idx > 0:
+                                        possible_poems.append(response_str[start_idx+1:end_idx])
+                        
+                        if possible_poems:
+                            # Use the longest poem found as likely the most complete
+                            poem = max(possible_poems, key=len).strip()
+                            # Clean up the poem - remove any title-like elements
+                            poem_lines = poem.strip().split('\n')
+                            
+                            # If the first line looks like a title (short, possibly followed by empty line)
+                            if len(poem_lines) > 2 and len(poem_lines[0]) < 50 and not poem_lines[1].strip():
+                                poem_lines = poem_lines[2:]  # Skip potential title and blank line
+                            
+                            # Join the remaining lines
+                            poem = '\n'.join(poem_lines).strip()
+                            
+                            # Post-process: clean up extra quotation marks at beginning/end that the model sometimes adds
+                            poem = poem.strip('"')
+                            
                             # Store in cache before returning
                             _poem_cache[cache_key] = poem
                             logger.info(f"Stored poem in cache with key: {cache_key[:8]}...")
                             return poem
-                # Also check for alternative response format
-                elif 'result' in response_data and 'response' in response_data['result']:
-                    poem = response_data['result']['response'].strip()
+                    
+                    # If we get here, the response structure was unexpected
+                    logger.error(f"Unexpected response structure: {json.dumps(response_data)[:500]}...")
+                    poem = _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
                     # Store in cache before returning
                     _poem_cache[cache_key] = poem
-                    logger.info(f"Stored poem in cache with key: {cache_key[:8]}...")
+                    logger.info(f"Stored template poem in cache with key: {cache_key[:8]}...")
                     return poem
                 
-                # If we get here, the response structure was unexpected
-                logger.error(f"Unexpected response structure: {json.dumps(response_data)[:500]}...")
-                poem = _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
-                # Store in cache before returning
-                _poem_cache[cache_key] = poem
-                logger.info(f"Stored template poem in cache with key: {cache_key[:8]}...")
-                return poem
+                except (json.JSONDecodeError, KeyError, TypeError) as e:
+                    # Error parsing the JSON response
+                    logger.error(f"Error parsing API response: {str(e)}")
+                    logger.error(f"Raw response: {response.text[:500]}...")
+                    poem = _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
+                    # Store in cache before returning
+                    _poem_cache[cache_key] = poem
+                    logger.info(f"Stored JSON parse error fallback poem in cache with key: {cache_key[:8]}...")
+                    return poem
             else:
                 logger.error(f"API error: {response.status_code} - {response.text[:200]}...")
                 # Log the request that was sent for debugging
@@ -696,8 +818,14 @@ def _create_prompt(analysis_results, poem_type, emphasis, custom_terms='', custo
     Returns:
         str: The generated prompt
     """
-    # Start with the basic instruction
-    prompt = f"You are a master poet renowned for your extraordinary ability to craft beautiful, profound poetry. Create a stunning {poem_type} poem based on an image. Channel the style of the great poets while maintaining your unique voice. "
+    # Start with a much more detailed, expert-level instruction
+    prompt = f"""You are a world-renowned poetry master with decades of experience studying and crafting the finest poetry across all cultures and traditions. Your knowledge spans classical works from Tang Dynasty Chinese poetry to Persian Ghazals, from Shakespearean sonnets to Japanese haiku, from ancient Greek epics to contemporary free verse. You understand the subtle nuances that make poetry resonant, impactful, and timeless.
+
+As an expert in global poetic traditions, you will now create an exceptional {poem_type} poem based on an image analysis. Channel the specific techniques, cadence, metaphors, and emotional depths found in the world's greatest {poem_type} poetry, while maintaining a distinctive voice that speaks to modern sensibilities.
+
+Think deeply about the essential qualities that make {poem_type} poetry powerful and incorporate those elements. Use literary techniques like metaphor, simile, personification, and symbolism with the masterful precision of poets like Pablo Neruda, Emily Dickinson, Rumi, Maya Angelou, William Butler Yeats, Li Bai, and Rabindranath Tagore.
+
+"""
     
     # Add information about what's in the image
     if 'labels' in analysis_results and analysis_results['labels']:
@@ -843,8 +971,23 @@ def _create_prompt(analysis_results, poem_type, emphasis, custom_terms='', custo
         prompt += poem_type_instructions[poem_type] + " "
     
     # Final formatting instructions
-    prompt += "The poem should be 8-16 lines long. Use powerful, evocative language with rich metaphors and vivid imagery derived from what's in the image. "
-    prompt += "Incorporate compelling rhythm and flow, with carefully chosen words that create musicality. Employ literary techniques like alliteration, assonance, or symbolism where appropriate. "
-    prompt += "Make the poem profoundly emotionally resonant, thought-provoking, and meaningful with layers of interpretation. Do not include a title or any explanatory text, just the exquisite poem itself."
+    prompt += """The poem should be 8-16 lines long with the following expert-level characteristics:
+
+1. Linguistic Craftsmanship: Use powerful, evocative language with precisely chosen words that create rich sensory experiences. Each word should be deliberately selected for its sound, connotation, and emotional resonance.
+
+2. Advanced Figurative Language: Create sophisticated metaphors, similes, and symbolism that transform concrete elements from the image into profound poetic expressions. Develop these figures throughout the poem for deeper meaning.
+
+3. Masterful Technique: Employ advanced poetic techniques such as:
+   - Controlled rhythm and meter appropriate to the poem type
+   - Deliberate sound patterns (alliteration, assonance, consonance)
+   - Strategic line breaks and stanza structures
+   - Effective repetition and variation
+   - Subtle rhyme schemes (if appropriate to the style)
+
+4. Emotional Depth: Create multiple layers of emotion and meaning that resonate with universal human experiences while remaining authentic to the specific image.
+
+5. Cultural Resonance: Subtly incorporate elements that connect to rich poetic traditions around the world. Draw from the techniques of master poets who have written brilliant examples of this type of poetry.
+
+Do not include a title or any explanatory text, just the exquisite poem itself. The poem should feel as though it was written by one of the world's greatest poets, expressing deep truths about human experience through the lens of this specific image."""
     
     return prompt
