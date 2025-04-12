@@ -216,6 +216,24 @@ main {
     max-width: 100%;
 }
 
+/* Social sharing buttons */
+.share-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    margin: 0.25rem;
+}
+
+.share-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
 /* Final Image Container */
 #finalCreationContainer {
     background-color: var(--bs-dark);

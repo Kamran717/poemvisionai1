@@ -757,6 +757,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const shareInstagram = document.getElementById('shareInstagram');
     const shareFacebook = document.getElementById('shareFacebook');
     const shareTikTok = document.getElementById('shareTikTok');
+    const shareTwitter = document.getElementById('shareTwitter');
+    const sharePinterest = document.getElementById('sharePinterest');
+    const shareEmail = document.getElementById('shareEmail');
     
     // Function to handle sharing when the creation is complete
     function setupSharing(shareCode) {
@@ -807,6 +810,30 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Try to open TikTok
             window.open('https://www.tiktok.com/', '_blank');
+        });
+        
+        // Twitter sharing
+        shareTwitter.addEventListener('click', function() {
+            const twitterText = 'Check out my custom poem generated from an image with Poem Vision AI:';
+            const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(twitterText)}&url=${encodeURIComponent(shareUrl)}`;
+            window.open(twitterUrl, '_blank');
+        });
+        
+        // Pinterest sharing
+        sharePinterest.addEventListener('click', function() {
+            // Get the final image URL
+            const imageUrl = document.getElementById('finalCreation').src;
+            const description = 'Custom AI-generated poem based on my image from Poem Vision AI';
+            const pinterestUrl = `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(shareUrl)}&media=${encodeURIComponent(imageUrl)}&description=${encodeURIComponent(description)}`;
+            window.open(pinterestUrl, '_blank');
+        });
+        
+        // Email sharing
+        shareEmail.addEventListener('click', function() {
+            const subject = 'Check out my custom poem from Poem Vision AI';
+            const body = `I created this custom poem from an image using Poem Vision AI! Check it out here: ${shareUrl}`;
+            const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            window.open(mailtoUrl);
         });
     }
     
