@@ -185,26 +185,27 @@
                                                 <!-- Counter will be inserted here by JavaScript -->
                                             </div>
                                             
-                                            <!-- Personalization Section - Using Inline Styles -->
-                                            <div class="mb-4 p-4 rounded border shadow-sm" style="background-color: #ffffff !important; border: 2px solid rgba(111, 66, 193, 0.3) !important; border-radius: 8px !important;">
-                                                <h5 class="mb-3" style="color: #222222 !important; font-weight: 700;">
-                                                    <i class="fas fa-magic me-2" style="color: #6f42c1 !important;"></i>Make It More Personal
+                                            <!-- Personalization Section - Dark Theme Compatible -->
+                                            <div class="mb-4 p-4 border rounded bg-dark bg-opacity-25 shadow-sm">
+                                                <h5 class="mb-3 text-light">
+                                                    <i class="fas fa-magic me-2 text-purple"></i>Make It More Personal
                                                 </h5>
-                                                <p style="color: #555 !important; font-size: 16px;">Let us know what you'd like included in your poem.</p>
+                                                <p class="text-light opacity-75 small">Let us know what you'd like included in your poem.</p>
                                                 
                                                 <div class="mb-3">
                                                     <div class="d-flex justify-content-between align-items-center mb-2">
-                                                        <label for="customPromptInput" class="form-label mb-0" style="font-weight: 500; font-size: 16px; color: #222222 !important;">
-                                                            <i class="fas fa-pen me-1" style="color: #6f42c1 !important;"></i> Custom Prompt
-                                                            <a href="#" data-bs-toggle="tooltip" title="This helps guide the poem to include exactly what matters to you.">
-                                                                <i class="fas fa-info-circle" style="color: #6f42c1 !important;"></i>
+                                                        <label for="customPromptInput" class="form-label mb-0 text-light small">
+                                                            <i class="fas fa-pen me-1 text-info"></i> Custom Prompt
+                                                            <a href="#" data-bs-toggle="tooltip" class="text-light" 
+                                                               title="This helps guide the poem to include exactly what matters to you.">
+                                                                <i class="fas fa-info-circle"></i>
                                                             </a>
                                                         </label>
-                                                        <small class="character-counter" style="color: #555 !important; font-size: 14px; background-color: rgba(0, 0, 0, 0.04) !important; padding: 2px 6px; border-radius: 12px;">0/300 characters</small>
+                                                        <small class="character-counter bg-dark bg-opacity-25 px-2 py-1 rounded text-light">0/300 characters</small>
                                                     </div>
                                                     
                                                     <div class="mb-2">
-                                                        <select id="customPromptCategory" class="form-select mb-2" style="font-size: 16px; padding: 8px; display: block; width: 100%; background-color: #ffffff !important; color: #222222 !important; border: 1px solid #ced4da !important;">
+                                                        <select id="customPromptCategory" class="form-select form-select-sm mb-2 bg-dark text-light border-secondary">
                                                             <option value="names">Names of people or pets</option>
                                                             <option value="places">Specific locations or places</option>
                                                             <option value="emotions">Emotions or themes</option>
@@ -212,42 +213,36 @@
                                                             <option value="other">Personal requests/special words</option>
                                                         </select>
                                                         
-                                                        <textarea class="form-control" id="customPromptInput" rows="2" maxlength="300" 
-                                                            style="width: 100%; padding: 10px; font-size: 16px; border: 1px solid #ced4da; border-radius: 4px; background-color: #ffffff !important; color: #222222 !important;"
+                                                        <textarea class="form-control bg-dark text-light border-secondary" id="customPromptInput" rows="2" maxlength="300" 
                                                             placeholder="Type any custom names, emotions, themes, or words you'd like us to include. For example: 'Add my dog's name Max and talk about how much I miss him.'"></textarea>
                                                     </div>
                                                     
-                                                    <small class="form-text" style="color: #555 !important; font-size: 14px; display: block; margin-top: 5px;">
+                                                    <small class="form-text text-light opacity-75 fst-italic">
                                                         Your custom input will be blended with our AI analysis to create a more personalized poem.
                                                     </small>
                                                 </div>
                                                 
                                                 <!-- Quick Suggestion Chips -->
                                                 <div class="mt-3">
-                                                    <p class="mb-2 small" style="color: #555 !important; font-size: 14px; font-weight: 500;">Quick suggestions:</p>
-                                                    <div class="d-flex flex-wrap gap-2" style="gap: 8px;">
-                                                        <button type="button" class="btn btn-sm prompt-chip" 
-                                                            style="border: 1px solid #0d6efd; color: #0d6efd; background: white; padding: 5px 10px; border-radius: 20px; font-size: 14px; margin: 2px;"
+                                                    <p class="mb-2 text-light small">Quick suggestions:</p>
+                                                    <div class="d-flex flex-wrap gap-2">
+                                                        <button type="button" class="btn btn-sm btn-outline-primary prompt-chip"
                                                             data-category="names" data-prompt="Add name of person in photo">
                                                             <i class="fas fa-user me-1"></i> Name a Person
                                                         </button>
-                                                        <button type="button" class="btn btn-sm prompt-chip" 
-                                                            style="border: 1px solid #dc3545; color: #dc3545; background: white; padding: 5px 10px; border-radius: 20px; font-size: 14px; margin: 2px;"
+                                                        <button type="button" class="btn btn-sm btn-outline-danger prompt-chip"
                                                             data-category="emotions" data-prompt="love, passion, romance">
                                                             <i class="fas fa-heart me-1"></i> Add Love Theme
                                                         </button>
-                                                        <button type="button" class="btn btn-sm prompt-chip" 
-                                                            style="border: 1px solid #ffc107; color: #6c4a00; background: white; padding: 5px 10px; border-radius: 20px; font-size: 14px; margin: 2px;"
+                                                        <button type="button" class="btn btn-sm btn-outline-warning prompt-chip"
                                                             data-category="activities" data-prompt="celebrating birthday">
                                                             <i class="fas fa-birthday-cake me-1"></i> Mention Birthday
                                                         </button>
-                                                        <button type="button" class="btn btn-sm prompt-chip" 
-                                                            style="border: 1px solid #0dcaf0; color: #055160; background: white; padding: 5px 10px; border-radius: 20px; font-size: 14px; margin: 2px;"
+                                                        <button type="button" class="btn btn-sm btn-outline-info prompt-chip"
                                                             data-category="places" data-prompt="describe this location">
                                                             <i class="fas fa-map-marker-alt me-1"></i> Describe Place
                                                         </button>
-                                                        <button type="button" class="btn btn-sm prompt-chip" 
-                                                            style="border: 1px solid #198754; color: #198754; background: white; padding: 5px 10px; border-radius: 20px; font-size: 14px; margin: 2px;"
+                                                        <button type="button" class="btn btn-sm btn-outline-success prompt-chip"
                                                             data-category="other" data-prompt="meaningful memory">
                                                             <i class="fas fa-star me-1"></i> Add Special Word
                                                         </button>

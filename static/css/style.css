@@ -230,158 +230,40 @@ main {
     box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* Force Light Theme - This completely overrides Bootstrap's dark theme for the section */
-.light-theme {
-    background-color: #ffffff !important;
-    border: 2px solid rgba(111, 66, 193, 0.3) !important;
-    border-radius: 8px !important;
-    color: #222222 !important;
+/* Dark theme-compatible personalization styles */
+.text-purple {
+    color: #a78bfa !important;
 }
 
-.light-theme * {
-    color: #222222 !important;
-}
-
-.light-theme .form-control, 
-.light-theme .form-select,
-.light-theme textarea {
-    background-color: #ffffff !important;
-    color: #222222 !important;
-    border: 1px solid #ced4da !important;
-}
-
-.light-theme .form-select option {
-    background-color: #ffffff !important;
-    color: #222222 !important;
-}
-
-.light-theme label {
-    color: #222222 !important;
-    font-weight: 500 !important;
-}
-
-.personalization-section {
-    background-color: #ffffff !important;
-    border: 2px solid rgba(111, 66, 193, 0.3) !important;
-    border-radius: 8px !important;
-}
-
-.personalization-section * {
-    color: #222222 !important;
-}
-
-.personalization-section .form-select,
-.personalization-section .form-control,
-.personalization-section textarea,
-.personalization-section [data-bs-theme="light"] .form-select,
-.personalization-section [data-bs-theme="light"] .form-control,
-.personalization-section [data-bs-theme="light"] textarea,
-[data-bs-theme="light"] .form-select,
-[data-bs-theme="light"] .form-control,
-[data-bs-theme="light"] textarea {
-    background-color: #ffffff !important;
-    color: #222222 !important;
-    border-color: #d1d1d1 !important;
-}
-
-.personalization-section .form-select option,
-.personalization-section [data-bs-theme="light"] .form-select option,
-[data-bs-theme="light"] .form-select option {
-    background-color: #ffffff !important;
-    color: #222222 !important;
-}
-
-.personalization-section i.text-purple {
-    color: #6f42c1 !important;
-}
-
-.personalization-title {
-    color: #222222 !important; 
-    font-weight: 700;
-    border-bottom: 2px solid rgba(111, 66, 193, 0.2);
-    padding-bottom: 10px;
-    margin-bottom: 15px;
-}
-
-.personalization-title i {
-    background-color: #6f42c1;
-    color: white;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 8px;
-}
-
-.prompt-chip,
-[data-bs-theme="light"] .prompt-chip,
-.personalization-section .prompt-chip {
+.prompt-chip {
     transition: all 0.2s ease;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     border-radius: 20px;
     font-size: 0.85rem;
-    background-color: #ffffff !important;
-    color: #212529 !important;
-    border: 1px solid rgba(0,0,0,0.2) !important;
 }
 
 .prompt-chip:hover {
     transform: translateY(-2px);
-    box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
 }
 
 .prompt-chip:active {
     transform: translateY(0);
 }
 
-.prompt-chip i,
-[data-bs-theme="light"] .prompt-chip i,
-.personalization-section .prompt-chip i {
-    color: inherit !important;
-}
-
-.light-theme .btn-outline-primary { color: #0d6efd !important; border-color: #0d6efd !important; background-color: #ffffff !important; }
-.light-theme .btn-outline-danger { color: #dc3545 !important; border-color: #dc3545 !important; background-color: #ffffff !important; }
-.light-theme .btn-outline-warning { color: #ffc107 !important; border-color: #ffc107 !important; background-color: #ffffff !important; }
-.light-theme .btn-outline-info { color: #0dcaf0 !important; border-color: #0dcaf0 !important; background-color: #ffffff !important; }
-.light-theme .btn-outline-success { color: #198754 !important; border-color: #198754 !important; background-color: #ffffff !important; }
-
-.light-theme .btn-outline-primary:hover { background-color: #0d6efd !important; color: #ffffff !important; }
-.light-theme .btn-outline-danger:hover { background-color: #dc3545 !important; color: #ffffff !important; }
-.light-theme .btn-outline-warning:hover { background-color: #ffc107 !important; color: #000000 !important; }
-.light-theme .btn-outline-info:hover { background-color: #0dcaf0 !important; color: #000000 !important; }
-.light-theme .btn-outline-success:hover { background-color: #198754 !important; color: #ffffff !important; }
-
-/* Legacy styles for personalization-section class - can be removed later */
-.personalization-section .btn-outline-primary,
-.personalization-section .btn-outline-danger,
-.personalization-section .btn-outline-warning,
-.personalization-section .btn-outline-info,
-.personalization-section .btn-outline-success {
-    background-color: #ffffff !important;
+.character-counter {
+    transition: all 0.3s ease;
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 0.75rem;
 }
 
 textarea#customPromptInput {
-    border-color: #eaeaea;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
     transition: all 0.3s ease;
     border-radius: 8px;
 }
 
 textarea#customPromptInput:focus {
-    border-color: rgba(111, 66, 193, 0.4);
     box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.1);
-}
-
-.character-counter {
-    transition: all 0.3s ease;
-    padding: 2px 6px;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    background-color: rgba(0, 0, 0, 0.04) !important;
-    color: #222222 !important;
 }
 
 /* Responsive Image */
