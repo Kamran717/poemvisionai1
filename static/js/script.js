@@ -834,16 +834,18 @@ document.addEventListener('DOMContentLoaded', function() {
         customPromptInput.addEventListener('input', function() {
             const currentLength = this.value.length;
             const maxLength = this.getAttribute('maxlength') || 300;
-            characterCounter.textContent = `${currentLength}/${maxLength} characters`;
+            characterCounter.textContent = `${currentLength}/${maxLength}`;
             
             // Add visual feedback when approaching the limit
             if (currentLength >= maxLength * 0.9) {
-                characterCounter.classList.add('text-danger');
+                characterCounter.classList.add('bg-danger');
+                characterCounter.classList.remove('bg-dark', 'bg-warning');
             } else if (currentLength >= maxLength * 0.7) {
-                characterCounter.classList.add('text-warning');
-                characterCounter.classList.remove('text-danger');
+                characterCounter.classList.add('bg-warning');
+                characterCounter.classList.remove('bg-dark', 'bg-danger');
             } else {
-                characterCounter.classList.remove('text-warning', 'text-danger');
+                characterCounter.classList.add('bg-dark');
+                characterCounter.classList.remove('bg-warning', 'bg-danger');
             }
         });
         
