@@ -49,6 +49,28 @@ POEM_ADJECTIVES = {
         "festive", "merry", "joyous", "celebratory", "cheerful", "bright",
         "wondrous", "magical", "traditional", "nostalgic"
     ],
+    # Religious poem adjectives
+    "religious-islam": [
+        "reverent", "devout", "faithful", "pious", "spiritual", "blessed",
+        "divine", "merciful", "humble", "sacred", "enlightened", "compassionate"
+    ],
+    "religious-christian": [
+        "devout", "faithful", "blessed", "graceful", "divine", "prayerful",
+        "sacred", "righteous", "holy", "reverent", "redeeming", "virtuous"
+    ],
+    "religious-judaism": [
+        "faithful", "devotional", "traditional", "sacred", "wise", "righteous",
+        "blessed", "honorable", "devout", "reverent", "divine", "covenant"
+    ],
+    "religious-general": [
+        "spiritual", "transcendent", "divine", "celestial", "sacred", "mystical",
+        "ethereal", "enlightened", "reverent", "blessed", "harmonious", "serene"
+    ],
+    # Memorial/RIP poem adjectives
+    "memorial": [
+        "reflective", "honoring", "remembering", "eternal", "respectful", "cherished",
+        "commemorative", "treasured", "heartfelt", "solemn", "dignified", "enduring"
+    ],
     "birthday": [
         "festive", "joyful", "celebratory", "special", "memorable",
         "milestone", "hopeful", "cheerful", "delightful", "happy"
@@ -192,6 +214,38 @@ POEM_TEMPLATES = {
         "{adj1}, {adj1} {element1},\nHow does your {element2} grow?\nWith {adj2} {element3} and pretty bells,\nAll lined up in a row.",
         
         "{element1}, {element1}, {adj1} and bright,\nSitting with {element2} tonight.\nThe {adj2} {element3} went round and round,\nAs they all played out of sight."
+    ],
+    
+    # Religious poem templates
+    "religious-islam": [
+        "In the light of {element1}, I find peace,\nAs {adj1} as the morning prayer.\nThe {element2} reminds me of divine mercy,\nAllah's guidance is everywhere.\nThrough {element3}, {adj2} and true,\nI witness the Creator's care.",
+        
+        "Bismillah, I begin with {element1},\n{adj1} signs of the Most Merciful.\nThe {element2} and {element3} before me,\nCreations so {adj2} and beautiful.\nSubhanAllah, in everything I see,\nThe wonder of the Divine's will."
+    ],
+    
+    "religious-christian": [
+        "The Lord created {element1},\nSo {adj1} in His perfect design.\nLike {element2} speaking to my soul,\nHis love is {adj2} and divine.\nThrough {element3} I feel His presence,\nHis grace forever mine.",
+        
+        "As I gaze upon the {element1},\nI feel God's {adj1} embrace.\nThe {element2} reminds me of His word,\nFilled with {adj2} amazing grace.\nIn {element3} I see His glory,\nAnd His mercy I can trace."
+    ],
+    
+    "religious-judaism": [
+        "Like ancient wisdom, {element1} stands,\n{adj1} as the covenant of old.\nThe {element2} speaks of traditions kept,\nStories {adj2} and bold.\nFrom generation to generation,\nLike {element3}, our faith unfolds.",
+        
+        "Shalom brings {element1} to my heart,\n{adj1} as the Sabbath light.\nThe {element2} reminds me of Torah's truth,\nGuiding with wisdom {adj2} and bright.\nLike {element3} before the Eternal One,\nWe stand in awe of divine might."
+    ],
+    
+    "religious-general": [
+        "The {adj1} spirit moves through {element1},\nLike prayers rising to the sky.\nIn {element2} I feel the sacred pulse,\nA connection {adj2} and high.\nThe divine speaks through {element3},\nIn a language that cannot lie.",
+        
+        "Beyond the veil of {element1},\nLies truth both {adj1} and vast.\nThe soul, like {element2}, seeks the light,\nIn moments {adj2} and steadfast.\nThrough {element3} we glimpse eternity,\nWhere material concerns are surpassed."
+    ],
+    
+    # Memorial poem templates
+    "memorial": [
+        "In loving memory of days with {element1},\nNow {adj1} in our hearts you stay.\nYour smile, like {element2}, we remember,\nIn a {adj2}, gentle way.\nThrough {element3} your spirit lingers,\nThough from earth you've gone away.",
+        
+        "We remember you through {element1},\n{adj1} memories that never fade.\nLike {element2}, your light still shines,\n{adj2} love that you conveyed.\nIn {element3} we feel your presence,\nThe legacy of life you made."
     ]
 }
 
