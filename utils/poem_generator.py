@@ -283,7 +283,7 @@ def _create_prompt(analysis_results, poem_type, emphasis):
         str: The generated prompt
     """
     # Start with the basic instruction
-    prompt = f"Write a beautiful {poem_type} poem based on an image. "
+    prompt = f"You are a master poet renowned for your extraordinary ability to craft beautiful, profound poetry. Create a stunning {poem_type} poem based on an image. Channel the style of the great poets while maintaining your unique voice. "
     
     # Add information about what's in the image
     if 'labels' in analysis_results and analysis_results['labels']:
@@ -328,24 +328,25 @@ def _create_prompt(analysis_results, poem_type, emphasis):
     
     # Add specific instructions based on poem type
     poem_type_instructions = {
-        "love": "Make the poem romantic and heartfelt, focusing on emotions and connections.",
-        "funny": "Make the poem humorous and light-hearted, perhaps using clever wordplay.",
-        "inspirational": "Create an uplifting poem that motivates and inspires, focusing on strength and perseverance.",
-        "angry": "Make the poem intense and passionate, expressing rage, frustration, and strong emotions. Use forceful language and imagery.",
-        "extreme": "Create a bold, intense poem that breaks conventions. Use ALL CAPS for emphasis, dramatic punctuation, and powerful imagery. Be daring and excessive!",
-        "holiday": "Capture the festive spirit and joy of holiday occasions.",
-        "birthday": "Include themes of celebration, growth, and personal milestones.",
-        "anniversary": "Focus on themes of enduring love, commitment, and shared memories.",
-        "nature": "Emphasize the beauty and tranquility of natural elements in the image.",
-        "friendship": "Highlight the bond of friendship, loyalty, and shared experiences.",
-        "free verse": "Create a poem with no specific rhyme scheme or meter, focusing on imagery and emotion."
+        "love": "Craft a deeply romantic and heartfelt masterpiece that captures the essence of profound connection. Channel the passion of Pablo Neruda, the intimacy of Elizabeth Barrett Browning, and the emotional depth of Rumi. Explore the intricate interplay of desire, devotion, and the eternal nature of true love.",
+        "funny": "Create a brilliantly humorous poem with the wit of Ogden Nash, the playful charm of Shel Silverstein, and the clever comedic timing of Dorothy Parker. Employ unexpected twists, delightful wordplay, and subtle irony that brings genuine smiles and laughter.",
+        "inspirational": "Compose an uplifting masterpiece in the tradition of Maya Angelou, Rumi, and Walt Whitman that stirs the soul and ignites inner strength. Weave powerful metaphors of resilience, transformation, and the triumph of the human spirit that will truly motivate and inspire.",
+        "angry": "Forge an intense, passionate work reminiscent of Sylvia Plath and Dylan Thomas that expresses powerful emotions with raw honesty. Create controlled chaos with deliberate rhythms, scorching metaphors, and precisely chosen words that convey genuine rage, frustration, and defiance.",
+        "extreme": "Craft a revolutionary poem that shatters conventions like the works of Allen Ginsberg and Vladimir Mayakovsky. Use ALL CAPS for emphasis, experimental typography, violent imagery, and shocking juxtapositions. Break traditional forms, syntax, and expectations with explosive language that provokes and challenges.",
+        "holiday": "Create an enchanting seasonal masterpiece that captures the festive spirit, traditions, and emotional resonance of holidays. Blend nostalgia, celebration, and the unique atmosphere of special occasions with rich, sensory details.",
+        "birthday": "Compose a memorable celebration of life's journey with themes of growth, reflection, and joyful milestones. Balance the personal significance of aging with universal insights about the passage of time and the gifts each year brings.",
+        "anniversary": "Craft an exquisite tribute to enduring love and commitment in the tradition of Elizabeth Barrett Browning and Pablo Neruda. Explore the depth of shared experiences, the beauty of lasting connection, and the precious nature of time spent together.",
+        "nature": "Create a sensory-rich nature poem in the tradition of Mary Oliver, William Wordsworth, and Robert Frost that reveals the profound beauty, wisdom, and tranquility found in the natural world. Use precise observations and reverent language to elevate the ordinary to the sublime.",
+        "friendship": "Compose a heartfelt celebration of profound human connection that explores the depth, loyalty, and transformative power of true friendship. Weave together moments of joy, support through darkness, and the unique understanding that exists between kindred spirits.",
+        "free verse": "Craft an organic, flowing masterpiece in the tradition of Walt Whitman, T.S. Eliot, and Pablo Neruda that breaks free from conventional rhyme schemes and meters. Allow rhythm to emerge naturally from emotional intensity and the inherent music of carefully chosen words."
     }
     
     if poem_type in poem_type_instructions:
         prompt += poem_type_instructions[poem_type] + " "
     
     # Final formatting instructions
-    prompt += "The poem should be 8-16 lines long. Use vivid imagery and sensory details based on what's in the image. "
-    prompt += "Make the poem emotionally resonant and meaningful. Do not include a title or any explanatory text, just the poem itself."
+    prompt += "The poem should be 8-16 lines long. Use powerful, evocative language with rich metaphors and vivid imagery derived from what's in the image. "
+    prompt += "Incorporate compelling rhythm and flow, with carefully chosen words that create musicality. Employ literary techniques like alliteration, assonance, or symbolism where appropriate. "
+    prompt += "Make the poem profoundly emotionally resonant, thought-provoking, and meaningful with layers of interpretation. Do not include a title or any explanatory text, just the exquisite poem itself."
     
     return prompt
