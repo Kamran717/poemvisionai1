@@ -61,13 +61,13 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
             ideal_font_size = available_text_height / (line_count * 1.4)
             
             # Scale by width - REDUCED to make text smaller
-            width_based_font_size = target_width * 0.06  # Reduced from 0.08
+            width_based_font_size = target_width * 0.05  # Further reduced from 0.06
             
             # Use the smaller of the two to ensure it fits
             poem_font_size = min(int(ideal_font_size), int(width_based_font_size))
             
             # Reduced minimum size to ensure everything fits
-            poem_font_size = max(20, poem_font_size)  # Reduced from 24
+            poem_font_size = max(18, poem_font_size)  # Further reduced from 20
             
             # Apply more significant reductions for longer poems
             if line_count > 6:
@@ -159,8 +159,17 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
                     # Approximate width if all else fails
                     line_width = len(line) * (poem_font_size * 0.6)
                     
-            # Center align text horizontally
-            text_x = (target_width - line_width) // 2
+            # Center align text horizontally with extra side padding (80% of width)
+            max_width = target_width * 0.8  # Use only 80% of width for text
+            if line_width > max_width:
+                # Scale down overflowing text
+                text_x = (target_width - max_width) // 2
+                # We'll need to scale the text down when drawing
+                scale_factor = max_width / line_width
+            else:
+                text_x = (target_width - line_width) // 2
+                scale_factor = 1.0
+                
             line_y = text_y + (i * poem_line_height)
             
             # For default font (which is small), create a much larger appearance
@@ -183,8 +192,26 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
                 # Finally draw the core text for maximum clarity
                 draw.text((text_x, line_y), line, fill=(0, 0, 0), font=font)
             else:
-                # Draw normal text with the proper font
-                draw.text((text_x, line_y), line, fill=(0, 0, 0), font=font)
+                # If we need to scale down the text due to width constraints
+                if scale_factor < 1.0:
+                    # Draw smaller text by creating a smaller font
+                    scaled_font_size = int(poem_font_size * scale_factor)
+                    try:
+                        # Try to get the same font but smaller
+                        scaled_font = ImageFont.truetype(font.path, size=scaled_font_size)
+                        # Recalculate the position for proper centering with the new font
+                        try:
+                            scaled_width = draw.textlength(line, font=scaled_font)
+                        except:
+                            scaled_width = len(line) * (scaled_font_size * 0.6)
+                        scaled_x = (target_width - scaled_width) // 2
+                        draw.text((scaled_x, line_y), line, fill=(0, 0, 0), font=scaled_font)
+                    except:
+                        # If resizing the font fails, use the original but it might overflow
+                        draw.text((text_x, line_y), line, fill=(0, 0, 0), font=font)
+                else:
+                    # Draw normal text with the proper font
+                    draw.text((text_x, line_y), line, fill=(0, 0, 0), font=font)
         
         # Save the final image with high quality
         output = io.BytesIO()
