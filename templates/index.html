@@ -240,33 +240,36 @@
                         </div>
                     </div>
 
-                    <!-- Step 3: Generated Poem -->
+                    <!-- Step 3: Generated Poem - Modern Clean Design -->
                     <div class="tab-pane fade" id="step3" role="tabpanel">
-                        <div class="row">
-                            <div class="col-md-6 mb-4">
-                                <div class="card h-100">
-                                    <div class="card-header">
-                                        <h5 class="card-title mb-0">Your Uploaded Image</h5>
-                                    </div>
-                                    <div class="card-body text-center">
-                                        <img id="poemStepImage" class="img-fluid rounded" alt="Your uploaded image">
+                        <div class="container-fluid p-0">
+                            <div class="row g-4">
+                                <div class="col-12">
+                                    <h4 class="fw-bold mb-4">Your Uploaded Image</h4>
+                                </div>
+                                
+                                <!-- Larger Image Column -->
+                                <div class="col-lg-7 mb-4">
+                                    <div class="bg-light p-0 rounded overflow-hidden" style="max-height: 550px;">
+                                        <img id="poemStepImage" class="img-fluid w-100 h-100 object-fit-cover" 
+                                             alt="Your uploaded image" style="object-position: center;">
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6 mb-4">
-                                <div class="card h-100">
-                                    <div class="card-header">
-                                        <h5 class="card-title mb-0">Your Generated Poem</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div id="generatedPoemContainer" class="p-3 border rounded bg-dark">
-                                            <pre id="generatedPoem" class="poem-text mb-0"></pre>
+                                
+                                <!-- Poem Column -->
+                                <div class="col-lg-5 mb-4">
+                                    <div class="h-100 d-flex flex-column">
+                                        <h4 class="fw-bold mb-4">Your Generated Poem</h4>
+                                        
+                                        <div class="bg-white text-dark rounded p-4 mb-3 flex-grow-1">
+                                            <div id="generatedPoemContainer">
+                                                <pre id="generatedPoem" class="poem-text mb-0 text-dark" style="font-family: 'Georgia', serif; white-space: pre-wrap; font-size: 1.1rem; line-height: 1.6;"></pre>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="card-footer">
-                                        <div class="d-flex justify-content-end">
-                                            <button id="regeneratePoemBtn" class="btn btn-outline-secondary btn-sm me-2">
-                                                <i class="fas fa-redo me-1"></i> Regenerate
+                                        
+                                        <div class="d-grid">
+                                            <button id="regeneratePoemBtn" class="btn btn-outline-dark rounded-pill py-2">
+                                                <i class="fas fa-redo me-2"></i> Regenerate
                                             </button>
                                         </div>
                                     </div>

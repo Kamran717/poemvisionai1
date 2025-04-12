@@ -59,18 +59,25 @@ main {
 
 /* Poem Styles */
 .poem-text {
-    font-family: 'Arial', 'Helvetica', sans-serif; /* Sans-serif for better screen readability */
+    font-family: 'Georgia', serif; /* Serif for elegant poetry */
     white-space: pre-wrap;
-    font-size: 18px; /* At least 16px */
-    line-height: 1.5; /* 1.5x the font size */
-    color: var(--bs-light);
-    background-color: rgba(0, 0, 0, 0.7); /* Background for better contrast */
-    padding: 15px;
-    border-radius: 5px;
+    font-size: 1.15rem; /* Slightly larger for readability */
+    line-height: 1.7; /* More spacing between lines */
+    color: #333; /* Dark gray but not pure black */
+    letter-spacing: 0.01rem; /* Slight letter spacing for elegance */
 }
 
+/* Redesigned poem display */
 #generatedPoemContainer {
+    position: relative;
     min-height: 200px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.object-fit-cover {
+    object-fit: cover;
 }
 
 /* Frame Option Styles */
