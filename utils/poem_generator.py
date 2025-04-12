@@ -9,8 +9,11 @@ logger = logging.getLogger(__name__)
 
 # Get the API key from environment variable
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-# Updated to use v1 API instead of v1beta since the endpoint has changed
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent"
+# Update to use the correct API endpoint 
+# The API might have changed, so we provide both v1beta and v1 endpoints
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
+# Fallback URL if the main one doesn't work
+GEMINI_API_URL_FALLBACK = "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent"
 
 # Poem adjectives by type
 POEM_ADJECTIVES = {
@@ -230,9 +233,10 @@ def generate_poem(analysis_results, poem_type, emphasis):
             }
         }
         
-        # Make the API request
+        # Make the API request - try the main endpoint first, then the fallback
         try:
-            logger.info(f"Sending request to Gemini API with prompt of length {len(prompt)}")
+            # First attempt with primary endpoint (v1beta)
+            logger.info(f"Sending request to Gemini API (primary endpoint) with prompt of length {len(prompt)}")
             response = requests.post(
                 f"{GEMINI_API_URL}?key={GEMINI_API_KEY}",
                 headers=headers,
@@ -240,18 +244,32 @@ def generate_poem(analysis_results, poem_type, emphasis):
                 timeout=15  # Set a 15-second timeout
             )
             
+            # If main endpoint fails with 404, try the fallback endpoint
+            if response.status_code == 404:
+                logger.warning("Primary Gemini API endpoint returned 404, trying fallback endpoint")
+                response = requests.post(
+                    f"{GEMINI_API_URL_FALLBACK}?key={GEMINI_API_KEY}",
+                    headers=headers,
+                    json=data,
+                    timeout=15
+                )
+            
             # Process the response
             if response.status_code == 200:
                 response_data = response.json()
                 logger.debug(f"Received successful response from Gemini API")
                 
                 # Extract the poem from the response
+                # Check both response formats - v1beta and v1 have slightly different structures
                 if 'candidates' in response_data and len(response_data['candidates']) > 0:
                     if 'content' in response_data['candidates'][0] and 'parts' in response_data['candidates'][0]['content']:
                         parts = response_data['candidates'][0]['content']['parts']
                         if parts and 'text' in parts[0]:
                             generated_text = parts[0]['text']
                             return generated_text.strip()
+                # Also check for alternative response format
+                elif 'result' in response_data and 'response' in response_data['result']:
+                    return response_data['result']['response'].strip()
                 
                 # If we get here, the response structure was unexpected
                 logger.error(f"Unexpected response structure: {json.dumps(response_data)[:500]}...")
@@ -320,6 +338,7 @@ def _generate_template_poem(analysis_results, poem_type, emphasis):
 def _apply_poem_template(key_elements, poem_type):
     """
     Apply a template to generate a poem based on the key elements and poem type.
+    Enhanced to generate higher quality backup poems.
     
     Args:
         key_elements (list): List of key elements to include in the poem
@@ -334,8 +353,53 @@ def _apply_poem_template(key_elements, poem_type):
     # Get poem templates based on the poem type
     templates = POEM_TEMPLATES.get(poem_type.lower(), POEM_TEMPLATES["default"])
     
+    # If we don't have templates for this specific poem type, try to find the best match
+    if poem_type.lower() not in POEM_TEMPLATES:
+        # Map to similar types if an exact match isn't found
+        poem_type_mapping = {
+            "rhyming": "default",
+            "rhythmic": "default",
+            "lyrical": "default",
+            "romantic": "love",
+            "humorous": "funny",
+            "comical": "funny",
+            "motivational": "inspirational",
+            "uplifting": "inspirational",
+            "rage": "angry",
+            "furious": "angry",
+            "radical": "extreme",
+            "wild": "extreme",
+            "seasonal": "holiday",
+            "celebration": "birthday",
+            "commemorative": "anniversary",
+            "stars": "twinkle",
+            "red": "roses",
+            "joke": "knock-knock",
+            "flirt": "pickup",
+            "japanese": "haiku",
+            "irish": "limerick",
+            "shakespeare": "sonnet",
+            "hiphop": "rap",
+            "children": "nursery"
+        }
+        
+        # Check if we have a mapping for this poem type
+        mapped_type = poem_type_mapping.get(poem_type.lower())
+        if mapped_type:
+            templates = POEM_TEMPLATES.get(mapped_type, POEM_TEMPLATES["default"])
+            adjectives = POEM_ADJECTIVES.get(mapped_type, POEM_ADJECTIVES["default"])
+    
     # Randomly select a template
     template = random.choice(templates)
+    
+    # Create a more diverse set of elements if needed
+    if len(key_elements) < 4:
+        # Add generic elements that work in most poems
+        generic_elements = ["beauty", "moment", "light", "feeling", "wonder", "scene", "vision", "memory", "dream", "image"]
+        while len(key_elements) < 4:
+            new_element = random.choice(generic_elements)
+            if new_element not in key_elements:
+                key_elements.append(new_element)
     
     # Replace placeholders with key elements and adjectives
     for i, element in enumerate(key_elements):
@@ -343,11 +407,30 @@ def _apply_poem_template(key_elements, poem_type):
             placeholder = f"{{element{i+1}}}"
             template = template.replace(placeholder, element.lower())
     
+    # Sample adjectives with more diversity (no repeats)
+    selected_adjectives = []
+    while len(selected_adjectives) < 4 and len(adjectives) > 0:
+        adj = random.choice(adjectives)
+        if adj not in selected_adjectives:
+            selected_adjectives.append(adj)
+    
     # Replace adjective placeholders
-    for i, adj in enumerate(random.sample(adjectives, min(4, len(adjectives)))):
+    for i, adj in enumerate(selected_adjectives):
         if i < 4:  # Only use up to 4 adjectives
             placeholder = f"{{adj{i+1}}}"
             template = template.replace(placeholder, adj)
+    
+    # Handle any remaining placeholders that weren't replaced
+    for i in range(1, 5):
+        # Check if element placeholders remain
+        placeholder = f"{{element{i}}}"
+        if placeholder in template:
+            template = template.replace(placeholder, random.choice(["moment", "scene", "image", "vision", "dream"]))
+        
+        # Check if adjective placeholders remain
+        placeholder = f"{{adj{i}}}"
+        if placeholder in template:
+            template = template.replace(placeholder, random.choice(adjectives))
     
     return template
 
