@@ -6,7 +6,8 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedFrame: 'classic',
         selectedEmphasis: [],
         image: null,
-        imageBase64: null
+        imageBase64: null,
+        maxEmphasisCount: 10 // Maximum number of elements that can be selected for emphasis
     };
 
     // DOM Elements
@@ -516,17 +517,43 @@ document.addEventListener('DOMContentLoaded', function() {
         // Get all checked checkboxes
         const checkedBoxes = [...document.querySelectorAll('.emphasis-checkbox:checked')];
         
-        // If more than 10 elements are selected, uncheck the last selected one
-        if (checkedBoxes.length > 10) {
+        // Create or update the counter element if it doesn't exist
+        let counterElement = document.getElementById('emphasis-counter');
+        if (!counterElement) {
+            counterElement = document.createElement('div');
+            counterElement.id = 'emphasis-counter';
+            counterElement.classList.add('mt-2', 'mb-3', 'small');
+            const emphasisContainer = document.querySelector('.emphasis-container');
+            if (emphasisContainer) {
+                emphasisContainer.appendChild(counterElement);
+            }
+        }
+        
+        // If more than the maximum elements are selected, uncheck the last selected one
+        if (checkedBoxes.length > state.maxEmphasisCount) {
             // Get the most recently changed checkbox (likely the last one checked)
             const lastChecked = checkedBoxes[checkedBoxes.length - 1];
             lastChecked.checked = false;
             
-            // Show a message to the user about the limit
-            alert('You can only select up to 10 elements to emphasize in your poem.');
-            
             // Remove the last one from our checked collection
             checkedBoxes.pop();
+            
+            // Show visual feedback (temporarily highlight the counter in red)
+            counterElement.classList.add('text-danger', 'fw-bold');
+            setTimeout(() => {
+                counterElement.classList.remove('text-danger', 'fw-bold');
+            }, 1500);
+        }
+        
+        // Update the counter display
+        const count = checkedBoxes.length;
+        counterElement.textContent = `${count}/${state.maxEmphasisCount} elements selected`;
+        
+        // Update styles based on count
+        if (count === state.maxEmphasisCount) {
+            counterElement.classList.add('text-warning');
+        } else {
+            counterElement.classList.remove('text-warning');
         }
         
         // Update our state with the (limited) selection
@@ -790,6 +817,76 @@ document.addEventListener('DOMContentLoaded', function() {
     const shareTwitter = document.getElementById('shareTwitter');
     const sharePinterest = document.getElementById('sharePinterest');
     const shareEmail = document.getElementById('shareEmail');
+    
+    // Custom prompt character counter and suggestion chips functionality
+    const customPromptInput = document.getElementById('customPromptInput');
+    const characterCounter = document.querySelector('.character-counter');
+    const promptChips = document.querySelectorAll('.prompt-chip');
+    
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Character counter functionality
+    if (customPromptInput && characterCounter) {
+        customPromptInput.addEventListener('input', function() {
+            const currentLength = this.value.length;
+            const maxLength = this.getAttribute('maxlength') || 300;
+            characterCounter.textContent = `${currentLength}/${maxLength} characters`;
+            
+            // Add visual feedback when approaching the limit
+            if (currentLength >= maxLength * 0.9) {
+                characterCounter.classList.add('text-danger');
+            } else if (currentLength >= maxLength * 0.7) {
+                characterCounter.classList.add('text-warning');
+                characterCounter.classList.remove('text-danger');
+            } else {
+                characterCounter.classList.remove('text-warning', 'text-danger');
+            }
+        });
+        
+        // Initialize the counter
+        customPromptInput.dispatchEvent(new Event('input'));
+    }
+    
+    // Suggestion chips functionality
+    if (promptChips.length) {
+        promptChips.forEach(chip => {
+            chip.addEventListener('click', function() {
+                const category = this.getAttribute('data-category');
+                const promptText = this.getAttribute('data-prompt');
+                
+                // Select the corresponding category
+                const categorySelect = document.getElementById('customPromptCategory');
+                if (categorySelect) {
+                    categorySelect.value = category;
+                }
+                
+                // Add the suggestion to the input
+                if (customPromptInput) {
+                    // If there's already text, add a comma unless it ends with one
+                    if (customPromptInput.value.trim()) {
+                        if (!customPromptInput.value.trim().endsWith(',')) {
+                            customPromptInput.value += ', ';
+                        } else {
+                            customPromptInput.value += ' ';
+                        }
+                    }
+                    
+                    // Add the suggestion
+                    customPromptInput.value += promptText;
+                    
+                    // Trigger the character counter update
+                    customPromptInput.dispatchEvent(new Event('input'));
+                    
+                    // Focus the input so user can continue typing
+                    customPromptInput.focus();
+                }
+            });
+        });
+    }
     
     // Function to handle sharing when the creation is complete
     function setupSharing(shareCode) {
