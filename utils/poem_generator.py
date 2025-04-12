@@ -199,6 +199,7 @@ def generate_poem(analysis_results, poem_type, emphasis, custom_terms='', custom
     """
     Generate a poem based on image analysis and user preferences using Google's Gemini API.
     If the API is not available, generates a basic poem using templates.
+    Includes caching to improve performance for repeated requests.
     
     Args:
         analysis_results (dict): The results from the Google Cloud Vision AI analysis
@@ -211,10 +212,42 @@ def generate_poem(analysis_results, poem_type, emphasis, custom_terms='', custom
         str: The generated poem
     """
     try:
+        # Create a unique cache key based on all inputs
+        # First, convert emphasis list to a stable string representation
+        emphasis_str = ','.join(sorted(emphasis)) if emphasis else 'none'
+        
+        # Create a simplified version of analysis_results that contains only the essential elements
+        # This makes the cache key more stable across similar images
+        simple_analysis = {}
+        if 'labels' in analysis_results:
+            simple_analysis['labels'] = [label['description'] for label in analysis_results['labels'][:5]]
+        if 'objects' in analysis_results:
+            simple_analysis['objects'] = [obj['name'] for obj in analysis_results['objects'][:5]]
+        
+        # Create a hash of all the inputs
+        cache_key_data = {
+            'analysis': simple_analysis,
+            'poem_type': poem_type,
+            'emphasis': emphasis_str,
+            'custom_terms': custom_terms,
+            'custom_category': custom_category
+        }
+        
+        # Convert to string and hash
+        cache_key = hashlib.md5(json.dumps(cache_key_data, sort_keys=True).encode('utf-8')).hexdigest()
+        
+        # Check if we have a cached poem for this input
+        if cache_key in _poem_cache:
+            logger.info(f"Using cached poem for key: {cache_key[:8]}...")
+            return _poem_cache[cache_key]
+        
         # Check if API key is available
         if not GEMINI_API_KEY:
             logger.warning("Gemini API key not found in environment variables. Using template poem.")
-            return _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
+            poem = _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
+            # Store in cache before returning
+            _poem_cache[cache_key] = poem
+            return poem
         
         # Create a detailed prompt based on the analysis and user preferences
         prompt = _create_prompt(analysis_results, poem_type, emphasis, custom_terms, custom_category)
@@ -272,29 +305,57 @@ def generate_poem(analysis_results, poem_type, emphasis, custom_terms='', custom
                         parts = response_data['candidates'][0]['content']['parts']
                         if parts and 'text' in parts[0]:
                             generated_text = parts[0]['text']
-                            return generated_text.strip()
+                            poem = generated_text.strip()
+                            # Store in cache before returning
+                            _poem_cache[cache_key] = poem
+                            logger.info(f"Stored poem in cache with key: {cache_key[:8]}...")
+                            return poem
                 # Also check for alternative response format
                 elif 'result' in response_data and 'response' in response_data['result']:
-                    return response_data['result']['response'].strip()
+                    poem = response_data['result']['response'].strip()
+                    # Store in cache before returning
+                    _poem_cache[cache_key] = poem
+                    logger.info(f"Stored poem in cache with key: {cache_key[:8]}...")
+                    return poem
                 
                 # If we get here, the response structure was unexpected
                 logger.error(f"Unexpected response structure: {json.dumps(response_data)[:500]}...")
-                return _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
+                poem = _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
+                # Store in cache before returning
+                _poem_cache[cache_key] = poem
+                logger.info(f"Stored template poem in cache with key: {cache_key[:8]}...")
+                return poem
             else:
                 logger.error(f"API error: {response.status_code} - {response.text[:200]}...")
                 # Log the request that was sent for debugging
                 logger.error(f"Request data: {json.dumps(data)[:500]}...")
-                return _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
+                poem = _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
+                # Store in cache before returning
+                _poem_cache[cache_key] = poem
+                logger.info(f"Stored fallback poem in cache with key: {cache_key[:8]}...")
+                return poem
         except requests.exceptions.Timeout:
             logger.error("Gemini API request timed out")
-            return _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
+            poem = _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
+            # Store in cache before returning
+            _poem_cache[cache_key] = poem
+            logger.info(f"Stored timeout fallback poem in cache with key: {cache_key[:8]}...")
+            return poem
         except requests.exceptions.RequestException as e:
             logger.error(f"Request exception when calling Gemini API: {str(e)}")
-            return _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
+            poem = _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
+            # Store in cache before returning
+            _poem_cache[cache_key] = poem
+            logger.info(f"Stored request error fallback poem in cache with key: {cache_key[:8]}...")
+            return poem
     
     except Exception as e:
         logger.error(f"Error generating poem: {str(e)}", exc_info=True)
-        return _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
+        poem = _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
+        # Store in cache before returning
+        _poem_cache[cache_key] = poem
+        logger.info(f"Stored general error fallback poem in cache with key: {cache_key[:8]}...")
+        return poem
 
 def _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms='', custom_category=''):
     """
