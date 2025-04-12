@@ -40,42 +40,10 @@
                 <small class="text-muted">Created on {{ creation.created_at.strftime('%B %d, %Y') }}</small>
             </div>
             <div class="card-body">
-                <div class="row">
-                    <div class="col-md-8">
+                <div class="row justify-content-center">
+                    <div class="col-md-10 col-lg-8">
                         <div id="finalCreationContainer" class="text-center mb-4">
-                            <img src="data:image/jpeg;base64,{{ creation.final_image_data }}" class="img-fluid rounded" alt="Final Creation">
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h5 class="mb-0">About This Poem</h5>
-                            </div>
-                            <div class="card-body">
-                                <p><strong>Poem Type:</strong> {{ creation.poem_type }}</p>
-                                
-                                {% if creation.emphasis %}
-                                <p><strong>Elements Emphasized:</strong></p>
-                                <div>
-                                    {% for item in creation.emphasis %}
-                                    <span class="badge bg-primary me-1 mb-1">{{ item }}</span>
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                                
-                                <p><strong>Frame Style:</strong> {{ creation.frame_style }}</p>
-                            </div>
-                        </div>
-                        
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">Just the Poem</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="p-3 border rounded bg-dark">
-                                    <pre class="poem-text mb-0">{{ creation.poem_text }}</pre>
-                                </div>
-                            </div>
+                            <img src="data:image/jpeg;base64,{{ creation.final_image_data }}" class="img-fluid rounded shadow" alt="Final Creation">
                         </div>
                     </div>
                 </div>
