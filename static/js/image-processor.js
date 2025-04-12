@@ -112,40 +112,63 @@ function checkAndResizeImage(imageFile, maxWidth, maxHeight, maxFileSize) {
         return Promise.resolve(imageFile);
     }
     
+    console.log(`Resizing image. Original size: ${(imageFile.size / 1024 / 1024).toFixed(2)}MB`);
+    
     return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = new Image();
-            img.onload = function() {
-                try {
-                    const { width, height } = calculateResizedDimensions(img, maxWidth, maxHeight);
-                    
-                    // Create a canvas to draw the resized image
-                    const canvas = document.createElement('canvas');
-                    canvas.width = width;
-                    canvas.height = height;
-                    
-                    // Draw the image on the canvas
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    
-                    // Convert the canvas to a Blob
-                    canvas.toBlob(function(blob) {
-                        resolve(blob);
-                    }, 'image/jpeg', 0.85);
-                } catch (err) {
-                    reject(err);
-                }
+        // Add timeout to prevent mobile browser freezes during processing
+        setTimeout(() => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    try {
+                        // Calculate dimensions - use smaller dimensions for mobile
+                        const isMobile = window.innerWidth <= 768;
+                        const mobileMaxWidth = Math.min(maxWidth, 1200);
+                        const mobileMaxHeight = Math.min(maxHeight, 1200);
+                        
+                        const { width, height } = calculateResizedDimensions(
+                            img, 
+                            isMobile ? mobileMaxWidth : maxWidth, 
+                            isMobile ? mobileMaxHeight : maxHeight
+                        );
+                        
+                        console.log(`Resizing to: ${width}x${height}`);
+                        
+                        // Create a canvas to draw the resized image
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        
+                        // Draw the image on the canvas
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Use lower quality on mobile to reduce file size further
+                        const quality = isMobile ? 0.75 : 0.85;
+                        
+                        // Convert the canvas to a Blob
+                        canvas.toBlob(function(blob) {
+                            console.log(`Resized image size: ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
+                            resolve(blob);
+                        }, 'image/jpeg', quality);
+                    } catch (err) {
+                        console.error('Error during image resize:', err);
+                        reject(err);
+                    }
+                };
+                img.onerror = function() {
+                    console.error('Failed to load image');
+                    reject(new Error('Failed to load image'));
+                };
+                img.src = e.target.result;
             };
-            img.onerror = function() {
-                reject(new Error('Failed to load image'));
+            reader.onerror = function() {
+                console.error('Failed to read file');
+                reject(new Error('Failed to read file'));
             };
-            img.src = e.target.result;
-        };
-        reader.onerror = function() {
-            reject(new Error('Failed to read file'));
-        };
-        reader.readAsDataURL(imageFile);
+            reader.readAsDataURL(imageFile);
+        }, 50); // Small delay to let the UI update
     });
 }
 

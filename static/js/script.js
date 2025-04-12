@@ -85,9 +85,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Handle image upload via file input
-    uploadArea.addEventListener('click', function() {
-        imageInput.click();
+    // Handle image upload via file input - don't make uploadArea click the input directly
+    // This avoids issues on some mobile browsers
+    const uploadButton = document.querySelector('label[for="imageInput"]');
+    if (uploadButton) {
+        uploadButton.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent the click from bubbling to uploadArea
+        });
+    }
+    
+    // Still allow clicking anywhere in the upload area (for desktop)
+    uploadArea.addEventListener('click', function(e) {
+        // Only trigger the file input click if the click wasn't on the button
+        if (!e.target.closest('label[for="imageInput"]')) {
+            imageInput.click();
+        }
     });
 
     imageInput.addEventListener('change', function() {

@@ -52,16 +52,23 @@ def analyze_image_route():
     try:
         # Get the uploaded image from the request
         if 'image' not in request.files:
-            return jsonify({'error': 'No image uploaded'}), 400
+            logger.error("No image file in request")
+            return jsonify({'error': 'No image uploaded. Please try again.'}), 400
         
         image_file = request.files['image']
         
         if image_file.filename == '':
-            return jsonify({'error': 'No image selected'}), 400
+            logger.error("Empty filename in uploaded file")
+            return jsonify({'error': 'No image selected. Please try again.'}), 400
+        
+        # Log received file type
+        logger.info(f"Received image type: {image_file.content_type}")
             
         # Check file size - limit to 5MB
         image_file.seek(0, os.SEEK_END)
         file_size = image_file.tell()
+        logger.info(f"Upload file size: {file_size/1024/1024:.2f}MB")
+        
         if file_size > 5 * 1024 * 1024:  # 5MB limit
             return jsonify({'error': 'Image size exceeds the 5MB limit. Please choose a smaller image.'}), 400
         
@@ -70,6 +77,9 @@ def analyze_image_route():
         
         # Reset file pointer and read image data
         image_file.seek(0)
+        
+        # Some mobile browsers may send strange content types
+        # Store original data regardless
         image_data = base64.b64encode(image_file.read()).decode('utf-8')
         
         # Analyze the image using Google Cloud Vision AI
