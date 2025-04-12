@@ -54,26 +54,32 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         # This ensures the text will properly fit in the allocated space
         if line_count > 0:
             # Calculate available height for text block (minus some padding)
-            available_text_height = text_section_height * 0.8  # Use 80% of the text section
+            available_text_height = text_section_height * 0.9  # Use 90% of the text section
             
             # Font size determined by available height divided by lines
-            # with adjustment for line spacing
-            ideal_font_size = available_text_height / (line_count * 1.8)
+            # with adjustment for line spacing - further reduced
+            ideal_font_size = available_text_height / (line_count * 1.4)
             
-            # Scale by width to keep proportionate to image width
-            width_based_font_size = target_width * 0.12
+            # Scale by width - REDUCED to make text smaller
+            width_based_font_size = target_width * 0.06  # Reduced from 0.08
             
             # Use the smaller of the two to ensure it fits
             poem_font_size = min(int(ideal_font_size), int(width_based_font_size))
             
-            # Ensure minimum readable size
-            poem_font_size = max(36, poem_font_size)
+            # Reduced minimum size to ensure everything fits
+            poem_font_size = max(20, poem_font_size)  # Reduced from 24
+            
+            # Apply more significant reductions for longer poems
+            if line_count > 6:
+                poem_font_size = int(poem_font_size * 0.7)
+            elif line_count > 4:
+                poem_font_size = int(poem_font_size * 0.8)
         else:
             # Default if no lines (shouldn't happen)
-            poem_font_size = max(36, int(target_width * 0.10))
+            poem_font_size = max(24, int(target_width * 0.07))
         
-        # Calculate proper line spacing (1.8x of font size for good vertical separation)
-        poem_line_height = int(poem_font_size * 1.8)
+        # Reduce line spacing to ensure all text fits (reduced from 1.8x to 1.4x)
+        poem_line_height = int(poem_font_size * 1.4)
         
         # We already calculated these values earlier, no need to repeat
             
