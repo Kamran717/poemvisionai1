@@ -38,17 +38,23 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         # First, determine image height maintaining aspect ratio
         image_area_height = int(original_height * (target_width / original_width))
         
-        # Make image take up exactly 70% of the total composition height
-        # This ensures image is dominant as requested
-        
-        # STRICTLY enforce the 70/30 ratio as requested
-        target_image_ratio = 0.70  # Image takes exactly 70% of total height
-        
-        # Calculate total height based on the image height and the 70% ratio
+        # New rule: Adjust the image ratio based on poem length
+        # For longer poems, give more space to the text section
+        if line_count <= 4:
+            # Default ratio for short poems - image takes 70%
+            target_image_ratio = 0.70
+        elif line_count <= 8:
+            # Medium length poems - image takes 65%
+            target_image_ratio = 0.65
+        else:
+            # Long poems - image takes 60%
+            target_image_ratio = 0.60
+            
+        # Calculate total height based on the image height and the adjusted ratio
         total_height = int(image_area_height / target_image_ratio)
         
-        # Text section is exactly 30% of the total height
-        text_section_height = int(total_height * 0.30)
+        # Text section is the remaining portion of the total height
+        text_section_height = int(total_height * (1 - target_image_ratio))
         
         # Calculate font size based on the 30% text area and number of lines
         # This ensures the text will properly fit in the allocated space
@@ -56,24 +62,25 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
             # Calculate available height for text block (minus some padding)
             available_text_height = text_section_height * 0.9  # Use 90% of the text section
             
-            # Font size determined by available height divided by lines
-            # with adjustment for line spacing - further reduced
-            ideal_font_size = available_text_height / (line_count * 1.4)
+            # We'll use a more consistent approach for font size calculations
+            # so we don't need this variable anymore
             
-            # Scale by width - REDUCED to make text smaller
-            width_based_font_size = target_width * 0.05  # Further reduced from 0.06
+            # Scale by width - with a consistent font size across all lines
+            base_font_size = target_width * 0.05
             
-            # Use the smaller of the two to ensure it fits
-            poem_font_size = min(int(ideal_font_size), int(width_based_font_size))
+            # Use the available height to adjust font size based on number of lines
+            height_based_font_size = available_text_height / (line_count * 1.3)
             
-            # Reduced minimum size to ensure everything fits
-            poem_font_size = max(18, poem_font_size)  # Further reduced from 20
+            # Combine both approaches to get the optimal font size
+            poem_font_size = min(int(base_font_size), int(height_based_font_size))
             
-            # Apply more significant reductions for longer poems
-            if line_count > 6:
-                poem_font_size = int(poem_font_size * 0.7)
-            elif line_count > 4:
-                poem_font_size = int(poem_font_size * 0.8)
+            # Ensure a minimum readable size
+            poem_font_size = max(18, poem_font_size)
+            
+            # With the new adaptive image ratio, we can keep font sizes more consistent
+            # Apply only minor reductions for very long poems
+            if line_count > 10:
+                poem_font_size = int(poem_font_size * 0.85)
         else:
             # Default if no lines (shouldn't happen)
             poem_font_size = max(24, int(target_width * 0.07))
@@ -192,22 +199,9 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
                 # Finally draw the core text for maximum clarity
                 draw.text((text_x, line_y), line, fill=(0, 0, 0), font=font)
             else:
-                # If a line is too long, it might go beyond our 80% width
-                if line_width > max_width:
-                    # For lines that would overflow, truncate to fit or use ellipsis
-                    # Find approximate characters that would fit
-                    approx_chars_per_width = line_width / len(line)
-                    max_chars = int((max_width / approx_chars_per_width) - 3)  # -3 for ellipsis
-                    if max_chars > 3:  # If we can fit at least a few characters
-                        truncated_line = line[:max_chars] + "..."
-                        # Draw the truncated line
-                        draw.text((text_x, line_y), truncated_line, fill=(0, 0, 0), font=font)
-                    else:
-                        # Just draw it anyway and accept overflow
-                        draw.text((text_x, line_y), line, fill=(0, 0, 0), font=font)
-                else:
-                    # Draw normal text with the proper font
-                    draw.text((text_x, line_y), line, fill=(0, 0, 0), font=font)
+                # With our new adaptive image size approach, we can display all text
+                # without truncation since we've allocated more space for longer poems
+                draw.text((text_x, line_y), line, fill=(0, 0, 0), font=font)
         
         # Save the final image with high quality
         output = io.BytesIO()
