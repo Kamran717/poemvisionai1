@@ -1,6 +1,15 @@
 {% extends 'layout.html' %}
 
 {% block extra_head %}
+<script>
+    // Hide the gallery link when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        const galleryNavItem = document.querySelector('a.nav-link[href="/gallery"]').parentElement;
+        if (galleryNavItem) {
+            galleryNavItem.style.display = 'none';
+        }
+    });
+</script>
 <style>
     .share-btn {
         width: 40px;
