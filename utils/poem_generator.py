@@ -346,10 +346,10 @@ def _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms=
     # Get a few key elements for the poem
     key_elements = all_elements[:min(4, len(all_elements))]
     
-    # Sample from poem templates based on the poem type
-    return _apply_poem_template(key_elements, poem_type)
+    # Sample from poem templates based on the poem type and pass any custom terms
+    return _apply_poem_template(key_elements, poem_type, custom_terms)
 
-def _apply_poem_template(key_elements, poem_type):
+def _apply_poem_template(key_elements, poem_type, custom_terms=''):
     """
     Apply a template to generate a poem based on the key elements and poem type.
     Enhanced to generate higher quality backup poems.
@@ -357,6 +357,7 @@ def _apply_poem_template(key_elements, poem_type):
     Args:
         key_elements (list): List of key elements to include in the poem
         poem_type (str): The type of poem to generate
+        custom_terms (str, optional): Custom terms to emphasize in the poem
         
     Returns:
         str: The generated poem
@@ -445,6 +446,40 @@ def _apply_poem_template(key_elements, poem_type):
         placeholder = f"{{adj{i}}}"
         if placeholder in template:
             template = template.replace(placeholder, random.choice(adjectives))
+    
+    # Add custom terms as a personalized ending if provided
+    if custom_terms:
+        # Split terms into a list
+        term_list = [term.strip() for term in custom_terms.split(',')]
+        
+        # Only use terms that aren't already in the poem
+        new_terms = [term for term in term_list if term.lower() not in template.lower()]
+        
+        if new_terms:
+            # Add a short personalized ending based on poem type
+            endings = {
+                "love": f"\nWith thoughts of {', '.join(new_terms)},\nMy heart is forever true.",
+                "funny": f"\nJust like {new_terms[0] if new_terms else 'you'},\nAlways brings a smile!",
+                "inspirational": f"\nLike {new_terms[0] if new_terms else 'you'} inspires us all,\nTo reach for something new.",
+                "angry": f"\nThinking of {', '.join(new_terms)}\nMakes my blood boil anew.",
+                "extreme": f"\nRADICAL {new_terms[0].upper() if new_terms else 'VISION'}!\nEXTREME {new_terms[-1].upper() if len(new_terms) > 1 else 'FEELING'}!",
+                "holiday": f"\nCelebrating with {', '.join(new_terms)},\nMakes this season bright.",
+                "birthday": f"\nHappy birthday to {new_terms[0] if new_terms else 'you'},\nAnother year to shine!",
+                "anniversary": f"\nWith {new_terms[0] if new_terms else 'you'} through the years,\nEach moment divine.",
+                "twinkle": f"\nTwinkle twinkle {new_terms[0] if new_terms else 'star'},\nHow I wonder what you are.",
+                "roses": f"\nRoses are red, violets are blue,\n{new_terms[0] if new_terms else 'You'} are special through and through.",
+                "haiku": "",  # Haiku has strict format, avoid changing
+                "limerick": f"\nWith {new_terms[0] if new_terms else 'you'} it's nothing but fun!",
+                "sonnet": f"\nMy thoughts turn to {new_terms[0] if new_terms else 'thee'},\nForever in my heart to be.",
+                "nursery": f"\nAnd {new_terms[0] if new_terms else 'you'} will always play,\nIn our hearts every day."
+            }
+            
+            # Use the appropriate ending or a default one
+            ending = endings.get(poem_type.lower(), f"\n\nDedicated to {', '.join(new_terms)}")
+            
+            # Don't add ending to haiku or other specific formats that would break their structure
+            if poem_type.lower() not in ["haiku", "knock-knock"]:
+                template += ending
     
     return template
 
