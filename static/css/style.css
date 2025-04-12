@@ -44,6 +44,18 @@ main {
     color: inherit;
 }
 
+/* Style for poem type select with purple outline */
+#poemTypeSelect {
+    border: 2px solid #6f42c1;
+    box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+    transition: all 0.3s ease;
+}
+
+#poemTypeSelect:focus {
+    border-color: #6f42c1;
+    box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.4);
+}
+
 /* Upload Area Styles */
 .upload-area {
     border: 2px dashed var(--bs-secondary);
@@ -209,6 +221,41 @@ main {
 .element-badge.selected {
     background-color: var(--bs-primary) !important;
     color: white !important;
+}
+
+/* Emphasis elements container styles */
+.emphasis-container {
+    position: relative;
+}
+
+#emphasisOptions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.emphasis-element {
+    margin-bottom: 0.5rem;
+}
+
+.emphasis-element-hidden {
+    display: none;
+}
+
+.show-more-btn {
+    background-color: #6f42c1;
+    color: white;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 0.5rem;
+}
+
+.show-more-btn:hover {
+    background-color: #5e35b1;
 }
 
 /* Custom Prompt Styling */

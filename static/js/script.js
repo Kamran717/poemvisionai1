@@ -323,8 +323,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Display labels
         const detectedLabels = document.getElementById('detectedLabels');
         detectedLabels.innerHTML = '';
+
+        // Keep track of all emphasis elements for visibility management
+        const allEmphasisElements = [];
+        let visibleElementsCount = 0;
+        let totalElementsCount = 0;
+
         if (results.labels && results.labels.length > 0) {
-            results.labels.forEach(label => {
+            results.labels.forEach((label, index) => {
                 const badge = document.createElement('span');
                 badge.classList.add('badge', 'bg-secondary', 'me-2', 'mb-2', 'element-badge');
                 badge.setAttribute('data-element', label.description);
@@ -333,12 +339,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Add to emphasis options
                 const option = document.createElement('div');
-                option.classList.add('form-check', 'form-check-inline');
+                option.classList.add('form-check', 'form-check-inline', 'emphasis-element');
+                
+                // Initially show only the first 4 elements
+                if (index >= 4) {
+                    option.classList.add('emphasis-element-hidden');
+                } else {
+                    visibleElementsCount++;
+                }
+                
                 option.innerHTML = `
                     <input class="form-check-input emphasis-checkbox" type="checkbox" value="${label.description}" id="emphasis_${label.description.replace(/\s+/g, '_')}">
                     <label class="form-check-label" for="emphasis_${label.description.replace(/\s+/g, '_')}">${label.description}</label>
                 `;
                 emphasisOptions.appendChild(option);
+                allEmphasisElements.push(option);
+                totalElementsCount++;
             });
         } else {
             detectedLabels.textContent = 'No labels detected.';
