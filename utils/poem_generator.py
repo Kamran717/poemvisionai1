@@ -15,9 +15,9 @@ _poem_cache = {}
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 # Update to use the correct API endpoint 
 # The API might have changed, so we provide both v1beta and v1 endpoints
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 # Fallback URL if the main one doesn't work
-GEMINI_API_URL_FALLBACK = "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent"
+GEMINI_API_URL_FALLBACK = "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent"
 
 # Poem adjectives by type
 POEM_ADJECTIVES = {

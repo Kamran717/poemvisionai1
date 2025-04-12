@@ -314,32 +314,36 @@
                                     <h4 class="fw-bold mb-4">Your Generated Poem & Image</h4>
                                 </div>
                                 
-                                <!-- Full-width Poem & Image Container - Without Right Side Sections -->
+                                <!-- Full-width Poem & Image Container -->
                                 <div class="col-12 col-lg-10 mx-auto mb-4">
-                                    <div class="row g-4">
-                                        <!-- Larger Image Column -->
-                                        <div class="col-lg-7 mb-4">
-                                            <div class="bg-light p-0 rounded overflow-hidden" style="max-height: 550px;">
-                                                <img id="poemStepImage" class="img-fluid w-100 h-100 object-fit-cover" 
-                                                     alt="Your uploaded image" style="object-position: center;">
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Poem Column -->
-                                        <div class="col-lg-5 mb-4">
-                                            <div class="h-100 d-flex flex-column">
-                                                <h4 class="fw-bold mb-4">Your Generated Poem</h4>
-                                                
-                                                <div class="bg-white text-dark rounded p-4 mb-3 flex-grow-1">
-                                                    <div id="generatedPoemContainer">
-                                                        <pre id="generatedPoem" class="poem-text mb-0 text-dark" style="font-family: 'Georgia', serif; white-space: pre-wrap; font-size: 1.1rem; line-height: 1.6;"></pre>
+                                    <!-- Balanced Two-Column Layout -->
+                                    <div class="row g-4 align-items-stretch">
+                                            <!-- Image Column -->
+                                            <div class="col-lg-6">
+                                                <div class="bg-light p-0 rounded overflow-hidden h-100">
+                                                    <div class="d-flex align-items-center justify-content-center h-100" style="min-height: 400px;">
+                                                        <img id="poemStepImage" class="img-fluid" 
+                                                            alt="Your uploaded image" style="max-height: 100%; object-fit: contain;">
                                                     </div>
                                                 </div>
-                                                
-                                                <div class="d-grid">
-                                                    <button id="regeneratePoemBtn" class="btn btn-outline-dark rounded-pill py-2">
-                                                        <i class="fas fa-redo me-2"></i> Regenerate
-                                                    </button>
+                                            </div>
+                                            
+                                            <!-- Poem Column -->
+                                            <div class="col-lg-6">
+                                                <div class="h-100 d-flex flex-column">
+                                                    <h4 class="fw-bold mb-3">Your Generated Poem</h4>
+                                                    
+                                                    <div class="bg-white text-dark rounded p-4 mb-3 flex-grow-1" style="min-height: 350px;">
+                                                        <div id="generatedPoemContainer" class="h-100 d-flex align-items-center">
+                                                            <pre id="generatedPoem" class="poem-text mb-0 text-dark w-100" style="font-family: 'Georgia', serif; white-space: pre-wrap; font-size: 1.1rem; line-height: 1.6;"></pre>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="d-grid">
+                                                        <button id="regeneratePoemBtn" class="btn btn-outline-dark rounded-pill py-2">
+                                                            <i class="fas fa-redo me-2"></i> Regenerate
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
