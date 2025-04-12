@@ -73,12 +73,14 @@ function updatePoemTypeDropdown(poemTypes) {
     poemTypes.forEach(poemType => {
         const option = document.createElement('option');
         option.value = poemType.id;
-        option.textContent = poemType.name;
         
+        // Add lock icon for premium options
         if (!poemType.free && !isPremium) {
-            option.textContent += ' 🌟';
+            option.textContent = `${poemType.name} 🔒`;
             option.classList.add('premium-option');
-            option.disabled = true;
+            // Don't disable the option so users can see it, but we'll show an upgrade prompt if selected
+        } else {
+            option.textContent = poemType.name;
         }
         
         poemTypeSelect.appendChild(option);
@@ -96,7 +98,7 @@ function updatePoemTypeDropdown(poemTypes) {
     if (!isPremium) {
         const legend = document.createElement('div');
         legend.className = 'small text-muted mt-2';
-        legend.innerHTML = '🌟 Premium feature. <a href="/upgrade" class="text-primary">Upgrade</a> to unlock.';
+        legend.innerHTML = '🔒 Premium feature. <a href="/upgrade" class="text-primary">Upgrade</a> to unlock premium poem types.';
         poemTypeSelect.parentNode.appendChild(legend);
     }
 }
@@ -122,24 +124,56 @@ function updateFrameOptions(frames) {
         const frameData = frames.find(f => f.id === frameId);
         
         if (frameData && (!frameData.free && !isPremium)) {
-            // Mark as premium
+            // Mark as premium but don't fully disable the option
             const frameImage = frameOption.querySelector('img');
             if (frameImage) {
                 frameImage.classList.add('premium-overlay');
             }
             
-            // Add premium badge
+            // Add lock icon badge
             const badge = document.createElement('span');
-            badge.className = 'badge bg-primary position-absolute top-0 end-0 m-2';
-            badge.innerHTML = '🌟 Premium';
+            badge.className = 'badge bg-secondary position-absolute top-0 end-0 m-2';
+            badge.innerHTML = '🔒 Premium';
             frameOption.appendChild(badge);
             
-            // Set disabled attribute on radio
+            // Add lock overlay for visual indication
+            const lockOverlay = document.createElement('div');
+            lockOverlay.className = 'position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center';
+            lockOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
+            lockOverlay.style.zIndex = '1';
+            lockOverlay.style.borderRadius = 'inherit';
+            
+            // Add upgrade link
+            const upgradeLink = document.createElement('a');
+            upgradeLink.href = '/upgrade';
+            upgradeLink.className = 'btn btn-sm btn-primary';
+            upgradeLink.innerHTML = 'Upgrade to unlock';
+            lockOverlay.appendChild(upgradeLink);
+            
+            frameOption.style.position = 'relative';
+            frameOption.appendChild(lockOverlay);
+            
+            // Don't completely disable radio button so users can still interact with it
+            // which will trigger our upgrade prompt
             const radioInput = frameOption.querySelector('input[type="radio"]');
             if (radioInput) {
-                radioInput.disabled = true;
+                radioInput.dataset.premium = 'true';
             }
         }
+    });
+    
+    // Add frame selection handler
+    document.querySelectorAll('input[name="frameStyle"][data-premium="true"]').forEach(radio => {
+        radio.addEventListener('click', function(e) {
+            if (!isPremium) {
+                // If premium and not a premium member, show upgrade prompt
+                e.preventDefault();
+                showUpgradePrompt('frame');
+                
+                // Reset to default frame
+                document.querySelector('input[name="frameStyle"][value="classic"]').checked = true;
+            }
+        });
     });
 }
 
