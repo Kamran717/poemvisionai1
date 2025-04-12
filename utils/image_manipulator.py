@@ -35,36 +35,47 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         # Count lines for spacing calculation
         line_count = len(poem_lines)
         
-        # Make image take up 65-70% of the total composition height
+        # First, determine image height maintaining aspect ratio
+        image_area_height = int(original_height * (target_width / original_width))
+        
+        # Make image take up exactly 70% of the total composition height
         # This ensures image is dominant as requested
         
-        # Determine text font size based on image width - MUCH larger now
-        # Using extra large text (12-15% of image width)
-        poem_font_size = max(48, int(target_width * 0.15))
+        # STRICTLY enforce the 70/30 ratio as requested
+        target_image_ratio = 0.70  # Image takes exactly 70% of total height
+        
+        # Calculate total height based on the image height and the 70% ratio
+        total_height = int(image_area_height / target_image_ratio)
+        
+        # Text section is exactly 30% of the total height
+        text_section_height = int(total_height * 0.30)
+        
+        # Calculate font size based on the 30% text area and number of lines
+        # This ensures the text will properly fit in the allocated space
+        if line_count > 0:
+            # Calculate available height for text block (minus some padding)
+            available_text_height = text_section_height * 0.8  # Use 80% of the text section
+            
+            # Font size determined by available height divided by lines
+            # with adjustment for line spacing
+            ideal_font_size = available_text_height / (line_count * 1.8)
+            
+            # Scale by width to keep proportionate to image width
+            width_based_font_size = target_width * 0.12
+            
+            # Use the smaller of the two to ensure it fits
+            poem_font_size = min(int(ideal_font_size), int(width_based_font_size))
+            
+            # Ensure minimum readable size
+            poem_font_size = max(36, poem_font_size)
+        else:
+            # Default if no lines (shouldn't happen)
+            poem_font_size = max(36, int(target_width * 0.10))
         
         # Calculate proper line spacing (1.8x of font size for good vertical separation)
         poem_line_height = int(poem_font_size * 1.8)
         
-        # Determine image height maintaining aspect ratio
-        image_area_height = int(original_height * (target_width / original_width))
-        
-        # Calculate total text section height including spacing
-        text_padding_top = int(poem_font_size * 1.0)  # Space after image
-        text_padding_bottom = int(poem_font_size * 2.0)  # Space at bottom
-        text_section_height = (line_count * poem_line_height) + text_padding_top + text_padding_bottom
-        
-        # Calculate total image height so image is approximately 70% of composition
-        # and text section is about 30% - this follows the example more closely
-        target_image_ratio = 0.70  # Image takes 70% of total height
-        total_height = int(image_area_height / target_image_ratio)
-        
-        # Ensure text section height matches what we calculated earlier
-        # Adjust if necessary to maintain ratio and spacing
-        if total_height - image_area_height < text_section_height:
-            total_height = image_area_height + text_section_height
-        
-        # Add some extra spacing - the example shows very generous whitespace
-        total_height += int(poem_font_size * 2)
+        # We already calculated these values earlier, no need to repeat
             
         # Create final image with white background
         final_img = Image.new("RGB", (target_width, total_height), (255, 255, 255))
@@ -110,8 +121,21 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
             logger.error(f"Error loading font: {str(e)}")
             font = ImageFont.load_default()
         
-        # Position text with proper spacing after image
-        text_y = image_area_height + text_padding_top
+        # Position text to start immediately after the image
+        # and center it vertically within the 30% text section
+        
+        # Calculate the total height needed for all text lines
+        total_text_lines_height = len(poem_lines) * poem_line_height
+        
+        # Figure out how much vertical space we have for text
+        available_text_space = text_section_height
+        
+        # Center the text block vertically in the available space
+        vertical_padding = (available_text_space - total_text_lines_height) / 2
+        vertical_padding = max(10, vertical_padding)  # Ensure at least a small margin
+        
+        # Set the starting y position for text
+        text_y = image_area_height + vertical_padding
         
         # Check if we're using the default font (which needs special handling)
         using_default_font = str(font) == str(ImageFont.load_default())
