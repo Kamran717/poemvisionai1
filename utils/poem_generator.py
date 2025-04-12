@@ -295,21 +295,38 @@ def _create_prompt(analysis_results, poem_type, emphasis):
         objects_text = ", ".join([obj['name'] for obj in analysis_results['objects'][:5]])
         prompt += f"Specific objects visible include: {objects_text}. "
     
-    # Count people in the image from both faces and objects detection
+    # Count people in the image using a more accurate approach
     people_count = 0
     has_faces = False
+    
+    # First check faces detected by the API
     if 'faces' in analysis_results and analysis_results['faces']:
         faces_count = len(analysis_results['faces'])
-        people_count += faces_count
+        people_count = faces_count
         has_faces = True
     
-    # Additionally check for Person objects which might be detected even if faces aren't clear
-    person_objects = 0
+    # Check if Person objects were detected
     if 'objects' in analysis_results and analysis_results['objects']:
-        person_objects = sum(1 for obj in analysis_results['objects'] if obj['name'] == 'Person')
-        # If we have more Person objects than faces, use that count instead
-        if person_objects > people_count:
-            people_count = person_objects
+        # Get confidence scores for Person objects
+        person_scores = [obj['score'] for obj in analysis_results['objects'] if obj['name'] == 'Person']
+        
+        # Count unique Person objects with score > 70 to avoid duplicates and low-confidence detections
+        high_confidence_people = sum(1 for score in person_scores if score > 70)
+        
+        # Count Person objects with scores between 50-70 as possibly the same people
+        medium_confidence_people = sum(1 for score in person_scores if 50 <= score <= 70) // 2
+        
+        # Use face count as minimum, object detection as maximum
+        # This avoids double-counting the same person from different angles
+        total_person_objects = high_confidence_people + medium_confidence_people
+        
+        # If we see person objects but no faces, use object detection count
+        if not has_faces:
+            people_count = total_person_objects
+        else:
+            # If we have both faces and objects, use the more reliable count
+            # but prevent excessive overcounting
+            people_count = min(total_person_objects, faces_count + 1)
     
     # Add information about people and emotions
     if people_count > 0:

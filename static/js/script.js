@@ -347,9 +347,28 @@ document.addEventListener('DOMContentLoaded', function() {
         const detectedObjects = document.getElementById('detectedObjects');
         detectedObjects.innerHTML = '';
         if (results.objects && results.objects.length > 0) {
-            // Track if a person was found
-            let personDetected = false;
+            // Track person detection with confidence scores
+            const personObjects = results.objects.filter(obj => obj.name === 'Person');
+            const highConfidencePersons = personObjects.filter(obj => obj.score > 70);
+            const mediumConfidencePersons = personObjects.filter(obj => obj.score >= 50 && obj.score <= 70);
             
+            // Calculate a reasonable person count (avoiding duplicates)
+            let personCount = highConfidencePersons.length;
+            // Add medium confidence person objects more conservatively
+            if (mediumConfidencePersons.length > 0) {
+                personCount += Math.min(1, Math.floor(mediumConfidencePersons.length / 2));
+            }
+            
+            // Check face detection to help confirm person count
+            const faceCount = results.faces ? results.faces.length : 0;
+            
+            // Only if we have both face detection and object detection, use the more reliable count
+            if (faceCount > 0) {
+                // Use face count as a guide, but don't exceed it dramatically
+                personCount = Math.min(personCount, faceCount + 1);
+            }
+            
+            // Display each object
             results.objects.forEach(obj => {
                 const badge = document.createElement('span');
                 badge.classList.add('badge', 'bg-info', 'text-dark', 'me-2', 'mb-2', 'element-badge');
@@ -357,24 +376,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 badge.textContent = `${obj.name} (${obj.score}%)`;
                 detectedObjects.appendChild(badge);
                 
-                // Add objects to emphasis options (especially "Person")
-                if (obj.name === 'Person') {
-                    personDetected = true;
-                    
-                    // Add to emphasis options with priority
-                    const option = document.createElement('div');
-                    option.classList.add('form-check', 'form-check-inline');
-                    option.innerHTML = `
-                        <input class="form-check-input emphasis-checkbox" type="checkbox" value="${obj.name}" id="emphasis_${obj.name.replace(/\s+/g, '_')}" checked>
-                        <label class="form-check-label" for="emphasis_${obj.name.replace(/\s+/g, '_')}"><strong>${obj.name}</strong></label>
-                    `;
-                    // Insert Person as the first option
-                    if (emphasisOptions.firstChild) {
-                        emphasisOptions.insertBefore(option, emphasisOptions.firstChild);
-                    } else {
-                        emphasisOptions.appendChild(option);
+                // Add Person objects to emphasis options but only add one checkbox
+                if (obj.name === 'Person' && obj.score >= 70) {
+                    // Only add Person once to emphasis options
+                    if (!document.getElementById('emphasis_Person')) {
+                        // Add to emphasis options with priority
+                        const option = document.createElement('div');
+                        option.classList.add('form-check', 'form-check-inline');
+                        option.innerHTML = `
+                            <input class="form-check-input emphasis-checkbox" type="checkbox" value="Person" id="emphasis_Person" checked>
+                            <label class="form-check-label" for="emphasis_Person"><strong>Person</strong></label>
+                        `;
+                        // Insert Person as the first option
+                        if (emphasisOptions.firstChild) {
+                            emphasisOptions.insertBefore(option, emphasisOptions.firstChild);
+                        } else {
+                            emphasisOptions.appendChild(option);
+                        }
                     }
-                } else {
+                } else if (obj.name !== 'Person') {
                     // Add other objects to emphasis options
                     const option = document.createElement('div');
                     option.classList.add('form-check', 'form-check-inline');
@@ -386,11 +406,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
-            // If a person was detected, highlight that this is the main subject
-            if (personDetected) {
+            // If people were detected, show a note about the count
+            if (personCount > 0) {
                 const personNote = document.createElement('div');
                 personNote.classList.add('mt-2', 'mb-2', 'small', 'text-info');
-                personNote.innerHTML = '<strong>Note:</strong> Person detected as main subject. The Person element is pre-selected for emphasis.';
+                
+                if (personCount === 1) {
+                    personNote.innerHTML = '<strong>Note:</strong> One person detected as the main subject. The Person element is pre-selected for emphasis.';
+                } else {
+                    personNote.innerHTML = `<strong>Note:</strong> ${personCount} people detected in the image. The Person element is pre-selected for emphasis.`;
+                }
+                
                 detectedObjects.appendChild(personNote);
             }
         } else {
