@@ -230,6 +230,36 @@ main {
     box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
 }
 
+/* Force Light Theme - This completely overrides Bootstrap's dark theme for the section */
+.light-theme {
+    background-color: #ffffff !important;
+    border: 2px solid rgba(111, 66, 193, 0.3) !important;
+    border-radius: 8px !important;
+    color: #222222 !important;
+}
+
+.light-theme * {
+    color: #222222 !important;
+}
+
+.light-theme .form-control, 
+.light-theme .form-select,
+.light-theme textarea {
+    background-color: #ffffff !important;
+    color: #222222 !important;
+    border: 1px solid #ced4da !important;
+}
+
+.light-theme .form-select option {
+    background-color: #ffffff !important;
+    color: #222222 !important;
+}
+
+.light-theme label {
+    color: #222222 !important;
+    font-weight: 500 !important;
+}
+
 .personalization-section {
     background-color: #ffffff !important;
     border: 2px solid rgba(111, 66, 193, 0.3) !important;
@@ -312,12 +342,19 @@ main {
     color: inherit !important;
 }
 
-.btn-outline-primary { color: #0d6efd !important; }
-.btn-outline-danger { color: #dc3545 !important; }
-.btn-outline-warning { color: #ffc107 !important; }
-.btn-outline-info { color: #0dcaf0 !important; }
-.btn-outline-success { color: #198754 !important; }
+.light-theme .btn-outline-primary { color: #0d6efd !important; border-color: #0d6efd !important; background-color: #ffffff !important; }
+.light-theme .btn-outline-danger { color: #dc3545 !important; border-color: #dc3545 !important; background-color: #ffffff !important; }
+.light-theme .btn-outline-warning { color: #ffc107 !important; border-color: #ffc107 !important; background-color: #ffffff !important; }
+.light-theme .btn-outline-info { color: #0dcaf0 !important; border-color: #0dcaf0 !important; background-color: #ffffff !important; }
+.light-theme .btn-outline-success { color: #198754 !important; border-color: #198754 !important; background-color: #ffffff !important; }
 
+.light-theme .btn-outline-primary:hover { background-color: #0d6efd !important; color: #ffffff !important; }
+.light-theme .btn-outline-danger:hover { background-color: #dc3545 !important; color: #ffffff !important; }
+.light-theme .btn-outline-warning:hover { background-color: #ffc107 !important; color: #000000 !important; }
+.light-theme .btn-outline-info:hover { background-color: #0dcaf0 !important; color: #000000 !important; }
+.light-theme .btn-outline-success:hover { background-color: #198754 !important; color: #ffffff !important; }
+
+/* Legacy styles for personalization-section class - can be removed later */
 .personalization-section .btn-outline-primary,
 .personalization-section .btn-outline-danger,
 .personalization-section .btn-outline-warning,
