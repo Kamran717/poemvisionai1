@@ -33,9 +33,10 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         # Create a larger canvas for the framed image with poem
         # The height is increased to accommodate the poem text below the image
         poem_lines = poem_text.strip().split("\n")
-        # Ensure line height is 1.2 times the font size for better spacing and compactness
-        poem_line_height = int(poem_font_size * 1.2)  # Reduced line spacing for compactness
-        poem_height = (len(poem_lines) * poem_line_height) + (padding * 2)
+        # Make line height tighter for a more compact appearance
+        poem_line_height = int(poem_font_size * 1.1)  # Further reduced line spacing for maximum compactness
+        # Reduced the padding for poem height to make it more compact
+        poem_height = (len(poem_lines) * poem_line_height) + padding
         
         # Calculate margins based on frame style
         frame_width = 20  # Default frame width
@@ -59,7 +60,8 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         
         # Now set the final dimensions - ensure all values are integers
         new_width = int(image_area_width + (frame_width * 2) + (padding * 2))
-        new_height = int(image_area_height + (frame_width * 2) + (padding * 2) + poem_height)
+        # Reduce the extra space at the bottom - make it more compact
+        new_height = int(image_area_height + (frame_width * 2) + padding + poem_height)
         
         # Frame color based on style
         frame_colors = {
@@ -149,19 +151,19 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
             logger.error(f"Error loading font: {str(e)}")
             font = ImageFont.load_default()
         
-        # Calculate text position (centered below the resized image)
-        text_y = int(paste_y + image_area_height + padding)
+        # Calculate text position - position it closer to the image with minimal space
+        text_y = int(paste_y + image_area_height + 5)  # Reduced padding to minimum (5px)
         
         # Draw each line of the poem with improved visibility
         text_color = (0, 0, 0)  # Black text
         text_shadow_color = (230, 230, 230)  # Lighter shadow for stronger contrast
         
         # Stronger contrast for better readability
-        background_rect_padding = 10  # Padding around text
+        background_rect_padding = 5  # Reduced padding around text
         
-        # Calculate the area for poem text
-        poem_bg_y = text_y - background_rect_padding*2
-        poem_bg_height = (len(poem_lines) * poem_line_height) + (background_rect_padding * 2)  # Reduce vertical spacing
+        # Calculate the area for poem text - start immediately after the image
+        poem_bg_y = text_y - background_rect_padding  # Reduced gap
+        poem_bg_height = (len(poem_lines) * poem_line_height) + background_rect_padding  # Even more compact vertical spacing
         
         # Find the longest line to ensure all text fits within a symmetrical area
         max_line_width = 0
