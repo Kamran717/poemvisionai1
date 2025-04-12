@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const downloadBtn = document.getElementById('downloadBtn');
     const regeneratePoemBtn = document.getElementById('regeneratePoemBtn');
     
+    const step2Image = document.getElementById('step2Image');
     const poemStepImage = document.getElementById('poemStepImage');
     const generatedPoem = document.getElementById('generatedPoem');
     const finalCreation = document.getElementById('finalCreation');
@@ -299,6 +300,11 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Display the analysis results
             displayAnalysisResults(data.results);
+            
+            // Set the image for step 2
+            if (step2Image) {
+                step2Image.src = state.imageBase64;
+            }
             
             // Move to the next step
             goToStep(2);
@@ -627,6 +633,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     backToStep2Btn.addEventListener('click', function() {
+        // Make sure step2Image is updated when navigating back
+        if (step2Image) {
+            step2Image.src = poemStepImage.src;
+        }
         goToStep(2);
     });
 
