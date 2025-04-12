@@ -1,7 +1,7 @@
 import io
 import logging
+import os
 from PIL import Image, ImageDraw, ImageFont
-import base64
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -30,52 +30,50 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         target_width = min(original_width, 800)
         
         # Calculate new height to maintain aspect ratio
-        image_area_height = original_height * (target_width / original_width)
+        image_area_height = int(original_height * (target_width / original_width))
         
-        # Format poem lines
-        poem_lines = poem_text.strip().split("\n")
+        # Format poem lines - only keep non-empty lines
+        poem_lines = [line for line in poem_text.strip().split("\n") if line.strip()]
         
-        # Increase font size dramatically to exactly match the example image
-        # The example shows very large text (72-80pt based on image width)
-        poem_font_size = max(72, int(target_width * 0.10))
+        # VERY LARGE text size - at least 48pt, up to 20% of image width
+        poem_font_size = max(48, int(target_width * 0.15))
         
-        # Calculate line height - in the example there's much more spacing between lines
-        # with clean whitespace between each line of the poem
-        poem_line_height = int(poem_font_size * 1.5)
+        # Calculate line height (space between lines) - make it much larger
+        # The example shows significant line spacing
+        poem_line_height = int(poem_font_size * 2.0)
         
-        # Calculate poem area height - much larger to accommodate bigger text
-        # The example shows more whitespace at top and bottom
-        poem_padding = 100
-        poem_height = (len(poem_lines) * poem_line_height) + poem_padding * 2
+        # Add generous whitespace after image and at bottom
+        poem_padding_top = int(poem_font_size * 1.2)  
+        poem_padding_bottom = int(poem_font_size * 3.0)
         
-        # Create a new image with white background
+        # Calculate poem area height - include empty space
+        poem_height = (len(poem_lines) * poem_line_height) + poem_padding_top + poem_padding_bottom
+        
+        # Create dimensions for the new image
         new_width = target_width
         new_height = int(image_area_height + poem_height)
         
         # Create the new image with white background
         final_img = Image.new("RGB", (new_width, new_height), (255, 255, 255))
         
-        # Resize the original image to fit the target width
+        # Resize and paste the original image at the top
         img_resized = img.resize((int(target_width), int(image_area_height)), Image.LANCZOS)
-        
-        # Paste the resized image at the top
         final_img.paste(img_resized, (0, 0))
         
         # Create draw object
         draw = ImageDraw.Draw(final_img)
         
-        # Try loading a nice serif font that matches the example
-        # The example uses a classic serif font with nice contrast
+        # Try to load a font
         try:
-            # Prioritize Georgia which closely matches the example
+            # Try a few common serif fonts first
             font_options = [
-                "Georgia.ttf",
-                "Times New Roman.ttf",
-                "DejaVuSerif.ttf",
-                "LiberationSerif-Regular.ttf",
-                "Arial.ttf"
+                "Georgia.ttf", 
+                "times.ttf", 
+                "Times New Roman.ttf", 
+                "DejaVuSerif.ttf"
             ]
             
+            # Try each font in order
             font = None
             for font_name in font_options:
                 try:
@@ -84,40 +82,37 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
                 except:
                     continue
             
+            # If no font found, use default
             if font is None:
                 font = ImageFont.load_default()
-                logger.warning("Using default font - none of the TrueType fonts were available")
+                logger.warning("Using default font - no TrueType fonts available")
+                
         except Exception as e:
             logger.error(f"Error loading font: {str(e)}")
             font = ImageFont.load_default()
         
         # Set starting position for the poem text
-        # In the example, the text starts with more whitespace after the image
-        text_y = int(image_area_height + poem_padding)
+        text_y = int(image_area_height + poem_padding_top)
+        
+        # If we're using the default font, make it appear much larger
+        using_default_font = str(font) == str(ImageFont.load_default())
         
         # Draw each line of the poem with large text
         for i, line in enumerate(poem_lines):
-            # Skip empty lines but maintain spacing
-            if not line.strip():
-                continue
-                
-            # Calculate text width for centering
-            try:
-                line_width = draw.textlength(line, font=font)
-            except:
-                # For older PIL versions that don't have textlength
-                try:
-                    line_width = font.getmask(line).getbbox()[2]
-                except:
-                    line_width = len(line) * (poem_font_size * 0.6)
-            
-            # Left align text with a left margin like in the example
-            # The example shows left-aligned text with a margin
-            text_x = int(new_width * 0.15)  # About 15% margin from left edge
+            # Left align text with a margin (12% from left)
+            text_x = int(new_width * 0.12)
             line_y = text_y + (i * poem_line_height)
             
-            # Draw the poem text in pure black like in the example
-            draw.text((text_x, line_y), line, font=font, fill=(0, 0, 0))
+            # If using default font, create a larger appearance by drawing multiple times
+            if using_default_font:
+                # Using thicker/larger text with the default font
+                thickness = 6  # Larger number = thicker text
+                for dx in range(-thickness, thickness+1):
+                    for dy in range(-thickness, thickness+1):
+                        draw.text((text_x+dx, line_y+dy), line, fill=(0, 0, 0), font=font)
+            else:
+                # Draw normal text with the loaded font
+                draw.text((text_x, line_y), line, fill=(0, 0, 0), font=font)
         
         # Save the final image
         output = io.BytesIO()
