@@ -174,10 +174,10 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         poem_bg_x1 = (new_width - poem_area_width) // 2
         poem_bg_x2 = poem_bg_x1 + poem_area_width
         
-        # Add a subtle background for the poem area - light cream color for elegance
+        # Add a white background for the poem area - pure white for maximum contrast with black text
         draw.rectangle(
             (poem_bg_x1, poem_bg_y, poem_bg_x2, poem_bg_y + poem_bg_height),
-            fill=(250, 250, 245),  # Very light cream color
+            fill=(255, 255, 255),  # Pure white background
             outline=None
         )
         
@@ -185,7 +185,7 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         draw.rectangle(
             (poem_bg_x1, poem_bg_y, poem_bg_x2, poem_bg_y + poem_bg_height),
             fill=None,
-            outline=(200, 200, 200),  # Light gray border
+            outline=(180, 180, 180),  # Medium gray border
             width=2
         )
         
@@ -202,11 +202,17 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
             text_x = (new_width - line_width) // 2
             line_y = text_y + (i * poem_line_height)
             
-            # Draw text with subtle shadow for depth without overwhelming contrast
-            # Shadow first - dark gray
-            draw.text((text_x + 2, line_y + 2), line, fill=(150, 150, 150), font=font)
+            # Draw text with a bolder appearance for improved readability
+            # Use pure black text on white background for maximum contrast and clarity
             
-            # Then the main text - pure black for clarity
+            # Create bold effect by drawing the text multiple times with slight offsets
+            for offset in range(1, 2):  # Smaller offset for a more refined bold effect
+                draw.text((text_x - offset, line_y), line, fill=(0, 0, 0), font=font)
+                draw.text((text_x + offset, line_y), line, fill=(0, 0, 0), font=font)
+                draw.text((text_x, line_y - offset), line, fill=(0, 0, 0), font=font)
+                draw.text((text_x, line_y + offset), line, fill=(0, 0, 0), font=font)
+            
+            # Draw the main text - pure black with high contrast against white
             draw.text((text_x, line_y), line, fill=(0, 0, 0), font=font)
         
         # Convert the image to bytes
