@@ -347,13 +347,52 @@ document.addEventListener('DOMContentLoaded', function() {
         const detectedObjects = document.getElementById('detectedObjects');
         detectedObjects.innerHTML = '';
         if (results.objects && results.objects.length > 0) {
+            // Track if a person was found
+            let personDetected = false;
+            
             results.objects.forEach(obj => {
                 const badge = document.createElement('span');
                 badge.classList.add('badge', 'bg-info', 'text-dark', 'me-2', 'mb-2', 'element-badge');
                 badge.setAttribute('data-element', obj.name);
                 badge.textContent = `${obj.name} (${obj.score}%)`;
                 detectedObjects.appendChild(badge);
+                
+                // Add objects to emphasis options (especially "Person")
+                if (obj.name === 'Person') {
+                    personDetected = true;
+                    
+                    // Add to emphasis options with priority
+                    const option = document.createElement('div');
+                    option.classList.add('form-check', 'form-check-inline');
+                    option.innerHTML = `
+                        <input class="form-check-input emphasis-checkbox" type="checkbox" value="${obj.name}" id="emphasis_${obj.name.replace(/\s+/g, '_')}" checked>
+                        <label class="form-check-label" for="emphasis_${obj.name.replace(/\s+/g, '_')}"><strong>${obj.name}</strong></label>
+                    `;
+                    // Insert Person as the first option
+                    if (emphasisOptions.firstChild) {
+                        emphasisOptions.insertBefore(option, emphasisOptions.firstChild);
+                    } else {
+                        emphasisOptions.appendChild(option);
+                    }
+                } else {
+                    // Add other objects to emphasis options
+                    const option = document.createElement('div');
+                    option.classList.add('form-check', 'form-check-inline');
+                    option.innerHTML = `
+                        <input class="form-check-input emphasis-checkbox" type="checkbox" value="${obj.name}" id="emphasis_${obj.name.replace(/\s+/g, '_')}">
+                        <label class="form-check-label" for="emphasis_${obj.name.replace(/\s+/g, '_')}">${obj.name}</label>
+                    `;
+                    emphasisOptions.appendChild(option);
+                }
             });
+            
+            // If a person was detected, highlight that this is the main subject
+            if (personDetected) {
+                const personNote = document.createElement('div');
+                personNote.classList.add('mt-2', 'mb-2', 'small', 'text-info');
+                personNote.innerHTML = '<strong>Note:</strong> Person detected as main subject. The Person element is pre-selected for emphasis.';
+                detectedObjects.appendChild(personNote);
+            }
         } else {
             detectedObjects.textContent = 'No objects detected.';
         }
@@ -441,6 +480,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.emphasis-checkbox').forEach(checkbox => {
             checkbox.addEventListener('change', updateSelectedEmphasis);
         });
+        
+        // Make sure our initial state includes any pre-checked boxes (like Person)
+        updateSelectedEmphasis();
     }
 
     // Update the selected emphasis elements
@@ -459,6 +501,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 badge.classList.remove('selected');
             }
         });
+        
+        // Initial update of the state when displayAnalysisResults is called
+        // This ensures the Person checkbox is properly included in state.selectedEmphasis
+        // if it was pre-checked in the UI
+        
+        // Log selected emphasis for debugging
+        console.log("Selected emphasis elements:", state.selectedEmphasis);
     }
 
     // Generate the poem
