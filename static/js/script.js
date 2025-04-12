@@ -567,6 +567,40 @@ document.addEventListener('DOMContentLoaded', function() {
             downloadBtn.href = finalImageSrc;
             downloadBtn.setAttribute('download', 'my-custom-poem.jpg');
             
+            // Add event listener to handle download for browsers that don't support download attribute
+            downloadBtn.addEventListener('click', function(e) {
+                // For browsers that don't support the download attribute
+                const isIE = !!window.MSInputMethodContext && !!document.documentMode;
+                const isEdge = navigator.userAgent.indexOf("Edge") > -1;
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                
+                if (isIE || isEdge || isIOS) {
+                    e.preventDefault();
+                    
+                    // Create a temporary link with download functionality
+                    const tmpLink = document.createElement('a');
+                    tmpLink.href = finalImageSrc;
+                    tmpLink.download = 'my-custom-poem.jpg';
+                    tmpLink.style.display = 'none';
+                    document.body.appendChild(tmpLink);
+                    
+                    // Create a blob and download it
+                    fetch(finalImageSrc)
+                        .then(res => res.blob())
+                        .then(blob => {
+                            const url = window.URL.createObjectURL(blob);
+                            tmpLink.href = url;
+                            tmpLink.click();
+                            window.URL.revokeObjectURL(url);
+                            document.body.removeChild(tmpLink);
+                        })
+                        .catch(err => {
+                            console.error('Error downloading image:', err);
+                            alert('Could not download the image. Try right-clicking on the image and selecting "Save image as..."');
+                        });
+                }
+            });
+            
             // Also store the data for sharing
             state.finalImageSrc = finalImageSrc;
             if (data.shareCode) {

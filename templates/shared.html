@@ -103,3 +103,51 @@
     </div>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Copy link functionality
+        const sharedUrlInput = document.getElementById('sharedUrlInput');
+        const copySharedLinkBtn = document.getElementById('copySharedLinkBtn');
+        
+        copySharedLinkBtn.addEventListener('click', function() {
+            sharedUrlInput.select();
+            document.execCommand('copy');
+            
+            // Visual feedback for copy button
+            copySharedLinkBtn.innerHTML = '<i class="fas fa-check"></i>';
+            setTimeout(() => {
+                copySharedLinkBtn.innerHTML = '<i class="fas fa-copy"></i>';
+            }, 2000);
+        });
+        
+        // Make the download function work properly too
+        const finalImage = document.querySelector('#finalCreationContainer img');
+        const downloadLink = document.createElement('a');
+        downloadLink.classList.add('btn', 'btn-success', 'mt-3');
+        downloadLink.innerHTML = '<i class="fas fa-download me-2"></i>Download';
+        downloadLink.href = finalImage.src;
+        downloadLink.setAttribute('download', 'shared-poem.jpg');
+        finalImage.parentNode.appendChild(downloadLink);
+    });
+    
+    // Instagram sharing (copy and open)
+    function copyAndOpenInstagram() {
+        const sharedUrlInput = document.getElementById('sharedUrlInput');
+        sharedUrlInput.select();
+        document.execCommand('copy');
+        alert('Link copied! Now you can paste it into Instagram.');
+        window.open('https://www.instagram.com/', '_blank');
+    }
+    
+    // TikTok sharing (copy and open)
+    function copyAndOpenTikTok() {
+        const sharedUrlInput = document.getElementById('sharedUrlInput');
+        sharedUrlInput.select();
+        document.execCommand('copy');
+        alert('Link copied! Now you can paste it into TikTok.');
+        window.open('https://www.tiktok.com/', '_blank');
+    }
+</script>
+{% endblock %}
