@@ -28,7 +28,7 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         # Determine poem text size and layout
         padding = 40  # Padding around the image and text
         poem_height = 0
-        poem_font_size = 100  # Significantly larger text for maximum readability
+        poem_font_size = 200  # MUCH larger text size for maximum readability
         
         # Create a larger canvas for the framed image with poem
         # The height is increased to accommodate the poem text below the image
@@ -48,8 +48,17 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         
         # Create a new image with the calculated dimensions
         # Adding space for the frame and the poem
-        new_width = original_width + (frame_width * 2) + (padding * 2)
-        new_height = original_height + (frame_width * 2) + (padding * 2) + poem_height
+        # Cap the width to ensure text doesn't get too wide on images with different aspect ratios
+        target_width = max(original_width, 1200) # Ensure minimum width for text
+        target_width = min(target_width, 1800)  # But cap maximum width to prevent excessive stretching
+        
+        # Calculate image scaling to ensure it fits within the frame
+        image_area_width = target_width
+        image_area_height = original_height * (image_area_width / original_width)
+        
+        # Now set the final dimensions - ensure all values are integers
+        new_width = int(image_area_width + (frame_width * 2) + (padding * 2))
+        new_height = int(image_area_height + (frame_width * 2) + (padding * 2) + poem_height)
         
         # Frame color based on style
         frame_colors = {
@@ -78,8 +87,11 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         paste_x = frame_width + padding
         paste_y = frame_width + padding
         
-        # Paste the original image
-        framed_img.paste(img, (paste_x, paste_y))
+        # Resize the image to fit while maintaining aspect ratio
+        img_resized = img.resize((int(image_area_width), int(image_area_height)), Image.LANCZOS)
+        
+        # Paste the resized image
+        framed_img.paste(img_resized, (paste_x, paste_y))
         
         # Draw decorative elements based on frame style
         if frame_style == "elegant":
@@ -100,12 +112,14 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
         elif frame_style == "ornate":
             # Draw ornate pattern along the frame
             pattern_spacing = 40
-            for i in range(frame_width, new_width - frame_width, pattern_spacing):
+            # Convert all values to integers for the range function
+            for i in range(frame_width, int(new_width - frame_width), pattern_spacing):
                 # Fix rectangle coordinates format (x1, y1, x2, y2)
                 draw.rectangle((i, frame_width//2, i + 10, frame_width), fill=frame_color)
                 draw.rectangle((i, new_height - frame_width, i + 10, new_height - frame_width//2), fill=frame_color)
             
-            for i in range(frame_width, new_height - frame_width, pattern_spacing):
+            # Convert all values to integers for the range function
+            for i in range(frame_width, int(new_height - frame_width), pattern_spacing):
                 # Fix rectangle coordinates format (x1, y1, x2, y2)
                 draw.rectangle((frame_width//2, i, frame_width, i + 10), fill=frame_color)
                 draw.rectangle((new_width - frame_width, i, new_width - frame_width//2, i + 10), fill=frame_color)
@@ -134,8 +148,8 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
             logger.error(f"Error loading font: {str(e)}")
             font = ImageFont.load_default()
         
-        # Calculate text position (centered below the image)
-        text_y = paste_y + original_height + padding
+        # Calculate text position (centered below the resized image)
+        text_y = int(paste_y + image_area_height + padding)
         
         # Draw each line of the poem with improved visibility
         text_color = (0, 0, 0)  # Black text
