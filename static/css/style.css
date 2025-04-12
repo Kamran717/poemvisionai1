@@ -230,7 +230,34 @@ main {
     box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
 }
 
+.personalization-section {
+    background-color: #ffffff !important;
+    border: 2px solid rgba(111, 66, 193, 0.3) !important;
+    border-radius: 8px !important;
+}
+
 .personalization-section * {
+    color: #222222 !important;
+}
+
+.personalization-section .form-select,
+.personalization-section .form-control,
+.personalization-section textarea,
+.personalization-section [data-bs-theme="light"] .form-select,
+.personalization-section [data-bs-theme="light"] .form-control,
+.personalization-section [data-bs-theme="light"] textarea,
+[data-bs-theme="light"] .form-select,
+[data-bs-theme="light"] .form-control,
+[data-bs-theme="light"] textarea {
+    background-color: #ffffff !important;
+    color: #222222 !important;
+    border-color: #d1d1d1 !important;
+}
+
+.personalization-section .form-select option,
+.personalization-section [data-bs-theme="light"] .form-select option,
+[data-bs-theme="light"] .form-select option {
+    background-color: #ffffff !important;
     color: #222222 !important;
 }
 
@@ -258,11 +285,16 @@ main {
     margin-right: 8px;
 }
 
-.prompt-chip {
+.prompt-chip,
+[data-bs-theme="light"] .prompt-chip,
+.personalization-section .prompt-chip {
     transition: all 0.2s ease;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     border-radius: 20px;
     font-size: 0.85rem;
+    background-color: #ffffff !important;
+    color: #212529 !important;
+    border: 1px solid rgba(0,0,0,0.2) !important;
 }
 
 .prompt-chip:hover {
@@ -272,6 +304,26 @@ main {
 
 .prompt-chip:active {
     transform: translateY(0);
+}
+
+.prompt-chip i,
+[data-bs-theme="light"] .prompt-chip i,
+.personalization-section .prompt-chip i {
+    color: inherit !important;
+}
+
+.btn-outline-primary { color: #0d6efd !important; }
+.btn-outline-danger { color: #dc3545 !important; }
+.btn-outline-warning { color: #ffc107 !important; }
+.btn-outline-info { color: #0dcaf0 !important; }
+.btn-outline-success { color: #198754 !important; }
+
+.personalization-section .btn-outline-primary,
+.personalization-section .btn-outline-danger,
+.personalization-section .btn-outline-warning,
+.personalization-section .btn-outline-info,
+.personalization-section .btn-outline-success {
+    background-color: #ffffff !important;
 }
 
 textarea#customPromptInput {
@@ -291,7 +343,8 @@ textarea#customPromptInput:focus {
     padding: 2px 6px;
     border-radius: 12px;
     font-size: 0.8rem;
-    background-color: rgba(0, 0, 0, 0.04);
+    background-color: rgba(0, 0, 0, 0.04) !important;
+    color: #222222 !important;
 }
 
 /* Responsive Image */
