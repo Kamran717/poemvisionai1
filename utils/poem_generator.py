@@ -191,7 +191,7 @@ POEM_TEMPLATES = {
     ]
 }
 
-def generate_poem(analysis_results, poem_type, emphasis):
+def generate_poem(analysis_results, poem_type, emphasis, custom_terms='', custom_category=''):
     """
     Generate a poem based on image analysis and user preferences using Google's Gemini API.
     If the API is not available, generates a basic poem using templates.
@@ -200,6 +200,8 @@ def generate_poem(analysis_results, poem_type, emphasis):
         analysis_results (dict): The results from the Google Cloud Vision AI analysis
         poem_type (str): The type of poem to generate (e.g., 'love', 'funny', 'inspirational')
         emphasis (list): List of elements to emphasize in the poem
+        custom_terms (str, optional): Custom terms or names to include in the poem
+        custom_category (str, optional): Category of the custom terms (e.g., names, places)
         
     Returns:
         str: The generated poem
@@ -208,10 +210,10 @@ def generate_poem(analysis_results, poem_type, emphasis):
         # Check if API key is available
         if not GEMINI_API_KEY:
             logger.warning("Gemini API key not found in environment variables. Using template poem.")
-            return _generate_template_poem(analysis_results, poem_type, emphasis)
+            return _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms, custom_category)
         
         # Create a detailed prompt based on the analysis and user preferences
-        prompt = _create_prompt(analysis_results, poem_type, emphasis)
+        prompt = _create_prompt(analysis_results, poem_type, emphasis, custom_terms, custom_category)
         logger.debug(f"Generated prompt: {prompt}")
         
         # Prepare the API request
@@ -290,7 +292,7 @@ def generate_poem(analysis_results, poem_type, emphasis):
         logger.error(f"Error generating poem: {str(e)}", exc_info=True)
         return _generate_template_poem(analysis_results, poem_type, emphasis)
 
-def _generate_template_poem(analysis_results, poem_type, emphasis):
+def _generate_template_poem(analysis_results, poem_type, emphasis, custom_terms='', custom_category=''):
     """
     Generate a poem based on templates when the API is not available.
     
@@ -298,6 +300,8 @@ def _generate_template_poem(analysis_results, poem_type, emphasis):
         analysis_results (dict): The results from the image analysis
         poem_type (str): The type of poem to generate
         emphasis (list): List of elements to emphasize in the poem
+        custom_terms (str, optional): Custom terms or names to include in the poem
+        custom_category (str, optional): Category of the custom terms (e.g., names, places)
         
     Returns:
         str: The generated poem
@@ -434,7 +438,7 @@ def _apply_poem_template(key_elements, poem_type):
     
     return template
 
-def _create_prompt(analysis_results, poem_type, emphasis):
+def _create_prompt(analysis_results, poem_type, emphasis, custom_terms='', custom_category=''):
     """
     Create a detailed prompt for the LLM based on image analysis and user preferences.
     
@@ -442,6 +446,8 @@ def _create_prompt(analysis_results, poem_type, emphasis):
         analysis_results (dict): The results from the Google Cloud Vision AI analysis
         poem_type (str): The type of poem to generate (e.g., 'love', 'funny', 'inspirational')
         emphasis (list): List of elements to emphasize in the poem
+        custom_terms (str, optional): Custom terms or names to include in the poem
+        custom_category (str, optional): Category of the custom terms (e.g., names, places)
         
     Returns:
         str: The generated prompt
@@ -526,6 +532,26 @@ def _create_prompt(analysis_results, poem_type, emphasis):
     if emphasis:
         emphasis_text = ", ".join(emphasis)
         prompt += f"Please emphasize these elements in the poem: {emphasis_text}. "
+        
+    # Add custom terms if provided
+    if custom_terms:
+        # Clean up the terms (remove extra spaces, etc.)
+        cleaned_terms = custom_terms.strip()
+        
+        # Different instructions based on the category
+        category_descriptions = {
+            'names': "people who are meaningful to the recipient",
+            'places': "locations or places that have significance",
+            'emotions': "emotional states or feelings",
+            'activities': "activities or actions",
+            'other': "custom elements"
+        }
+        
+        # Get the category description or use a default
+        category_desc = category_descriptions.get(custom_category, "personal elements")
+        
+        # Add to prompt
+        prompt += f"It is very important to incorporate these specific {category_desc}: '{cleaned_terms}' into the poem. Make these terms central to the theme and meaning of the poem. "
     
     # Add specific instructions based on poem type
     poem_type_instructions = {

@@ -228,8 +228,18 @@ def generate_poem_route():
         poem_type = data.get('poemType', 'free verse')
         emphasis = data.get('emphasis', [])
         
-        # Generate the poem using the LLM
-        poem = generate_poem(analysis_results, poem_type, emphasis)
+        # Get custom prompt info if provided
+        custom_prompt = data.get('customPrompt', {})
+        custom_terms = custom_prompt.get('terms', '')
+        custom_category = custom_prompt.get('category', '')
+        
+        # Generate the poem using the LLM with custom prompt if provided
+        if custom_terms:
+            # Pass the custom prompt data to the poem generator
+            poem = generate_poem(analysis_results, poem_type, emphasis, custom_terms=custom_terms, custom_category=custom_category)
+        else:
+            # Generate poem without custom prompt
+            poem = generate_poem(analysis_results, poem_type, emphasis)
         
         # Update the temporary creation with the poem
         temp_creation.poem_text = poem

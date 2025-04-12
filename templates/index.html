@@ -178,9 +178,54 @@
                                                 </select>
                                             </div>
                                             <div class="mb-3">
-                                                <label class="form-label">Elements to Emphasize</label>
+                                                <label class="form-label">Elements to Emphasize <small class="text-muted">(Choose up to 3)</small></label>
                                                 <div id="emphasisOptions" class="mb-3">
                                                     <!-- Dynamically populated based on analysis results -->
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Personalization Section -->
+                                            <div class="mb-4 p-3 bg-light rounded border">
+                                                <h5 class="mb-3">
+                                                    <i class="fas fa-magic me-2"></i>Personalize Your Poem
+                                                </h5>
+                                                <div class="mb-3">
+                                                    <label for="customPromptInput" class="form-label">Add special words or names to your poem</label>
+                                                    <div class="input-group">
+                                                        <select id="customPromptCategory" class="form-select" style="max-width: 120px;">
+                                                            <option value="names">Names</option>
+                                                            <option value="places">Places</option>
+                                                            <option value="emotions">Emotions</option>
+                                                            <option value="activities">Activities</option>
+                                                            <option value="other">Other</option>
+                                                        </select>
+                                                        <input type="text" class="form-control" id="customPromptInput" 
+                                                            placeholder="Enter names, words, or themes (comma-separated)">
+                                                    </div>
+                                                    <small class="form-text text-muted">
+                                                        These words will be incorporated into your poem to make it more personal.
+                                                    </small>
+                                                </div>
+                                                
+                                                <div class="row g-2 mb-2">
+                                                    <div class="col">
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary w-100 prompt-example" 
+                                                                data-category="names" data-prompt="Sarah, John, Max">
+                                                            Names Example
+                                                        </button>
+                                                    </div>
+                                                    <div class="col">
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary w-100 prompt-example" 
+                                                                data-category="places" data-prompt="Paris, mountains, beach">
+                                                            Places Example
+                                                        </button>
+                                                    </div>
+                                                    <div class="col">
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary w-100 prompt-example" 
+                                                                data-category="emotions" data-prompt="nostalgia, excitement, wonder">
+                                                            Emotions Example
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </form>
