@@ -101,11 +101,11 @@ def create_framed_image(image_bytes, poem_text, frame_style="classic"):
             pattern_spacing = 40
             for i in range(frame_width, new_width - frame_width, pattern_spacing):
                 draw.rectangle([(i, frame_width//2), (i + 10, frame_width)], fill=frame_color)
-                draw.rectangle([(i, new_height - frame_width//2), (i + 10, new_height - frame_width)], fill=frame_color)
+                draw.rectangle([(i, new_height - frame_width), (i + 10, new_height - frame_width//2)], fill=frame_color)
             
             for i in range(frame_width, new_height - frame_width, pattern_spacing):
                 draw.rectangle([(frame_width//2, i), (frame_width, i + 10)], fill=frame_color)
-                draw.rectangle([(new_width - frame_width//2, i), (new_width - frame_width, i + 10)], fill=frame_color)
+                draw.rectangle([(new_width - frame_width, i), (new_width - frame_width//2, i + 10)], fill=frame_color)
         
         # Add poem text below the image
         try:
