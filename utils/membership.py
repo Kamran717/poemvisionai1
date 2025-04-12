@@ -175,28 +175,50 @@ def get_available_poem_types(user_id):
     """Get the list of poem types available to a user based on their plan."""
     # All poem types in the system
     ALL_POEM_TYPES = [
-        {"id": "love", "name": "Love Poem", "free": True},
-        {"id": "funny", "name": "Funny Poem", "free": True},
-        {"id": "inspirational", "name": "Inspirational", "free": True},
+        # Standard poems
+        {"id": "free verse", "name": "Free Verse", "free": True},
+        {"id": "love", "name": "Romantic/Love Poem", "free": True},
+        {"id": "funny", "name": "Funny/Humorous", "free": True},
+        {"id": "inspirational", "name": "Inspirational/Motivational", "free": True},
+        {"id": "angry", "name": "Angry/Intense", "free": False},
+        {"id": "extreme", "name": "Extreme/Bold", "free": False},
         {"id": "holiday", "name": "Holiday", "free": False},
         {"id": "birthday", "name": "Birthday", "free": False},
         {"id": "anniversary", "name": "Anniversary", "free": False},
-        {"id": "farewell", "name": "Farewell", "free": False},
-        {"id": "newborn", "name": "Newborn", "free": False},
-        {"id": "memorial", "name": "Memorial", "free": False},
-        {"id": "religious-general", "name": "Spiritual", "free": False},
-        {"id": "sonnet", "name": "Sonnet", "free": False},
+        {"id": "nature", "name": "Nature", "free": False},
+        {"id": "friendship", "name": "Friendship", "free": False},
+        
+        # Life events
+        {"id": "memorial", "name": "In Memory/RIP", "free": False},
+        {"id": "farewell", "name": "Farewell/Goodbye", "free": False},
+        {"id": "newborn", "name": "Newborn/Baby", "free": False},
+        
+        # Religious
+        {"id": "religious-islam", "name": "Islamic/Muslim", "free": False},
+        {"id": "religious-christian", "name": "Christian", "free": False},
+        {"id": "religious-judaism", "name": "Jewish/Judaism", "free": False},
+        {"id": "religious-general", "name": "Spiritual/General", "free": False},
+        
+        # Fun formats
+        {"id": "twinkle", "name": "Twinkle Twinkle", "free": False},
+        {"id": "roses", "name": "Roses are Red", "free": False},
+        {"id": "knock-knock", "name": "Knock Knock", "free": False},
+        {"id": "pickup", "name": "Pick-up Lines", "free": False},
+        
+        # Classical forms
         {"id": "haiku", "name": "Haiku", "free": False},
-        {"id": "rap", "name": "Rap Verse", "free": False}
+        {"id": "limerick", "name": "Limerick", "free": False},
+        {"id": "sonnet", "name": "Sonnet", "free": False},
+        {"id": "rap", "name": "Rap/Hip-Hop", "free": False},
+        {"id": "nursery", "name": "Nursery Rhyme", "free": False}
     ]
     
-    # If no user or user is not premium, return only free poem types
+    # Check if user is premium
     user = User.query.get(user_id) if user_id else None
+    is_premium = user and user.is_premium
     
-    if not user or not user.is_premium:
-        return [poem_type for poem_type in ALL_POEM_TYPES if poem_type["free"]]
-    
-    # Premium users get all poem types
+    # Return all poem types with their availability status
+    # We're not filtering anymore - we want to show all options
     return ALL_POEM_TYPES
 
 def get_available_frames(user_id):
@@ -214,11 +236,10 @@ def get_available_frames(user_id):
         {"id": "shadow", "name": "Shadow Box", "free": False}
     ]
     
-    # If no user or user is not premium, return only free frames
+    # Check if user is premium
     user = User.query.get(user_id) if user_id else None
+    is_premium = user and user.is_premium
     
-    if not user or not user.is_premium:
-        return [frame for frame in ALL_FRAMES if frame["free"]]
-    
-    # Premium users get all frames
+    # Return all frames with their availability status
+    # We're not filtering anymore - we want to show all options
     return ALL_FRAMES

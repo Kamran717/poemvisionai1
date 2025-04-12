@@ -69,36 +69,135 @@ function updatePoemTypeDropdown(poemTypes) {
     // Clear existing options
     poemTypeSelect.innerHTML = '';
     
-    // Add available poem types
-    poemTypes.forEach(poemType => {
+    // Create optgroups for better organization
+    const standardGroup = document.createElement('optgroup');
+    standardGroup.label = "Standard Poems";
+    
+    const lifeEventsGroup = document.createElement('optgroup');
+    lifeEventsGroup.label = "Life Events";
+    
+    const religiousGroup = document.createElement('optgroup');
+    religiousGroup.label = "Religious Poems";
+    
+    const funGroup = document.createElement('optgroup');
+    funGroup.label = "Fun Formats";
+    
+    const classicGroup = document.createElement('optgroup');
+    classicGroup.label = "Classical Forms";
+    
+    // Define poem types categorization
+    const poemCategories = {
+        standard: ['free verse', 'love', 'funny', 'inspirational', 'angry', 'extreme', 'holiday', 'birthday', 'anniversary', 'nature', 'friendship'],
+        lifeEvents: ['memorial', 'farewell', 'newborn'],
+        religious: ['religious-islam', 'religious-christian', 'religious-judaism', 'religious-general'],
+        fun: ['twinkle', 'roses', 'knock-knock', 'pickup'],
+        classic: ['haiku', 'limerick', 'sonnet', 'rap', 'nursery']
+    };
+    
+    // Define display names for poem types
+    const displayNames = {
+        'free verse': 'Free Verse',
+        'love': 'Romantic/Love Poem',
+        'funny': 'Funny/Humorous',
+        'inspirational': 'Inspirational/Motivational',
+        'angry': 'Angry/Intense',
+        'extreme': 'Extreme/Bold',
+        'holiday': 'Holiday',
+        'birthday': 'Birthday',
+        'anniversary': 'Anniversary',
+        'nature': 'Nature',
+        'friendship': 'Friendship',
+        'memorial': 'In Memory/RIP',
+        'farewell': 'Farewell/Goodbye',
+        'newborn': 'Newborn/Baby',
+        'religious-islam': 'Islamic/Muslim',
+        'religious-christian': 'Christian',
+        'religious-judaism': 'Jewish/Judaism',
+        'religious-general': 'Spiritual/General',
+        'twinkle': 'Twinkle Twinkle',
+        'roses': 'Roses are Red',
+        'knock-knock': 'Knock Knock',
+        'pickup': 'Pick-up Lines',
+        'haiku': 'Haiku',
+        'limerick': 'Limerick',
+        'sonnet': 'Sonnet',
+        'rap': 'Rap/Hip-Hop',
+        'nursery': 'Nursery Rhyme'
+    };
+    
+    // Free types that are available to all users
+    const freeTypes = ['free verse', 'love', 'funny', 'inspirational'];
+    
+    // Map of poem type to its appropriate group
+    const groupMap = {};
+    for (const [category, types] of Object.entries(poemCategories)) {
+        types.forEach(type => groupMap[type] = category);
+    }
+    
+    // Process each poem type and add to appropriate group
+    Object.keys(displayNames).forEach(poemTypeId => {
         const option = document.createElement('option');
-        option.value = poemType.id;
+        option.value = poemTypeId;
+        
+        // Set the free flag based on our predefined free types
+        const isFree = freeTypes.includes(poemTypeId);
         
         // Add lock icon for premium options
-        if (!poemType.free && !isPremium) {
-            option.textContent = `${poemType.name} 🔒`;
+        if (!isFree && !isPremium) {
+            option.textContent = `${displayNames[poemTypeId]} 🔒`;
             option.classList.add('premium-option');
-            // Don't disable the option so users can see it, but we'll show an upgrade prompt if selected
         } else {
-            option.textContent = poemType.name;
+            option.textContent = displayNames[poemTypeId];
         }
         
-        poemTypeSelect.appendChild(option);
+        // Add to appropriate group
+        const category = groupMap[poemTypeId];
+        switch(category) {
+            case 'standard':
+                standardGroup.appendChild(option);
+                break;
+            case 'lifeEvents':
+                lifeEventsGroup.appendChild(option);
+                break;
+            case 'religious':
+                religiousGroup.appendChild(option);
+                break;
+            case 'fun':
+                funGroup.appendChild(option);
+                break;
+            case 'classic':
+                classicGroup.appendChild(option);
+                break;
+            default:
+                poemTypeSelect.appendChild(option);
+        }
         
         // Store in cache
-        accessCache.poemTypes[poemType.id] = poemType.free || isPremium;
+        accessCache.poemTypes[poemTypeId] = isFree || isPremium;
     });
     
+    // Add groups to select
+    poemTypeSelect.appendChild(standardGroup);
+    poemTypeSelect.appendChild(lifeEventsGroup);
+    poemTypeSelect.appendChild(religiousGroup);
+    poemTypeSelect.appendChild(funGroup);
+    poemTypeSelect.appendChild(classicGroup);
+    
     // Try to restore previous selection
-    if (currentSelection && Array.from(poemTypeSelect.options).find(opt => opt.value === currentSelection)) {
-        poemTypeSelect.value = currentSelection;
+    if (currentSelection) {
+        try {
+            poemTypeSelect.value = currentSelection;
+        } catch (e) {
+            // If selection not available, default to free verse
+            poemTypeSelect.value = 'free verse';
+        }
     }
     
     // Add premium indicator if not premium
     if (!isPremium) {
         const legend = document.createElement('div');
         legend.className = 'small text-muted mt-2';
-        legend.innerHTML = '🔒 Premium feature. <a href="/upgrade" class="text-primary">Upgrade</a> to unlock premium poem types.';
+        legend.innerHTML = '🔒 Premium poem types. <a href="/upgrade" class="text-primary">Upgrade</a> to unlock all poem types.';
         poemTypeSelect.parentNode.appendChild(legend);
     }
 }

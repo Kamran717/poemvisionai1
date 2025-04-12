@@ -172,47 +172,8 @@
                                             <div class="mb-3">
                                                 <label for="poemTypeSelect" class="form-label">Poem Type</label>
                                                 <select id="poemTypeSelect" class="form-select">
-                                                    <option value="free verse">Free Verse</option>
-                                                    <option value="love">Romantic/Love Poem</option>
-                                                    <option value="funny">Funny/Humorous</option>
-                                                    <option value="inspirational">Inspirational/Motivational</option>
-                                                    <option value="angry">Angry/Intense</option>
-                                                    <option value="extreme">Extreme/Bold</option>
-                                                    <option value="holiday">Holiday</option>
-                                                    <option value="birthday">Birthday</option>
-                                                    <option value="anniversary">Anniversary</option>
-                                                    <option value="nature">Nature</option>
-                                                    <option value="friendship">Friendship</option>
-                                                    
-                                                    <!-- Life Events -->
-                                                    <option value="memorial">In Memory/RIP</option>
-                                                    <option value="farewell">Farewell/Goodbye</option>
-                                                    <option value="newborn">Newborn/Baby</option>
-                                                    
-                                                    <!-- Religious poem types -->
-                                                    <optgroup label="Religious Poems">
-                                                        <option value="religious-islam">Islamic/Muslim</option>
-                                                        <option value="religious-christian">Christian</option>
-                                                        <option value="religious-judaism">Jewish/Judaism</option>
-                                                        <option value="religious-general">Spiritual/General</option>
-                                                    </optgroup>
-                                                    
-                                                    <!-- Fun poem types -->
-                                                    <optgroup label="Fun Formats">
-                                                        <option value="twinkle">Twinkle Twinkle</option>
-                                                        <option value="roses">Roses are Red</option>
-                                                        <option value="knock-knock">Knock Knock</option>
-                                                        <option value="pickup">Pick-up Lines</option>
-                                                    </optgroup>
-                                                    
-                                                    <!-- Classic poetry forms -->
-                                                    <optgroup label="Classical Forms">
-                                                        <option value="haiku">Haiku</option>
-                                                        <option value="limerick">Limerick</option>
-                                                        <option value="sonnet">Sonnet</option>
-                                                        <option value="rap">Rap/Hip-Hop</option>
-                                                        <option value="nursery">Nursery Rhyme</option>
-                                                    </optgroup>
+                                                    <!-- This will be populated by JavaScript -->
+                                                    <option value="free verse">Loading poem types...</option>
                                                 </select>
                                             </div>
                                             <div class="mb-3 emphasis-container">
@@ -328,51 +289,57 @@
                                     <div class="card-body">
                                         <div class="row" id="frameOptions">
                                             <div class="col-4 col-md-2 mb-3">
-                                                <div class="frame-option text-center" data-frame="classic">
+                                                <div class="frame-option text-center" data-frame="classic" data-frame-id="classic">
                                                     <div class="frame-preview classic-frame mb-2">
                                                         <div class="frame-preview-inner"></div>
                                                     </div>
+                                                    <input type="radio" name="frameStyle" value="classic" class="d-none" checked>
                                                     <span>Classic</span>
                                                 </div>
                                             </div>
                                             <div class="col-4 col-md-2 mb-3">
-                                                <div class="frame-option text-center" data-frame="elegant">
+                                                <div class="frame-option text-center" data-frame="elegant" data-frame-id="elegant">
                                                     <div class="frame-preview elegant-frame mb-2">
                                                         <div class="frame-preview-inner"></div>
                                                     </div>
+                                                    <input type="radio" name="frameStyle" value="elegant" class="d-none">
                                                     <span>Elegant</span>
                                                 </div>
                                             </div>
                                             <div class="col-4 col-md-2 mb-3">
-                                                <div class="frame-option text-center" data-frame="vintage">
+                                                <div class="frame-option text-center" data-frame="vintage" data-frame-id="vintage">
                                                     <div class="frame-preview vintage-frame mb-2">
                                                         <div class="frame-preview-inner"></div>
                                                     </div>
+                                                    <input type="radio" name="frameStyle" value="vintage" class="d-none">
                                                     <span>Vintage</span>
                                                 </div>
                                             </div>
                                             <div class="col-4 col-md-2 mb-3">
-                                                <div class="frame-option text-center" data-frame="minimalist">
+                                                <div class="frame-option text-center" data-frame="minimalist" data-frame-id="minimalist">
                                                     <div class="frame-preview minimalist-frame mb-2">
                                                         <div class="frame-preview-inner"></div>
                                                     </div>
+                                                    <input type="radio" name="frameStyle" value="minimalist" class="d-none">
                                                     <span>Minimalist</span>
                                                 </div>
                                             </div>
                                             <div class="col-4 col-md-2 mb-3">
-                                                <div class="frame-option text-center" data-frame="ornate">
+                                                <div class="frame-option text-center" data-frame="ornate" data-frame-id="ornate">
                                                     <div class="frame-preview ornate-frame mb-2">
                                                         <div class="frame-preview-inner"></div>
                                                     </div>
+                                                    <input type="radio" name="frameStyle" value="ornate" class="d-none">
                                                     <span>Ornate</span>
                                                 </div>
                                             </div>
 
                                             <div class="col-4 col-md-2 mb-3">
-                                                <div class="frame-option text-center" data-frame="none">
+                                                <div class="frame-option text-center" data-frame="none" data-frame-id="none">
                                                     <div class="frame-preview none-frame mb-2">
                                                         <div class="frame-preview-inner"></div>
                                                     </div>
+                                                    <input type="radio" name="frameStyle" value="none" class="d-none">
                                                     <span>No Frame</span>
                                                 </div>
                                             </div>
