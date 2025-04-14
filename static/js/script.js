@@ -317,6 +317,33 @@ document.addEventListener('DOMContentLoaded', function() {
             analyzeImageBtn.disabled = false;
         });
     });
+        
+    // Mobile-specific upload flow
+    function handleMobileUpload() {
+        const imageInput = document.getElementById('imageInput');
+        const uploadedImageContainer = document.getElementById('uploadedImageContainer');
+        const analyzeBtnMobile = document.getElementById('analyzeImageBtnMobile');
+        const analyzeBtnMain = document.getElementById('analyzeImageBtn');
+
+        if (!imageInput || !analyzeBtnMobile) return;
+
+        // Sync mobile button with main analyze button
+        analyzeBtnMobile.addEventListener('click', () => {
+            analyzeBtnMain.click();
+        });
+
+        // Show container with mobile-appropriate buttons
+        imageInput.addEventListener('change', function() {
+            if (window.innerWidth < 768) {
+                uploadedImageContainer.classList.remove('d-none');
+            }
+        });
+    }
+
+    // Initialize on load and resize
+    document.addEventListener('DOMContentLoaded', handleMobileUpload);
+    window.addEventListener('resize', handleMobileUpload);
+    
 
     // Display the analysis results and populate emphasis options
     function displayAnalysisResults(results) {
@@ -545,10 +572,13 @@ document.addEventListener('DOMContentLoaded', function() {
             showMoreBtn.classList.add('show-more-btn', 'mt-2');
             showMoreBtn.setAttribute('id', 'showMoreEmphasisBtn');
             
+            
             // Track if elements are currently shown or hidden
             let elementsShown = false;
             
             showMoreBtn.addEventListener('click', function() {
+                event.preventDefault();
+                
                 if (!elementsShown) {
                     // Show all hidden elements
                     document.querySelectorAll('.emphasis-element-hidden').forEach(el => {

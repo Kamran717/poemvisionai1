@@ -1,6 +1,7 @@
 {% extends 'layout.html' %}
 
 {% block extra_head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="{{ url_for('static', filename='frames/frame_data.js') }}"></script>
     <script src="{{ url_for('static', filename='js/image-processor.js') }}" defer></script>
 {% endblock %}
@@ -10,7 +11,7 @@
     <div class="col-12">
         <div class="card mb-4">
             <div class="card-body text-center p-5">
-                <h1 class="display-4 mb-4">
+                <h1 class="display-4 mb-3">
                     <i class="fas fa-image me-2"></i>
                     <span class="brand-text">
                         <span class="blue">P</span><span class="red">o</span><span class="yellow">e</span><span class="blue">m</span>
@@ -18,9 +19,14 @@
                         <span class="regular">AI</span>
                     </span>
                 </h1>
+                <h2 class="h4 mb-3 text-muted fw-normal">
+                    <span class="d-block d-md-inline">Your Personal Poet</span>
+                    <span class="d-none d-md-inline mx-2">•</span>
+                    <span class="d-block d-md-inline">Need a Poem? Try Poem Vision AI - It's Free!</span>
+                </h2>
                 <p class="lead">Upload an image and get a custom-generated poem based on what's in your picture.</p>
-                <p>Our AI analyzes your image and creates personalized poems that capture its essence.</p>
-                
+                <p class="mb-4">Our AI analyzes your image and creates personalized poems that capture its essence.</p>
+
                 {% if not session.get('user_id') %}
                 <div class="alert alert-info" role="alert">
                     <i class="fas fa-info-circle me-2"></i>
@@ -31,7 +37,7 @@
                     </div>
                 </div>
                 {% elif user and not user.is_premium %}
-                <div class="alert alert-primary" role="alert">
+                <div class="alert alert-info d-none" id="premiumAlert" role="alert">
                     <i class="fas fa-star me-2"></i>
                     <strong>Upgrade to Premium</strong> to unlock all poem types, frames, and unlimited storage!
                     <div class="mt-2">
@@ -100,10 +106,13 @@
                                             <div class="mt-2 small text-muted">Max size: 5MB</div>
                                         </div>
                                         <div id="uploadedImageContainer" class="d-none">
-                                            <img id="uploadedImage" class="img-fluid mb-3 rounded" alt="Uploaded Image">
-                                            <div>
+                                            <img id="uploadedImage" class="img-fluid mb-2 rounded" alt="Uploaded Image">
+                                            <div class="d-flex justify-content-between mb-3">
                                                 <button id="changeImageBtn" class="btn btn-outline-secondary btn-sm">
-                                                    <i class="fas fa-sync-alt me-1"></i> Change Image
+                                                    <i class="fas fa-sync-alt me-1"></i> Change
+                                                </button>
+                                                <button id="analyzeImageBtnMobile" class="btn btn-primary">
+                                                    <i class="fas fa-magic me-1"></i> Analyze
                                                 </button>
                                             </div>
                                         </div>
@@ -171,7 +180,7 @@
                                         <form id="poemPreferencesForm">
                                             <div class="mb-3">
                                                 <label for="poemTypeSelect" class="form-label">Poem Type</label>
-                                                <select id="poemTypeSelect" class="form-select">
+                                                <select id="poemTypeSelect" class="form-select enhanced-select">
                                                     <!-- This will be populated by JavaScript -->
                                                     <option value="free verse">Loading poem types...</option>
                                                 </select>
@@ -320,9 +329,11 @@
                                 <!-- Image Column -->
                                 <div class="col-12 col-lg-6 mb-4">
                                     <div class="bg-light p-0 rounded overflow-hidden h-100">
-                                        <div class="d-flex align-items-center justify-content-center" style="min-height: 400px; max-height: 600px;">
-                                            <img id="poemStepImage" class="img-fluid rounded" 
-                                                alt="Your uploaded image" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                        <!-- Changed to d-flex to help with centering -->
+                                        <div class="position-relative d-flex justify-content-center align-items-center" style="min-height: 400px;">
+                                            <img id="poemStepImage" class="h-100" 
+                                                alt="Your uploaded image" 
+                                                style="width: 80%; object-fit: contain; object-position: center;">
                                         </div>
                                     </div>
                                 </div>
@@ -331,14 +342,16 @@
                                 <div class="col-12 col-lg-6 mb-4">
                                     <div class="h-100 d-flex flex-column">
                                         <h4 class="fw-bold mb-3">Your Generated Poem</h4>
-                                        
-                                        <div class="bg-white text-dark rounded p-4 mb-3 flex-grow-1" style="min-height: 350px;">
-                                            <div id="generatedPoemContainer" class="h-100 d-flex align-items-center">
-                                                <pre id="generatedPoem" class="poem-text mb-0 text-dark w-100" style="font-family: 'Georgia', serif; white-space: pre-wrap; font-size: 1.1rem; line-height: 1.6;"></pre>
+
+                                        <div class="bg-white text-dark rounded-0 p-4 flex-grow-1 overflow-auto" style="min-height: 400px;">
+                                            
+                                            <div id="generatedPoemContainer" class="h-100 d-flex flex-column justify-content-center">
+                                                <pre id="generatedPoem" class="poem-text mb-0 text-dark w-100" style="font-family: 'Georgia', serif; white-space: pre-wrap; font-size: 1.1rem; line-height: 1.6; overflow-y: auto;"></pre>
+                                                
                                             </div>
                                         </div>
-                                        
-                                        <div class="d-grid">
+
+                                        <div class="d-grid mt-2">
                                             <button id="regeneratePoemBtn" class="btn btn-outline-dark rounded-pill py-2">
                                                 <i class="fas fa-redo me-2"></i> Regenerate
                                             </button>

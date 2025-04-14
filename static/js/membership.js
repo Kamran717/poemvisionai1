@@ -14,45 +14,138 @@ let isPremium = false;
 /**
  * Initialize the membership features
  */
-function initMembership() {
-    // Fetch available poem types based on user's membership
-    fetchAvailablePoemTypes();
-    
-    // Fetch available frames based on user's membership
-    fetchAvailableFrames();
-    
-    // Setup upgrade prompts
-    setupUpgradePrompts();
+async function initMembership() {
+    console.log('Initializing membership features...');
+    try {
+        // Use the existing endpoint that returns premium status
+        const response = await fetch('/api/available-poem-types', {
+            credentials: 'include' // Important for session cookies
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        isPremium = data.is_premium || false;
+        console.log('Premium status initialized:', isPremium);
+
+        // Now proceed with initialization
+        await fetchAvailablePoemTypes();
+        await fetchAvailableFrames();
+        setupUpgradePrompts();
+    } catch (error) {
+        console.error('Membership init error:', error);
+        // Fallback to non-premium if there's an error
+        isPremium = false;
+        await fetchAvailablePoemTypes();
+        await fetchAvailableFrames();
+    }
 }
 
 /**
  * Fetch the available poem types for the current user
  */
-function fetchAvailablePoemTypes() {
-    fetch('/api/available-poem-types')
-        .then(response => response.json())
-        .then(data => {
-            if (data.poem_types) {
-                updatePoemTypeDropdown(data.poem_types);
-                isPremium = data.is_premium;
-            }
-        })
-        .catch(error => console.error('Error fetching poem types:', error));
+async function fetchAvailablePoemTypes() {
+    console.log('Fetching available poem types...');
+    try {
+        const response = await fetch('/api/available-poem-types', {
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.poem_types) {
+            isPremium = data.is_premium; // Update from response
+            updatePoemTypeDropdown(data.poem_types);
+        }
+    } catch (error) {
+        console.error('Error fetching poem types:', error);
+        // Fallback to free types only
+        updatePoemTypeDropdown([]);
+    }
 }
 
 /**
  * Fetch the available frames for the current user
  */
-function fetchAvailableFrames() {
-    fetch('/api/available-frames')
-        .then(response => response.json())
-        .then(data => {
-            if (data.frames) {
-                updateFrameOptions(data.frames);
-                isPremium = data.is_premium;
-            }
-        })
-        .catch(error => console.error('Error fetching frames:', error));
+async function fetchAvailableFrames() {
+    try {
+        const response = await fetch('/api/available-frames', {
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.frames) {
+            isPremium = data.is_premium; // Update from response
+            updateFrameOptions(data.frames);
+        }
+    } catch (error) {
+        console.error('Error fetching frames:', error);
+        // Fallback to free frames only
+        updateFrameOptions([]);
+    }
+}
+
+/**
+ * Check if a user has access to a specific feature
+ * @param {string} featureType - The type of feature ('poem_type' or 'frame')
+ * @param {string} featureId - The ID of the feature
+ * @returns {Promise<boolean>} Promise resolving to access status
+ */
+async function checkFeatureAccess(featureType, featureId) {
+    // Check cache first
+    if (featureType === 'poem_type' && accessCache.poemTypes.hasOwnProperty(featureId)) {
+        return accessCache.poemTypes[featureId];
+    }
+
+    if (featureType === 'frame' && accessCache.frames.hasOwnProperty(featureId)) {
+        return accessCache.frames[featureId];
+    }
+
+    try {
+        const response = await fetch('/api/check-access', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                type: featureType,
+                id: featureId
+            }),
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Update cache
+        if (featureType === 'poem_type') {
+            accessCache.poemTypes[featureId] = data.has_access;
+        } else if (featureType === 'frame') {
+            accessCache.frames[featureId] = data.has_access;
+        }
+
+        // Update premium status
+        isPremium = data.is_premium;
+
+        return data.has_access;
+    } catch (error) {
+        console.error('Error checking feature access:', error);
+        return false; // Default to no access on error
+    }
 }
 
 /**
@@ -62,38 +155,56 @@ function fetchAvailableFrames() {
 function updatePoemTypeDropdown(poemTypes) {
     const poemTypeSelect = document.getElementById('poemTypeSelect');
     if (!poemTypeSelect) return;
-    
-    // Remember the current selection if any
+
+    console.log('Updating poem dropdown. Current premium:', isPremium);
+
+    // Clear any existing premium legend
+    const existingLegend = poemTypeSelect.parentNode.querySelector('.premium-legend');
+    if (existingLegend) {
+        existingLegend.remove();
+    }
+
+    // Remember current selection
     const currentSelection = poemTypeSelect.value;
-    
-    // Clear existing options
     poemTypeSelect.innerHTML = '';
-    
-    // Create optgroups for better organization
+
+    // Create optgroups
     const standardGroup = document.createElement('optgroup');
     standardGroup.label = "Standard Poems";
-    
+
     const lifeEventsGroup = document.createElement('optgroup');
     lifeEventsGroup.label = "Life Events";
-    
+
     const religiousGroup = document.createElement('optgroup');
     religiousGroup.label = "Religious Poems";
-    
+
     const funGroup = document.createElement('optgroup');
     funGroup.label = "Fun Formats";
-    
+
+    const famousPoetsGroup = document.createElement('optgroup');
+    famousPoetsGroup.label = "Famous Poets";
+
+    const congratulationsGroup = document.createElement('optgroup');
+    congratulationsGroup.label = "Congratulations";
+
+    const mirrorGroup = document.createElement('optgroup');
+    mirrorGroup.label = "Mirror";
+
     const classicGroup = document.createElement('optgroup');
     classicGroup.label = "Classical Forms";
-    
+
     // Define poem types categorization
     const poemCategories = {
         standard: ['free verse', 'love', 'funny', 'inspirational', 'angry', 'extreme', 'holiday', 'birthday', 'anniversary', 'nature', 'friendship'],
         lifeEvents: ['memorial', 'farewell', 'newborn'],
         religious: ['religious-islam', 'religious-christian', 'religious-judaism', 'religious-general'],
-        fun: ['twinkle', 'roses', 'knock-knock', 'pickup'],
+        fun: ['twinkle', 'roses', 'knock-knock', 'pickup','hickory dickory dock'],
+        famousPoets: ['william-shakespeare', 'dante-alighieri', 'rumi', 'emily-dickinson', 'robert-frost', 'langston-hughes', 'sylvia-plath', 'pablo-neruda', 'walt-whitman', 'edgar-allan-poe'],
+        congratulations: ['new-job', 'graduation', 'wedding', 'new-baby', 'promotion', 'new-home', 'new-car', 'new-pet'],
+        mirror: ['mirror','fairytale','mysterious','haunted','romantic','mystical','magical','whimsical'],
         classic: ['haiku', 'limerick', 'sonnet', 'rap', 'nursery']
     };
-    
+
     // Define display names for poem types
     const displayNames = {
         'free verse': 'Free Verse',
@@ -118,85 +229,105 @@ function updatePoemTypeDropdown(poemTypes) {
         'roses': 'Roses are Red',
         'knock-knock': 'Knock Knock',
         'pickup': 'Pick-up Lines',
+        'hickory dickory dock': 'Hickory Dickory Dock',
+        'william-shakespeare': 'William Shakespeare Style',
+        'dante-alighieri': 'Dante Alighieri Style',
+        'rumi': 'Rumi Style',
+        'emily-dickinson': 'Emily Dickinson Style',
+        'robert-frost': 'Robert Frost Style',
+        'langston-hughes': 'Langston Hughes Style',
+        'sylvia-plath': 'Sylvia Plath Style',
+        'pablo-neruda': 'Pablo Neruda Style',
+        'walt-whitman': 'Walt Whitman Style',
+        'edgar-allan-poe': 'Edgar Allan Poe Style',
+        'new-job': 'New Job Congratulations',
+        'graduation': 'Graduation Congratulations',
+        'wedding': 'Wedding Congratulations',
+        'new-baby': 'New Baby Congratulations',
+        'promotion': 'Promotion Congratulations',
+        'new-home': 'New Home Congratulations',
+        'new-car': 'New Car Congratulations',
+        'new-pet': 'New Pet Congratulations',
+        'mirror': 'Mirror',
+        'fairytale': 'Fairytale',
+        'mysterious': 'Mysterious',
+        'haunted': 'Haunted',
+        'romantic': 'Romantic',
+        'mystical': 'Mystical',
+        'magical': 'Magical',
+        'whimsical': 'Whimsical',
         'haiku': 'Haiku',
         'limerick': 'Limerick',
         'sonnet': 'Sonnet',
         'rap': 'Rap/Hip-Hop',
         'nursery': 'Nursery Rhyme'
     };
-    
+
     // Free types that are available to all users
     const freeTypes = ['free verse', 'love', 'funny', 'inspirational'];
-    
+
     // Map of poem type to its appropriate group
     const groupMap = {};
     for (const [category, types] of Object.entries(poemCategories)) {
         types.forEach(type => groupMap[type] = category);
     }
-    
+
     // Process each poem type and add to appropriate group
     Object.keys(displayNames).forEach(poemTypeId => {
         const option = document.createElement('option');
         option.value = poemTypeId;
-        
-        // Set the free flag based on our predefined free types
+
+        // Check access
         const isFree = freeTypes.includes(poemTypeId);
-        
-        // Add lock icon for premium options
-        if (!isFree && !isPremium) {
+        const hasAccess = isFree || isPremium;
+
+        if (!hasAccess) {
             option.textContent = `${displayNames[poemTypeId]} 🔒`;
             option.classList.add('premium-option');
+            option.disabled = true;
         } else {
             option.textContent = displayNames[poemTypeId];
         }
-        
+
         // Add to appropriate group
         const category = groupMap[poemTypeId];
         switch(category) {
-            case 'standard':
-                standardGroup.appendChild(option);
-                break;
-            case 'lifeEvents':
-                lifeEventsGroup.appendChild(option);
-                break;
-            case 'religious':
-                religiousGroup.appendChild(option);
-                break;
-            case 'fun':
-                funGroup.appendChild(option);
-                break;
-            case 'classic':
-                classicGroup.appendChild(option);
-                break;
-            default:
-                poemTypeSelect.appendChild(option);
+            case 'standard': standardGroup.appendChild(option); break;
+            case 'lifeEvents': lifeEventsGroup.appendChild(option); break;
+            case 'religious': religiousGroup.appendChild(option); break;
+            case 'fun': funGroup.appendChild(option); break;
+            case 'famousPoets': famousPoetsGroup.appendChild(option); break;
+            case 'congratulations': congratulationsGroup.appendChild(option); break;
+            case 'mirror': mirrorGroup.appendChild(option); break;
+            case 'classic': classicGroup.appendChild(option); break;
+            default: poemTypeSelect.appendChild(option);
         }
-        
-        // Store in cache
-        accessCache.poemTypes[poemTypeId] = isFree || isPremium;
+
+        // Update cache
+        accessCache.poemTypes[poemTypeId] = hasAccess;
     });
-    
+
     // Add groups to select
     poemTypeSelect.appendChild(standardGroup);
     poemTypeSelect.appendChild(lifeEventsGroup);
     poemTypeSelect.appendChild(religiousGroup);
     poemTypeSelect.appendChild(funGroup);
+    poemTypeSelect.appendChild(famousPoetsGroup);
+    poemTypeSelect.appendChild(congratulationsGroup);
+    poemTypeSelect.appendChild(mirrorGroup);
     poemTypeSelect.appendChild(classicGroup);
-    
-    // Try to restore previous selection
-    if (currentSelection) {
-        try {
-            poemTypeSelect.value = currentSelection;
-        } catch (e) {
-            // If selection not available, default to free verse
-            poemTypeSelect.value = 'free verse';
-        }
+
+    // Restore selection
+    if (currentSelection && poemTypeSelect.querySelector(`option[value="${currentSelection}"]`)) {
+        poemTypeSelect.value = currentSelection;
+    } else {
+        poemTypeSelect.value = 'free verse';
     }
-    
-    // Add premium indicator if not premium
+
+    // Add premium indicator if needed
     if (!isPremium) {
         const legend = document.createElement('div');
-        legend.className = 'small text-muted mt-2';
+        legend.className = 'small text-muted mt-2 premium-legend';
         legend.innerHTML = '🔒 Premium poem types. <a href="/upgrade" class="text-primary">Upgrade</a> to unlock all poem types.';
         poemTypeSelect.parentNode.appendChild(legend);
     }

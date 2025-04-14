@@ -182,3 +182,39 @@ if (typeof module !== 'undefined' && module.exports) {
         checkAndResizeImage
     };
 }
+
+// Premium feature access handler
+function handlePremiumAccess(featureName) {
+    const userIsPremium = document.body.getAttribute('data-user-premium') === 'true';
+    if (!userIsPremium) {
+        showPremiumAlert(featureName);
+        return false;
+    }
+    return true;
+}
+
+// Function to show premium alert when accessing premium features
+function showPremiumAlert(featureName) {
+    const premiumAlert = document.getElementById('premiumAlert');
+    if (premiumAlert) {
+        // Update the message if we have a specific feature name
+        if (featureName) {
+            const message = premiumAlert.querySelector('.alert-message');
+            if (message) {
+                message.textContent = `Upgrade to Premium to access ${featureName} and other premium features!`;
+            }
+        }
+
+        premiumAlert.classList.remove('d-none');
+
+        // Scroll to the alert for better visibility
+        premiumAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // Add a temporary highlight effect
+        premiumAlert.classList.add('highlight-alert');
+        setTimeout(() => {
+            premiumAlert.classList.remove('highlight-alert');
+        }, 2000);
+    }
+}
+

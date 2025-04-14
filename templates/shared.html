@@ -68,7 +68,13 @@
     <div class="col-md-10">
         <div class="card">
             <div class="card-header">
-                <h3 class="mb-0">Shared Creation</h3>
+                <h3 class="mb-0">
+                    {% if creator_username %}
+                        Shared Creation by {{ creator_username }}
+                    {% else %}
+                        Shared Creation
+                    {% endif %}
+                </h3>
                 <small class="text-muted">Created on {{ creation.created_at.strftime('%B %d, %Y') }}</small>
             </div>
             <div class="card-body">

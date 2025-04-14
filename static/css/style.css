@@ -338,6 +338,30 @@ textarea#customPromptInput:focus {
     image-orientation: from-image; /* Use EXIF data for orientation */
 }
 
+.highlight-alert {
+    animation: highlight 2s ease-out;
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.5);
+}
+
+@keyframes highlight {
+    0% { box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.5); }
+    100% { box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.5); }
+}
+
+/* Hide mobile analyze button on desktop by default */
+@media (min-width: 768px) {
+    #analyzeImageBtnMobile {
+        display: none !important;
+    }
+}
+
+/* Hide the analyze button on mobile devices */
+@media (max-width: 767.98px) {
+    #analyzeImageBtn {
+        display: none !important;
+    }
+}
+
 .final-image-container {
     display: flex;
     justify-content: center;
@@ -415,6 +439,27 @@ textarea#customPromptInput:focus {
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+/* Enhanced Select Dropdown Styling */
+.enhanced-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%236c757d' d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    padding-right: 2.5rem !important;
+}
+
+/* For dark theme selects */
+.bg-dark.enhanced-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%23f8f9fa' d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+}
+
+/* Optional: Add a hover effect */
+.enhanced-select:hover {
+    cursor: pointer;
+    border-color: #80bdff;
 }
 
 /* Upgrade button pulse animation */

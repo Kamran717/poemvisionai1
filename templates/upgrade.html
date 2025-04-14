@@ -27,34 +27,46 @@
                                 <span class="text-muted">/month</span>
                             </div>
                         </div>
-                        
+
                         <div class="payment-options">
-                            <!-- This section will be populated with Stripe when API key is available -->
                             <form id="payment-form" class="mt-4">
-                                <div id="payment-message" class="alert alert-info mb-4">
+                                <div id="payment-message" class="alert alert-info mb-4 d-none">
                                     <i class="fas fa-info-circle me-2"></i>
-                                    Demo Mode: Click the button below to simulate a successful payment.
+                                    <span id="payment-message-text"></span>
                                 </div>
-                                
+
+                                <div id="card-element" class="form-control mb-3 p-2" style="height: 40px;"></div>
+                                <div class="mb-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="terms-agreement" required>
+                                        <label class="form-check-label" for="terms-agreement">
+                                            I have read and agree to the Terms & Conditions and authorize Poem Vision AI to automatically charge my card monthly until I cancel my membership.
+                                        </label>
+                                    </div>
+                                    <div class="small text-muted mt-2">
+                                        By subscribing to Poem Vision AI membership, you agree to our Terms & Conditions. Your card will be charged $4.99 USD monthly on a recurring basis. You may cancel your membership at any time by accessing your account settings.
+                                    </div>
+                                </div>
+
                                 <div class="d-grid gap-2">
                                     <button id="submit-button" type="submit" class="btn btn-lg btn-primary">
-                                        <i class="fas fa-lock me-2"></i>Secure Checkout
+                                        <i class="fas fa-lock me-2"></i>Subscribe Now
                                     </button>
                                 </div>
-                                
+
                                 <div class="text-center mt-3">
-                                    <img src="https://cdn.jsdelivr.net/gh/stripe/credit-card-logos@master/visa-logo.svg" height="30" alt="Visa" class="me-2">
-                                    <img src="https://cdn.jsdelivr.net/gh/stripe/credit-card-logos@master/mastercard-logo.svg" height="30" alt="Mastercard" class="me-2">
-                                    <img src="https://cdn.jsdelivr.net/gh/stripe/credit-card-logos@master/amex-logo.svg" height="30" alt="American Express" class="me-2">
-                                    <img src="https://cdn.jsdelivr.net/gh/stripe/credit-card-logos@master/discover-logo.svg" height="30" alt="Discover">
+                                  <i class="fab fa-cc-visa fa-2x me-2"></i>
+                                  <i class="fab fa-cc-mastercard fa-2x me-2"></i>
+                                  <i class="fab fa-cc-amex fa-2x me-2"></i>
+                                  <i class="fab fa-cc-discover fa-2x"></i>
                                 </div>
                             </form>
                         </div>
                     </div>
                 </div>
-                
+
                 <hr>
-                
+
                 <div class="row mt-4">
                     <div class="col-md-12">
                         <h5>Frequently Asked Questions</h5>
@@ -71,7 +83,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="accordion-item">
                                 <h2 class="accordion-header">
                                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqTwo">
@@ -88,7 +100,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="card-footer text-center">
                 <small class="text-muted">Secure payment processing by <i class="fab fa-stripe"></i> Stripe</small>
             </div>
@@ -98,59 +110,132 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://js.stripe.com/v3/"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const stripe = Stripe('{{ stripe_publishable_key }}');
+    const elements = stripe.elements();
+    const cardElement = elements.create('card', {
+        style: {
+            base: {
+                fontSize: '16px',
+                color: '#32325d',
+                '::placeholder': {
+                    color: '#aab7c4'
+                }
+            },
+            invalid: {
+                color: '#fa755a',
+                iconColor: '#fa755a'
+            }
+        }
+    });
+
+    cardElement.mount('#card-element');
+
     const paymentForm = document.getElementById('payment-form');
     const submitButton = document.getElementById('submit-button');
     const paymentMessage = document.getElementById('payment-message');
-    
-    paymentForm.addEventListener('submit', function(e) {
+    const messageText = document.getElementById('payment-message-text');
+
+    paymentForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
+
+        if (!document.getElementById('terms-agreement').checked) {
+            showMessage('You must agree to the Terms & Conditions to proceed.');
+            return;
+        }
+
         // Disable the submit button and show processing message
         submitButton.disabled = true;
         submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processing...';
-        
-        // Simulate payment processing (for demo purposes)
-        setTimeout(function() {
-            // Send the payment to the server
-            fetch('/upgrade', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({
-                    payment_method: 'demo',
-                })
+
+        // Reset message
+        paymentMessage.classList.add('d-none');
+
+        // Create payment method
+        const { paymentMethod, error } = await stripe.createPaymentMethod({
+            type: 'card',
+            card: cardElement,
+            billing_details: {
+                name: '{{ user.username }}',
+                email: '{{ user.email }}'
+            }
+        });
+
+        if (error) {
+            showMessage(error.message);
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-lock me-2"></i>Subscribe Now';
+            return;
+        }
+
+        // Send the payment method to your server
+        const response = await fetch('/upgrade', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                payment_method_id: paymentMethod.id
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Redirect to profile page on success
-                    paymentMessage.className = 'alert alert-success mb-4';
-                    paymentMessage.innerHTML = '<i class="fas fa-check-circle me-2"></i>Payment successful! Redirecting to your profile...';
-                    
-                    setTimeout(function() {
-                        window.location.href = data.redirect;
-                    }, 1500);
-                } else {
-                    // Show error message
-                    paymentMessage.className = 'alert alert-danger mb-4';
-                    paymentMessage.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>' + data.error;
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = '<i class="fas fa-lock me-2"></i>Secure Checkout';
-                }
-            })
-            .catch(error => {
-                // Show generic error message
-                paymentMessage.className = 'alert alert-danger mb-4';
-                paymentMessage.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>An error occurred during payment processing. Please try again.';
+        });
+
+        const result = await response.json();
+
+        if (result.error) {
+            showMessage(result.error);
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-lock me-2"></i>Subscribe Now';
+        } else if (result.requires_action) {
+            // Handle required action (3D Secure)
+            const { error: confirmError } = await stripe.confirmCardPayment(
+                result.payment_intent_client_secret
+            );
+
+            if (confirmError) {
+                showMessage(confirmError.message);
                 submitButton.disabled = false;
-                submitButton.innerHTML = '<i class="fas fa-lock me-2"></i>Secure Checkout';
-                console.error('Error:', error);
-            });
-        }, 1500); // Simulated processing time
+                submitButton.innerHTML = '<i class="fas fa-lock me-2"></i>Subscribe Now';
+            } else {
+                // Success after action
+                showMessage('Payment successful! Redirecting...', 'success');
+                setTimeout(() => {
+                    window.location.href = result.redirect;
+                }, 1500);
+            }
+        } else {
+            // Success
+            showMessage('Payment successful! Redirecting...', 'success');
+            setTimeout(() => {
+                window.location.href = result.redirect;
+            }, 1500);
+        }
+    });
+
+    function showMessage(messageText, type = 'error') {
+        const message = document.getElementById('payment-message');
+        const textElement = document.getElementById('payment-message-text');
+
+        message.classList.remove('d-none', 'alert-info', 'alert-success', 'alert-danger');
+        textElement.textContent = messageText;
+
+        if (type === 'success') {
+            message.classList.add('alert-success');
+        } else {
+            message.classList.add('alert-danger');
+        }
+    }
+
+    // Show any initial errors on the card element
+    cardElement.on('change', function(event) {
+        const displayError = document.getElementById('card-errors');
+        if (event.error) {
+            showMessage(event.error.message);
+        } else {
+            paymentMessage.classList.add('d-none');
+        }
     });
 });
 </script>
