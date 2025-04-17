@@ -19,7 +19,9 @@ from models import db, Creation, User, Membership, Transaction
 from utils.membership import (create_default_plans, get_user_plan,
                               check_poem_type_access, check_frame_access,
                               process_payment, get_user_creations,
-                              get_available_poem_types, get_available_frames)
+                              get_available_poem_types, get_available_frames,
+                              check_poem_length_access,
+                              get_available_poem_lengths)
 
 # Set up logging first so we can use it everywhere
 logging.basicConfig(level=logging.DEBUG)
@@ -75,9 +77,8 @@ def cache_view(timeout=3600):  # Default cache of 1 hour
 # Initialize Flask app
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
-
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
-stripe.api_version = "2023-08-16"  # Use current API version
+stripe.api_version = "2023-08-16"
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
 
 # Set up database with connection pooling and retry settings
@@ -212,8 +213,7 @@ def analyze_image_route():
             }), 400
 
         # Generate a shorter unique ID for this analysis
-        analysis_id = str(
-            uuid.uuid4()).split('-')[0]  # Just use the first part of the UUID
+        analysis_id = str(uuid.uuid4()).split('-')[0]
 
         # Reset file pointer and read image data
         image_file.seek(0)
@@ -223,7 +223,7 @@ def analyze_image_route():
         image_data = base64.b64encode(image_file.read()).decode('utf-8')
 
         # Analyze the image using Google Cloud Vision AI
-        image_file.seek(0)  # Reset the file pointer again
+        image_file.seek(0)
         logger.info(
             f"Analyzing image: {image_file.filename} ({file_size/1024:.1f} KB)"
         )
@@ -264,12 +264,11 @@ def analyze_image_route():
                 # Check if user is logged in to assign creation to their account
                 user_id = session.get('user_id')
 
-                temp_creation = Creation(
-                    image_data=image_data,
-                    analysis_results=analysis_results,
-                    share_code=f"temp{analysis_id}",  # Shorter share_code
-                    user_id=user_id  # Will be None for non-logged in users
-                )
+                temp_creation = Creation()
+                temp_creation.image_data = image_data
+                temp_creation.analysis_results = analysis_results
+                temp_creation.share_code = f"temp{analysis_id}"
+                temp_creation.user_id = user_id
                 db.session.add(temp_creation)
                 db.session.commit()
 
@@ -333,6 +332,7 @@ def generate_poem_route():
 
         # Get user preferences from the request
         poem_type = data.get('poemType', 'free verse')
+        poem_length = data.get('poemLength', 'short')
         emphasis = data.get('emphasis', [])
 
         # Get structured custom prompt info if provided
@@ -372,12 +372,14 @@ def generate_poem_route():
             # Pass the custom prompt data to the poem generator
             poem = generate_poem(analysis_results,
                                  poem_type,
+                                 poem_length,
                                  emphasis,
                                  custom_terms=custom_terms,
                                  custom_category=custom_category)
         else:
             # Generate poem without custom prompt
-            poem = generate_poem(analysis_results, poem_type, emphasis)
+            poem = generate_poem(analysis_results, poem_type, poem_length,
+                                 emphasis)
 
         # Update the temporary creation with the poem
         temp_creation.poem_text = poem
@@ -395,6 +397,7 @@ def generate_poem_route():
 @app.route('/create-final-image', methods=['POST'])
 def create_final_image_route():
     """Create the final framed image with the poem."""
+        
     try:
         data = request.json
         analysis_id = data.get('analysisId')
@@ -415,7 +418,7 @@ def create_final_image_route():
         # Create the framed image with the poem
         final_image = create_framed_image(
             base64.b64decode(temp_creation.image_data),
-            temp_creation.poem_text, frame_style)
+            temp_creation.poem_text)
 
         # Convert the final image to base64 for sending to the client
         final_image_base64 = base64.b64encode(final_image).decode('utf-8')
@@ -427,7 +430,7 @@ def create_final_image_route():
         # Create the final creation by updating the temporary one
         temp_creation.frame_style = frame_style
         temp_creation.final_image_data = final_image_base64
-        temp_creation.share_code = share_code  # Replace the temp share code with a permanent one
+        temp_creation.share_code = share_code
         db.session.commit()
 
         return jsonify({
@@ -444,7 +447,7 @@ def create_final_image_route():
 
 
 @app.route('/shared/<share_code>')
-@cache_view(timeout=3600)  # Cache shared views for 1 hour
+@cache_view(timeout=3600)  
 def view_shared_creation(share_code):
     """View a shared creation by its share code."""
     try:
@@ -556,7 +559,9 @@ def signup():
             }), 400
 
         # Create new user
-        new_user = User(username=username, email=email)
+        new_user = User()
+        new_user.username = username
+        new_user.email = email
         new_user.set_password(password)
 
         # Set to free tier by default
@@ -600,7 +605,7 @@ def profile():
     user = User.query.get(user_id)
 
     if not user:
-        session.pop('user_id', None)  # Clear invalid session
+        session.pop('user_id', None)  
         return redirect(url_for('login'))
 
     # Get user's creations
@@ -639,7 +644,7 @@ def upgrade_membership():
     user = User.query.get(user_id)
 
     if not user:
-        session.pop('user_id', None)  # Clear invalid session
+        session.pop('user_id', None)  
         return redirect(url_for('login'))
 
     # If user is already premium
@@ -682,7 +687,7 @@ def upgrade_membership():
                                            payment_method_id
                                        })
 
-            # Create a subscription
+            # Create a subscription with expanded invoice and payment intent
             subscription = stripe.Subscription.create(
                 customer=user.stripe_customer_id,
                 items=[{
@@ -696,43 +701,97 @@ def upgrade_membership():
 
             user.subscription_id = subscription.id
 
-            # Check if payment was successful
-            if subscription.latest_invoice.payment_intent.status == 'succeeded':
-                # Update user to premium
-                user.is_premium = True
+            # Check if we actually got the expanded objects
+            if hasattr(subscription, 'latest_invoice') and isinstance(subscription.latest_invoice, stripe.Invoice):
+                invoice = subscription.latest_invoice
 
-                # Add these lines to set membership dates
-                user.membership_start = datetime.utcnow()
-                # Get the current period end from the subscription
-                current_period_end = datetime.fromtimestamp(subscription.current_period_end)
-                user.membership_end = current_period_end
+                if hasattr(invoice, 'payment_intent') and invoice.payment_intent:
+                    # Access the payment intent status
+                    if invoice.payment_intent.status == 'succeeded':
+                        # Update user to premium
+                        user.is_premium = True
 
-                # Record the transaction
-                transaction = Transaction(
-                    user_id=user.id,
-                    membership_id=premium_plan.id,
-                    amount=premium_plan.price,
-                    currency='USD',
-                    transaction_id=subscription.latest_invoice.
-                    payment_intent.id,
-                    status='completed')
-                db.session.add(transaction)
-                db.session.commit()
+                        # Set membership dates
+                        user.membership_start = datetime.utcnow()
+                        # Get the current period end from the subscription
+                        current_period_end = datetime.fromtimestamp(
+                            subscription.current_period_end)
+                        user.membership_end = current_period_end
 
-                return jsonify({
-                    'success': True,
-                    'redirect': url_for('profile'),
-                    'message': 'Subscription created successfully!'
-                })
+                        # Record the transaction
+                        transaction = Transaction()
+                        transaction.user_id = user.id
+                        transaction.membership_id = premium_plan.id
+                        transaction.amount = premium_plan.price
+                        transaction.currency = 'USD'
+                        transaction.transaction_id = invoice.payment_intent.id
+                        transaction.status = 'completed'
+                        db.session.add(transaction)
+                        db.session.commit()
+
+                        return jsonify({
+                            'success': True,
+                            'redirect': url_for('profile'),
+                            'message': 'Subscription created successfully!'
+                        })
+                    else:
+                        # Handle payment that requires action
+                        return jsonify({
+                            'error': 'Payment requires additional action',
+                            'requires_action': True,
+                            'payment_intent_client_secret': invoice.payment_intent.client_secret
+                        }), 400
+                else:
+                    # Handle case where payment intent is not available
+                    logger.error(f"Payment intent not available in the invoice: {invoice.id}")
+                    return jsonify({'error': 'Payment processing issue. Please try again.'}), 500
             else:
-                return jsonify({
-                    'error':
-                    'Payment failed. Please try another payment method.',
-                    'requires_action':
-                    True,
-                    'payment_intent_client_secret':
-                    subscription.latest_invoice.payment_intent.client_secret
-                }), 400
+                # Handle case where latest_invoice is not expanded
+                logger.error("Latest invoice not expanded in subscription response")
+
+                # Try to retrieve the invoice separately
+                try:
+                    invoice = stripe.Invoice.retrieve(
+                        subscription.latest_invoice,
+                        expand=['payment_intent']
+                    )
+
+                    if invoice.payment_intent.status == 'succeeded':
+                        # Update user to premium
+                        user.is_premium = True
+
+                        # Set membership dates
+                        user.membership_start = datetime.utcnow()
+                        # Get the current period end from the subscription
+                        current_period_end = datetime.fromtimestamp(
+                            subscription.current_period_end)
+                        user.membership_end = current_period_end
+
+                        # Record the transaction
+                        transaction = Transaction()
+                        transaction.user_id = user.id
+                        transaction.membership_id = premium_plan.id
+                        transaction.amount = premium_plan.price
+                        transaction.currency = 'USD'
+                        transaction.transaction_id = invoice.payment_intent.id
+                        transaction.status = 'completed'
+                        db.session.add(transaction)
+                        db.session.commit()
+
+                        return jsonify({
+                            'success': True,
+                            'redirect': url_for('profile'),
+                            'message': 'Subscription created successfully!'
+                        })
+                    else:
+                        return jsonify({
+                            'error': 'Payment requires additional action',
+                            'requires_action': True,
+                            'payment_intent_client_secret': invoice.payment_intent.client_secret
+                        }), 400
+                except Exception as e:
+                    logger.error(f"Error retrieving invoice: {str(e)}")
+                    return jsonify({'error': 'Payment processing issue. Please try again.'}), 500
 
         except StripeError as e:
             logger.error(f"Stripe error during payment: {str(e)}",
@@ -740,7 +799,7 @@ def upgrade_membership():
             return jsonify({
                 'error':
                 str(e.user_message)
-                if e.user_message else 'Payment processing failed'
+                if hasattr(e, 'user_message') and e.user_message else 'Payment processing failed'
             }), 500
         except Exception as e:
             logger.error(f"Error processing payment: {str(e)}", exc_info=True)
@@ -800,13 +859,15 @@ def handle_payment_succeeded(invoice):
                 # Add these lines
                 user.membership_start = datetime.utcnow()
                 # Set end date based on billing cycle, using subscription data
-                current_period_end = datetime.fromtimestamp(subscription.current_period_end)
+                current_period_end = datetime.fromtimestamp(
+                    subscription.current_period_end)
                 user.membership_end = current_period_end
 
                 db.session.commit()
                 logger.info(f"Updated user {user_id} membership after payment")
     except Exception as e:
         logger.error(f"Error handling payment succeeded webhook: {str(e)}")
+
 
 def handle_subscription_cancelled(subscription):
     """Handle subscription cancellation webhook"""
@@ -827,36 +888,39 @@ def handle_subscription_cancelled(subscription):
             f"Error handling subscription cancelled webhook: {str(e)}")
 
 
+@app.route('/api/available-poem-lengths')
+def available_poem_lengths():
+    user_id = session.get('user_id')
+    user = User.query.get(user_id) if user_id else None
+    lengths = get_available_poem_lengths(user_id)
+    return jsonify({
+        'poem_lengths': lengths,
+        'is_premium': user.is_premium if user else False
+    })
+
+
 @app.route('/api/check-access', methods=['POST'])
 def check_access():
-    """API endpoint to check if a user has access to premium features"""
-    try:
-        data = request.json
-        feature_type = data.get('type')  # 'poem_type' or 'frame'
-        feature_id = data.get('id')
+    data = request.json
+    feature_type = data.get('type')
+    feature_id = data.get('id')
+    user_id = session.get('user_id')
 
-        # Get user ID from session
-        user_id = session.get('user_id')
+    if feature_type == 'poem_type':
+        has_access = check_poem_type_access(user_id, feature_id)
+    elif feature_type == 'frame':
+        has_access = check_frame_access(user_id, feature_id)
+    elif feature_type == 'poem_length':
+        has_access = check_poem_length_access(user_id, feature_id)
+    else:
+        return jsonify({'error': 'Invalid feature type'}), 400
 
-        # Check access based on feature type
-        if feature_type == 'poem_type':
-            has_access = check_poem_type_access(user_id, feature_id)
-        elif feature_type == 'frame':
-            has_access = check_frame_access(user_id, feature_id)
-        else:
-            return jsonify({'error': 'Invalid feature type'}), 400
-
-        return jsonify({
-            'has_access':
-            has_access,
-            'is_premium':
-            bool(user_id and User.query.get(user_id)
-                 and User.query.get(user_id).is_premium)
-        })
-
-    except Exception as e:
-        logger.error(f"Error checking access: {str(e)}", exc_info=True)
-        return jsonify({'error': str(e)}), 500
+    return jsonify({
+        'has_access':
+        has_access,
+        'is_premium':
+        current_user.is_premium if current_user.is_authenticated else False
+    })
 
 
 @app.route('/api/available-poem-types')
@@ -907,6 +971,18 @@ def api_available_frames():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/delete_creation/<int:creation_id>', methods=['DELETE'])
+def delete_creation(creation_id):
+    user_id = session.get('user_id')
+    creation = Creation.query.get_or_404(creation_id)
+    if creation.user_id != user_id:
+        abort(403)
+
+    db.session.delete(creation)
+    db.session.commit()
+    return jsonify({'success': True})
+
+
 # Helper function to deduplicate and simplify elements for emphasis
 def deduplicate_elements(analysis_results):
     """
@@ -925,7 +1001,7 @@ def deduplicate_elements(analysis_results):
         'automotive wheel system': 'wheel',
         'automotive mirror': 'mirror',
         'public transport': 'transport',
-        'rolling': 'wheel',  # Assuming this refers to wheels rolling
+        'rolling': 'wheel',
 
         # Clothing
         'pants': 'clothing',
@@ -945,7 +1021,7 @@ def deduplicate_elements(analysis_results):
         'fun': 'activity',
         'leisure': 'activity',
         'recreation': 'activity',
-        'vacation': 'activity',  # Note: Fix typo from "vacation"
+        'vacation': 'activity',
         'holiday': 'activity',
         'travel': 'activity',
 

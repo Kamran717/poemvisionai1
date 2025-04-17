@@ -3,7 +3,7 @@ Membership management utilities for Poem Vision AI.
 """
 import logging
 from datetime import datetime, timedelta
-from models import db, User, Membership, Transaction
+from models import db, User, Membership, Transaction, PoemLength
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -18,34 +18,36 @@ def create_default_plans():
             return
 
         # Create free plan
-        free_plan = Membership(name="Free",
-                               price=0.0,
-                               description="Basic access to Poem Vision AI",
-                               features=[
-                                   "Generate basic poems from uploaded images",
-                                   "Access to 3 default poem styles",
-                                   "Limited frame designs"
-                               ],
-                               max_poem_types=3,
-                               max_frame_types=3,
-                               max_saved_poems=5,
-                               has_gallery=False)
+        free_plan = Membership()
+        free_plan.name = "Free"
+        free_plan.price = 0.0
+        free_plan.description = "Basic access to Poem Vision AI"
+        free_plan.features = [
+            "Generate basic poems from uploaded images",
+            "Access to 3 default poem styles",
+            "Limited frame designs"
+        ]
+        free_plan.max_poem_types = 3
+        free_plan.max_frame_types = 3
+        free_plan.max_saved_poems = 5
+        free_plan.has_gallery = False
 
         # Create premium plan
-        premium_plan = Membership(
-            name="Premium",
-            price=5.0,
-            description="Full access to Poem Vision AI features",
-            features=[
-                "Access to all poem categories",
-                "Unlock all creative frame designs",
-                "Personal gallery storage", "Smarter AI customization",
-                "Exclusive early access to new features"
-            ],
-            max_poem_types=100,  # effectively unlimited
-            max_frame_types=100,  # effectively unlimited
-            max_saved_poems=500,  # effectively unlimited
-            has_gallery=True)
+        premium_plan = Membership()
+        premium_plan.name = "Premium"
+        premium_plan.price = 5.0
+        premium_plan.description = "Full access to Poem Vision AI features"
+        premium_plan.features = [
+            "Access to all poem categories",
+            "Unlock all creative frame designs",
+            "Personal gallery storage", 
+            "Smarter AI customization",
+            "Exclusive early access to new features"
+        ]
+        premium_plan.max_poem_types = 100  
+        premium_plan.max_frame_types = 100  
+        premium_plan.max_saved_poems = 500  
+        premium_plan.has_gallery = True
 
         # Add plans to database
         db.session.add(free_plan)
@@ -124,18 +126,17 @@ def process_payment(user_id, payment_method, transaction_id):
             return {"success": False, "message": "User not found"}
 
         # Create a new transaction record
-        transaction = Transaction(
-            user_id=user_id,
-            amount=5.0,  # $5/month premium plan
-            status="completed",
-            payment_method=payment_method,
-            transaction_id=transaction_id)
+        transaction = Transaction()
+        transaction.user_id = user_id
+        transaction.amount = 5.0  
+        transaction.status = "completed"
+        transaction.payment_method = payment_method
+        transaction.transaction_id = transaction_id
 
         # Update user membership status
         user.is_premium = True
         user.membership_start = datetime.utcnow()
-        user.membership_end = datetime.utcnow() + timedelta(
-            days=30)  # 30-day membership
+        user.membership_end = datetime.utcnow() + timedelta(days=30)  
 
         # Save to database
         db.session.add(transaction)
@@ -355,6 +356,28 @@ def get_available_poem_types(user_id):
             "free": False
         },
 
+        #Flirty fun
+        {
+            "id": "pick-up",
+            "name": "Pick-Up Lines",
+            "free": False
+        },
+        {
+            "id": "roast-you",
+            "name": "Roast You",
+            "free": False
+        },
+        {
+            "id": "first-date-feel",
+            "name": "First Date Feel",
+            "free": False
+        },
+        {
+            "id": "love-at-first-sight",
+            "name": "Love at First Sight",
+            "free": False
+        },
+
         # Congratulations Category
         {
             "id": "graduation",
@@ -365,43 +388,118 @@ def get_available_poem_types(user_id):
         {
             "id": "new-job",
             "name": "New Job",
-            "category": "congratulations",
             "free": False
         },
         {
             "id": "wedding",
             "name": "Wedding",
-            "category": "congratulations",
+            "free": False
+        },
+        {
+            "id": "engagement",
+            "name": "Engagement",
             "free": False
         },
         {
             "id": "new-baby",
             "name": "New Baby",
-            "category": "congratulations",
             "free": False
         },
         {
             "id": "promotion",
             "name": "Promotion",
-            "category": "congratulations",
             "free": False
         },
         {
             "id": "new-home",
             "name": "New Home",
-            "category": "congratulations",
             "free": False
         },
         {
             "id": "new-car",
             "name": "New Car",
-            "category": "congratulations",
             "free": False
         },
         {
             "id": "new-pet",
             "name": "New Pet",
-            "category": "congratulations",
+            "free": False
+        },
+        {
+            "id": "first-day-of-school",
+            "name": "First Day of School",
+            "free": False
+        },
+        {
+            "id": "retirement",
+            "name": "Retirement",
+            "free": False
+        },
+
+        #Holidays
+        {
+            "id": "new-year",
+            "name": "New Year",
+            "free": False
+        },
+        {
+            "id": "valentines-day",
+            "name": "Valentines Day",
+            "free": False
+        },
+        {
+            "id": "ramadan",
+            "name": "Ramadan",
+            "free": False
+        },
+        {
+            "id": "halloween",
+            "name": "Halloween",
+            "free": False
+        },
+        {
+            "id": "easter",
+            "name": "Easter",
+            "free": False
+        },
+        {
+            "id": "thanksgiving",
+            "name": "Thanksgiving",
+            "free": False
+        },
+        {
+            "id": "mother-day",
+            "name": "Mother Day",
+            "free": False
+        },
+        {
+            "id": "father-day",
+            "name": "Father Day",
+            "free": False
+        },
+        {
+            "id": "christmas",
+            "name": "Christmas",
+            "free": False
+        },
+        {
+            "id": "independence-day",
+            "name": "Independence Day",
+            "free": False
+        },
+        {
+            "id": "hanukkah",
+            "name": "Hanukkah",
+            "free": False
+        },
+        {
+            "id": "diwali",
+            "name": "Diwali",
+            "free": False
+        },
+        {
+            "id": "new-year-eve",
+            "name": "New Year Eve",
             "free": False
         },
 
@@ -422,57 +520,105 @@ def get_available_poem_types(user_id):
             "free": False
         },
         {
-            "id": "pickup",
-            "name": "Pick-up Lines",
-            "free": False
-        },
-        {
             "id": "hickory dickory dock",
             "name": "Hickory Dickory Dock",
             "free": False
         },
+        {
+            "id": "nursery-rhymes",
+            "name": "Nursery Rhymes",
+            "free": False
+        },
 
-        # mirror
+        # Music
         {
-            "id": "mirror",
-            "name": "Mirror",
+            "id": "rap/hiphop",
+            "name": "Rap/Hip-Hop",
             "free": False
         },
         {
-            "id": "fairytale",
-            "name": "Fairytale",
+            "id":"country",
+            "name": "Country",
             "free": False
         },
         {
-            "id": "mysterious",
-            "name": "Mysterious",
+            "id": "rock",
+            "name": "Rock",
             "free": False
         },
         {
-            "id": "whimsical",
-            "name": "Whimsical",
+            "id": "jazz",
+            "name": "Jazz",
             "free": False
         },
         {
-            "id": "haunted",
-            "name": "Haunted",
+            "id": "pop",
+            "name": "Pop",
+            "free": False
+        },
+
+        #Artist
+        {
+            "id": "eminem",
+            "name": "Eminem",
             "free": False
         },
         {
-            "id": "mystical",
-            "name": "Mystical",
+            "id": "kendrick-lamar",
+            "name": "Kendrick Lamar",
             "free": False
         },
         {
-            "id": "romantic",
-            "name": "Romantic",
+            "id": "taylor-swift",
+            "name": "Taylor Swift",
             "free": False
         },
         {
-            "id": "magical",
-            "name": "Magical",
+            "id": "drake",
+            "name": "Drake",
             "free": False
         },
+        {
+            "id": "50cent",
+            "name": "50 Cent",
+            "free": False
+        },
+        {
+            "id": "lil-wayne",
+            "name": "Lil Wayne",
+            "free": False
+        },
+        {
+            "id": "doja-cat",
+            "name": "Doja Cat",
+            "free": False
+        },
+        {
+            "id": "nicki-minaj",
+            "name": "Nicki Minaj",
+            "free": False
+        },
+        {
+            "id": "j. cole",
+            "name": "J. Cole",
+            "free": False
+        },
+        {
+            "id": "elvis-presley",
+            "name": "Elvis Presley",
+            "free": False
+        },
+        {
+            "id": "buddy-holly",
+            "name": "Buddy Holly",
+            "free": False
+        },
+        {
+            "id": "luis-armstrong",
+            "name": "Luis Armstrong",
+            "free": False
+        },
+
 
         # Classical forms
         {
@@ -486,18 +632,60 @@ def get_available_poem_types(user_id):
             "free": False
         },
         {
-            "id": "sonnet",
-            "name": "Sonnet",
+            "id": "tanka",
+            "name": "Tanka",
             "free": False
         },
         {
-            "id": "rap",
-            "name": "Rap/Hip-Hop",
+            "id": "senryu",
+            "name": "Senryu",
+            "free": False
+        },
+
+        # Tribulations
+        {
+            "id": "memorial",
+            "name": "In Memory/RIP",
             "free": False
         },
         {
-            "id": "nursery",
-            "name": "Nursery Rhyme",
+            "id": "farewell",
+            "name": "Farewell/Goodbye",
+            "free": False
+        },
+        {
+            "id": "get-well-soon",
+            "name": "Get Well Soon",
+            "free": False
+        },
+        {
+            "id": "apology",
+            "name": "Apology/Sorry",
+            "free": False
+        },
+        {
+            "id": "divorce",
+            "name": "Divorce/Breakup",
+            "free": False
+        },
+        {
+            "id": "hard-times",
+            "name": "Hard Times/Struggles",
+            "free": False
+        },
+        {
+            "id": "missing-you",
+            "name": "Missing You",
+            "free": False
+        },
+        {
+            "id": "conflict",
+            "name": "Conflict/Disagreement",
+            "free": False
+        },
+        {
+            "id": "lost-pet",
+            "name": "Lost Pet",
             "free": False
         }
     ]
@@ -514,43 +702,103 @@ def get_available_poem_types(user_id):
 def get_available_frames(user_id):
     """Get the list of frames available to a user based on their plan."""
     # All frame styles in the system
-    ALL_FRAMES = [{
-        "id": "classic",
-        "name": "Classic",
-        "free": True
-    }, {
-        "id": "minimalist",
-        "name": "Minimalist",
-        "free": True
-    }, {
-        "id": "none",
-        "name": "No Frame",
-        "free": True
-    }, {
-        "id": "elegant",
-        "name": "Elegant",
-        "free": False
-    }, {
-        "id": "vintage",
-        "name": "Vintage",
-        "free": False
-    }, {
-        "id": "ornate",
-        "name": "Ornate",
-        "free": False
-    }, {
-        "id": "modern",
-        "name": "Modern",
-        "free": False
-    }, {
-        "id": "polaroid",
-        "name": "Polaroid",
-        "free": False
-    }, {
-        "id": "shadow",
-        "name": "Shadow Box",
-        "free": False
-    }]
+    ALL_FRAMES = [
+        {
+            "id": "classic",
+            "name": "Classic",
+            "free": True
+        },
+        {
+            "id": "minimalist",
+            "name": "Minimalist",
+            "free": True
+        },
+        {
+            "id": "none",
+            "name": "No Frame",
+            "free": True
+        },
+        {
+            "id": "elegant",
+            "name": "Elegant",
+            "free": False
+        },
+        {
+            "id": "vintage",
+            "name": "Vintage",
+            "free": False
+        },
+        {
+            "id": "ornate",
+            "name": "Ornate",
+            "free": False
+        },
+        {
+            "id": "modern",
+            "name": "Modern",
+            "free": False
+        },
+        {
+            "id": "polaroid",
+            "name": "Polaroid",
+            "free": False
+        },
+        {
+            "id": "shadow",
+            "name": "Shadow Box",
+            "free": False
+        },
+        {
+            "id": "ornate-gold",
+            "name": "Ornate Gold",
+            "free": False
+        },
+        {
+            "id": "ornate-brown",
+            "name": "Ornate Brown",
+            "free": False
+        },
+        {
+            "id": "futuristic",
+            "name": "Futuristic",
+            "free": False
+        },
+        {
+            "id": "era",
+            "name": "Era",
+            "free": False
+        },
+        {
+            "id": "red",
+            "name": "Red",
+            "free": False
+        },
+        {
+            "id": "blue",
+            "name": "Blue",
+            "free": False
+        },
+        {
+            "id": "light blue",
+            "name": "Light Blue",
+            "free": False
+        },
+        {
+            "id": "ornate-green",
+            "name": "Ornate Green",
+            "free": False
+        },
+        {
+            "id": "orange",
+            "name": "Orange",
+            "free": False
+        },
+        {
+            "id": "purple",
+            "name": "Purple",
+            "free": False
+        }
+    ]
 
     # Check if user is premium
     user = User.query.get(user_id) if user_id else None
@@ -559,3 +807,49 @@ def get_available_frames(user_id):
     # Return all frames with their availability status
     # We're not filtering anymore - we want to show all options
     return ALL_FRAMES
+
+def create_default_poem_lengths():
+    """Create default poem length options"""
+    try:
+        if PoemLength.query.count() > 0:
+            return
+
+        lengths = [
+            {"name": "short", "display_name": "Short (4-6 lines)", "line_range": "4-6", "is_premium": False},
+            {"name": "medium", "display_name": "Medium (8-12 lines)", "line_range": "8-12", "is_premium": True},
+            {"name": "long", "display_name": "Long (14-20 lines)", "line_range": "14-20", "is_premium": True}
+        ]
+
+        for length in lengths:
+            db.session.add(PoemLength(**length))
+
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error creating poem lengths: {str(e)}")
+
+def get_available_poem_lengths(user_id):
+    """Get available poem lengths based on user's membership"""
+    user = User.query.get(user_id) if user_id else None
+    is_premium = user and user.is_premium
+
+    lengths = PoemLength.query.order_by(PoemLength.order).all()
+
+    return [{
+        "id": length.name,
+        "name": length.display_name,
+        "free": not length.is_premium,
+        "has_access": not length.is_premium or is_premium
+    } for length in lengths]
+
+def check_poem_length_access(user_id, length_name):
+    """Check if user has access to a specific poem length"""
+    length = PoemLength.query.filter_by(name=length_name).first()
+    if not length:
+        return False
+
+    if not length.is_premium:
+        return True
+
+    user = User.query.get(user_id) if user_id else None
+    return user and user.is_premium

@@ -395,6 +395,72 @@ textarea#customPromptInput:focus {
     border-radius: 5px;
 }
 
+.feature-card {
+    border: 1px solid rgba(0,0,0,.125);
+    box-shadow: 0 2px 5px rgba(0,0,0,.05);
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,.1);
+}
+
+.icon-container {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 70px;
+    height: 70px;
+    margin-bottom: 15px;
+}
+
+.feature-card h4 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+.feature-card p {
+    color: #6c757d;
+    margin-bottom: 0;
+}
+
+/* How It Works Section Styles */
+.step-circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: #f0f8ff; 
+    color: #0d6efd; 
+}
+
+.step-circle span {
+    font-size: 2.5rem;
+}
+
+/* Style for disabled share buttons */
+.btn[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Visual indicator for protected actions */
+.protected-action {
+    position: relative;
+}
+.protected-action:after {
+    content: "🔒";
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.6;
+}
+
+#finalCreation {
+  border-radius: 10px;
+}
+
 /* Media Queries */
 /* Membership-related styles */
 .premium-option {
@@ -440,6 +506,225 @@ textarea#customPromptInput:focus {
     height: 100%;
     object-fit: cover;
 }
+
+/* Ornate Gold Frame (based on Images 1 & 2) */
+.ornate-gold-frame {
+    border: 15px solid #d4af37;
+    border-image: linear-gradient(45deg, #ffd700, #b8860b, #ffd700) 1;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+    position: relative;
+}
+
+.ornate-gold-frame::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    border: 2px solid #d4af37;
+    z-index: -1;
+}
+
+/* Colored Frames (based on Image 3) */
+.red-frame {
+    border: 10px solid #cc2929;
+    box-shadow: 0 0 5px rgba(204, 41, 41, 0.5);
+}
+
+.green-frame {
+    border: 10px solid #29cc29;
+    box-shadow: 0 0 5px rgba(41, 204, 41, 0.5);
+}
+
+.blue-frame {
+    border: 10px solid #2929cc;
+    box-shadow: 0 0 5px rgba(41, 41, 204, 0.5);
+}
+
+.purple-frame {
+    border: 10px solid #a229cc;
+    box-shadow: 0 0 5px rgba(162, 41, 204, 0.5);
+}
+
+.orange-frame {
+    border: 10px solid #cc7729;
+    box-shadow: 0 0 5px rgba(204, 119, 41, 0.5);
+}
+
+/* Decorative Corner Frames (based on Image 4) */
+.corner-pink-frame {
+    border: 2px solid #e83e8c;
+    position: relative;
+    box-shadow: 0 0 5px rgba(232, 62, 140, 0.3);
+}
+
+.corner-pink-frame::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    width: 20px;
+    height: 20px;
+    border-top: 4px solid #e83e8c;
+    border-left: 4px solid #e83e8c;
+}
+
+.corner-pink-frame::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 20px;
+    height: 20px;
+    border-top: 4px solid #e83e8c;
+    border-right: 4px solid #e83e8c;
+}
+
+.corner-pink-frame .frame-preview-inner::before {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: -5px;
+    width: 20px;
+    height: 20px;
+    border-bottom: 4px solid #e83e8c;
+    border-left: 4px solid #e83e8c;
+}
+
+.corner-pink-frame .frame-preview-inner::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    width: 20px;
+    height: 20px;
+    border-bottom: 4px solid #e83e8c;
+    border-right: 4px solid #e83e8c;
+}
+
+/* Green Corner Frame */
+.corner-green-frame {
+    border: 2px solid #28a745;
+    position: relative;
+    box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
+}
+
+.corner-green-frame::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    width: 20px;
+    height: 20px;
+    border-top: 4px solid #28a745;
+    border-left: 4px solid #28a745;
+}
+
+.corner-green-frame::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 20px;
+    height: 20px;
+    border-top: 4px solid #28a745;
+    border-right: 4px solid #28a745;
+}
+
+.corner-green-frame .frame-preview-inner::before {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: -5px;
+    width: 20px;
+    height: 20px;
+    border-bottom: 4px solid #28a745;
+    border-left: 4px solid #28a745;
+}
+
+.corner-green-frame .frame-preview-inner::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    width: 20px;
+    height: 20px;
+    border-bottom: 4px solid #28a745;
+    border-right: 4px solid #28a745;
+}
+
+/* Greek Key Pattern Frame */
+.greek-frame {
+    border: 12px solid transparent;
+    background: linear-gradient(to right, #d4af37, #ffdf00) padding-box,
+                repeating-linear-gradient(
+                    45deg, 
+                    #d4af37 0, 
+                    #d4af37 10px, 
+                    #ffdf00 10px, 
+                    #ffdf00 20px
+                ) border-box;
+    position: relative;
+}
+
+.greek-frame::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    right: -8px;
+    bottom: -8px;
+    background: transparent;
+    border: 2px solid #d4af37;
+    z-index: -1;
+}
+
+/* Make sure frame previews have proper sizing */
+.frame-preview {
+    width: 100%;
+    height: 80px;
+    background-color: #212529;
+    position: relative;
+    margin: 0 auto;
+}
+
+.frame-preview-inner {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    bottom: 5px;
+    background-color: #212529;
+}
+
+/* Make sure this matches your active tab color */
+.btn-custom-blue {
+    background-color: #8B5CF6; /* Bootstrap's default primary blue */
+    border-color: #0d6efd;
+    color: white;
+}
+
+.btn-custom-blue:hover {
+    background-color: #8B5CF6;
+    border-color: #0a58ca;
+}
+
+/* Ensure the frame-option has proper hover effect */
+.frame-option {
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.frame-option:hover {
+    transform: scale(1.05);
+}
+
+/* Styles for selected frame */
+.frame-option.selected .frame-preview {
+    box-shadow: 0 0 0 2px #ffffff;
+}
+
 
 /* Enhanced Select Dropdown Styling */
 .enhanced-select {

@@ -24,6 +24,9 @@ function calculateResizedDimensions(image, maxWidth, maxHeight) {
     return { width, height };
 }
 
+
+
+
 /**
  * Create a thumbnail preview of an image
  * @param {string} src - The source URL of the image

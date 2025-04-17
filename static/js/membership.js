@@ -5,7 +5,8 @@
 // Cache for feature access permissions
 const accessCache = {
     poemTypes: {},
-    frames: {}
+    frames: {},
+    poemLengths: {}
 };
 
 // Indicate whether user is premium
@@ -19,7 +20,7 @@ async function initMembership() {
     try {
         // Use the existing endpoint that returns premium status
         const response = await fetch('/api/available-poem-types', {
-            credentials: 'include' // Important for session cookies
+            credentials: 'include' 
         });
 
         if (!response.ok) {
@@ -33,6 +34,7 @@ async function initMembership() {
         // Now proceed with initialization
         await fetchAvailablePoemTypes();
         await fetchAvailableFrames();
+        await fetchAvailablePoemLengths();
         setupUpgradePrompts();
     } catch (error) {
         console.error('Membership init error:', error);
@@ -40,8 +42,60 @@ async function initMembership() {
         isPremium = false;
         await fetchAvailablePoemTypes();
         await fetchAvailableFrames();
+        await fetchAvailablePoemLengths();
+        
     }
 }
+
+// fetch and update poem lengths
+async function fetchAvailablePoemLengths() {
+    try {
+        const response = await fetch('/api/available-poem-lengths', {
+            credentials: 'include'
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const data = await response.json();
+        if (data.poem_lengths) {
+            updatePoemLengthDropdown(data.poem_lengths);
+        }
+    } catch (error) {
+        console.error('Error fetching poem lengths:', error);
+        updatePoemLengthDropdown([]);
+    }
+}
+
+function updatePoemLengthDropdown(lengths) {
+    const select = document.getElementById('poemLengthSelect');
+    if (!select) return;
+
+    select.innerHTML = '';
+
+    lengths.forEach(length => {
+        const option = document.createElement('option');
+        option.value = length.id;
+        option.textContent = length.name;
+
+        if (!length.has_access) {
+            option.textContent += ' 🔒';
+            option.classList.add('premium-option');
+            option.disabled = true;
+        }
+
+        // Cache access status
+        accessCache.poemLengths[length.id] = length.has_access;
+
+        select.appendChild(option);
+    });
+
+    // Set default to first available length
+    const availableLength = lengths.find(l => l.has_access);
+    if (availableLength) {
+        select.value = availableLength.id;
+    }
+}
+
 
 /**
  * Fetch the available poem types for the current user
@@ -112,6 +166,10 @@ async function checkFeatureAccess(featureType, featureId) {
         return accessCache.frames[featureId];
     }
 
+    if (featureType === 'poem_length' && accessCache.poemLengths.hasOwnProperty(featureId)) {
+        return Promise.resolve(accessCache.poemLengths[featureId]);
+    }
+
     try {
         const response = await fetch('/api/check-access', {
             method: 'POST',
@@ -136,6 +194,8 @@ async function checkFeatureAccess(featureType, featureId) {
             accessCache.poemTypes[featureId] = data.has_access;
         } else if (featureType === 'frame') {
             accessCache.frames[featureId] = data.has_access;
+        }  else if (featureType === 'poem_length') {
+            accessCache.poemLengths[featureId] = data.has_access;
         }
 
         // Update premium status
@@ -172,8 +232,6 @@ function updatePoemTypeDropdown(poemTypes) {
     const standardGroup = document.createElement('optgroup');
     standardGroup.label = "Standard Poems";
 
-    const lifeEventsGroup = document.createElement('optgroup');
-    lifeEventsGroup.label = "Life Events";
 
     const religiousGroup = document.createElement('optgroup');
     religiousGroup.label = "Religious Poems";
@@ -184,25 +242,41 @@ function updatePoemTypeDropdown(poemTypes) {
     const famousPoetsGroup = document.createElement('optgroup');
     famousPoetsGroup.label = "Famous Poets";
 
+    const flirtyFunGroup = document.createElement('optgroup');
+    flirtyFunGroup.label = "Flirty & Fun";
+
     const congratulationsGroup = document.createElement('optgroup');
     congratulationsGroup.label = "Congratulations";
 
-    const mirrorGroup = document.createElement('optgroup');
-    mirrorGroup.label = "Mirror";
+    const holidaysGroup = document.createElement('optgroup');
+    holidaysGroup.label = "Holidays";
+
+    const musicGroup = document.createElement('optgroup');
+    musicGroup.label = "Music Inspired";
+
+    const artistGroup = document.createElement('optgroup');
+    artistGroup.label = "Artist Inspired";
+
 
     const classicGroup = document.createElement('optgroup');
     classicGroup.label = "Classical Forms";
 
+    const tribulationsGroup = document.createElement('optgroup');
+    tribulationsGroup.label = "Tribulations";
+
     // Define poem types categorization
     const poemCategories = {
         standard: ['free verse', 'love', 'funny', 'inspirational', 'angry', 'extreme', 'holiday', 'birthday', 'anniversary', 'nature', 'friendship'],
-        lifeEvents: ['memorial', 'farewell', 'newborn'],
         religious: ['religious-islam', 'religious-christian', 'religious-judaism', 'religious-general'],
-        fun: ['twinkle', 'roses', 'knock-knock', 'pickup','hickory dickory dock'],
+        fun: ['twinkle', 'roses', 'knock-knock','hickory dickory dock','nursery-rhymes'],
         famousPoets: ['william-shakespeare', 'dante-alighieri', 'rumi', 'emily-dickinson', 'robert-frost', 'langston-hughes', 'sylvia-plath', 'pablo-neruda', 'walt-whitman', 'edgar-allan-poe'],
-        congratulations: ['new-job', 'graduation', 'wedding', 'new-baby', 'promotion', 'new-home', 'new-car', 'new-pet'],
-        mirror: ['mirror','fairytale','mysterious','haunted','romantic','mystical','magical','whimsical'],
-        classic: ['haiku', 'limerick', 'sonnet', 'rap', 'nursery']
+        flirtyFun: ['pick-up', 'roast-you', 'first-date-feel', 'love-at-first-sight'],
+        congratulations: ['new-job', 'graduation', 'wedding', 'engagement', 'new-baby', 'promotion', 'new-home', 'new-car', 'new-pet', 'first-day-of-school', 'retirement'],
+        holidays: ['new-year', 'valentines-day', 'ramadan', 'easter', 'mother-day', 'father-day','independence-day', 'halloween', 'thanksgiving', 'christmas','hanukkah','diwali','new-year-eve'],
+        music: ['rap/hiphop', 'country', 'rock', 'pop', 'jazz'],
+        artist: ['eminem','taylor-swift','drake','50cent','lil-wayne','doja-cat','nicki-minaj','kendrick-lamar','j. cole','elvis-presley','buddy-holly','luis-armstrong'],
+        classic: ['haiku', 'limerick', 'tanka', 'senryu'],
+        tribulations: ['memorial', 'farewell', 'get-well-soon','apology','divorce','hard-times','missing-you','conflict','lost-pet']
     };
 
     // Define display names for poem types
@@ -218,9 +292,6 @@ function updatePoemTypeDropdown(poemTypes) {
         'anniversary': 'Anniversary',
         'nature': 'Nature',
         'friendship': 'Friendship',
-        'memorial': 'In Memory/RIP',
-        'farewell': 'Farewell/Goodbye',
-        'newborn': 'Newborn/Baby',
         'religious-islam': 'Islamic/Muslim',
         'religious-christian': 'Christian',
         'religious-judaism': 'Jewish/Judaism',
@@ -228,8 +299,8 @@ function updatePoemTypeDropdown(poemTypes) {
         'twinkle': 'Twinkle Twinkle',
         'roses': 'Roses are Red',
         'knock-knock': 'Knock Knock',
-        'pickup': 'Pick-up Lines',
         'hickory dickory dock': 'Hickory Dickory Dock',
+        'nursery-rhymes': 'Nursery Rhymes',
         'william-shakespeare': 'William Shakespeare Style',
         'dante-alighieri': 'Dante Alighieri Style',
         'rumi': 'Rumi Style',
@@ -240,27 +311,64 @@ function updatePoemTypeDropdown(poemTypes) {
         'pablo-neruda': 'Pablo Neruda Style',
         'walt-whitman': 'Walt Whitman Style',
         'edgar-allan-poe': 'Edgar Allan Poe Style',
-        'new-job': 'New Job Congratulations',
-        'graduation': 'Graduation Congratulations',
-        'wedding': 'Wedding Congratulations',
-        'new-baby': 'New Baby Congratulations',
-        'promotion': 'Promotion Congratulations',
-        'new-home': 'New Home Congratulations',
-        'new-car': 'New Car Congratulations',
-        'new-pet': 'New Pet Congratulations',
-        'mirror': 'Mirror',
-        'fairytale': 'Fairytale',
-        'mysterious': 'Mysterious',
-        'haunted': 'Haunted',
-        'romantic': 'Romantic',
-        'mystical': 'Mystical',
-        'magical': 'Magical',
-        'whimsical': 'Whimsical',
+        'pick-up': 'Pick-Up Lines',
+        'roast-you': 'Roast You',
+        'first-date-feel': 'First Date Feel',
+        'love-at-first-sight': 'Love at First Sight',
+        'new-job': 'New Job',
+        'graduation': 'Graduation',
+        'wedding': 'Wedding',
+        'engagement': 'Engagement',
+        'new-baby': 'New Baby',
+        'promotion': 'Promotion',
+        'new-home': 'New Home',
+        'new-car': 'New Car',
+        'new-pet': 'New Pet',
+        'first-day-of-school': 'First Day of School',
+        'retirement': 'Retirement',
+        'new-year': 'New Year',
+        'valentines-day': 'Valentines Day',
+        'ramadan': 'Ramadan',
+        'easter': 'Easter',
+        'mother-day': 'Mother Day',
+        'father-day': 'Father Day',
+        'independence-day': 'Independence Day',
+        'halloween': 'Halloween',
+        'thanksgiving': 'Thanksgiving',
+        'christmas': 'Christmas',
+        'hanukkah': 'Hanukkah',
+        'diwali': 'Diwali',
+        'new-year-eve': 'New Year Eve',
+        'rap/hiphop': 'Rap/Hip-Hop',
+        'country': 'Country',
+        'rock': 'Rock',
+        'pop': 'Pop',
+        'jazz': 'Jazz',
+        'eminem': 'Eminem',
+        'taylor-swift': 'Taylor Swift',
+        'drake': 'Drake',
+        '50cent': '50 Cent',
+        'lil-wayne': 'Lil Wayne',
+        'doja-cat': 'Doja Cat',
+        'nicki-minaj': 'Nicki Minaj',
+        'kendrick-lamar': 'Kendrick Lamar',
+        'j. cole': 'J. Cole',
+        'elvis-presley': 'Elvis Presley',
+        'buddy-holly': 'Buddy Holly',
+        'luis-armstrong': 'Luis Armstrong',
         'haiku': 'Haiku',
-        'limerick': 'Limerick',
-        'sonnet': 'Sonnet',
-        'rap': 'Rap/Hip-Hop',
-        'nursery': 'Nursery Rhyme'
+        'limerick': 'Limerick ',
+        'tanka': 'Tanka',
+        'senryu': 'Senryu',
+        'memorial': 'In Memory/RIP',
+        'farewell': 'Farewell/Goodbye',
+        'get-well-soon': 'Get Well Soon',
+        'apology': 'Apology/Sorry',
+        'divorce': 'Divorce/Breakup',
+        'hard-times': 'Hard Times/Struggles',
+        'missing-you': 'Missing You',
+        'conflict': 'Conflict/Disagreement',
+        'lost-pet': 'Lost Pet'
     };
 
     // Free types that are available to all users
@@ -293,13 +401,16 @@ function updatePoemTypeDropdown(poemTypes) {
         const category = groupMap[poemTypeId];
         switch(category) {
             case 'standard': standardGroup.appendChild(option); break;
-            case 'lifeEvents': lifeEventsGroup.appendChild(option); break;
             case 'religious': religiousGroup.appendChild(option); break;
             case 'fun': funGroup.appendChild(option); break;
             case 'famousPoets': famousPoetsGroup.appendChild(option); break;
+            case 'flirtyFun': flirtyFunGroup.appendChild(option); break;
             case 'congratulations': congratulationsGroup.appendChild(option); break;
-            case 'mirror': mirrorGroup.appendChild(option); break;
+            case 'music': musicGroup.appendChild(option); break;
+            case 'artist': artistGroup.appendChild(option); break;
+            case 'holidays': holidaysGroup.appendChild(option); break;
             case 'classic': classicGroup.appendChild(option); break;
+            case 'tribulations': tribulationsGroup.appendChild(option); break;
             default: poemTypeSelect.appendChild(option);
         }
 
@@ -308,14 +419,17 @@ function updatePoemTypeDropdown(poemTypes) {
     });
 
     // Add groups to select
-    poemTypeSelect.appendChild(standardGroup);
-    poemTypeSelect.appendChild(lifeEventsGroup);
+    poemTypeSelect.appendChild(standardGroup); 
     poemTypeSelect.appendChild(religiousGroup);
     poemTypeSelect.appendChild(funGroup);
     poemTypeSelect.appendChild(famousPoetsGroup);
+    poemTypeSelect.appendChild(flirtyFunGroup);
     poemTypeSelect.appendChild(congratulationsGroup);
-    poemTypeSelect.appendChild(mirrorGroup);
+    poemTypeSelect.appendChild(musicGroup);
+    poemTypeSelect.appendChild(artistGroup);
+    poemTypeSelect.appendChild(holidaysGroup);
     poemTypeSelect.appendChild(classicGroup);
+    poemTypeSelect.appendChild(tribulationsGroup);
 
     // Restore selection
     if (currentSelection && poemTypeSelect.querySelector(`option[value="${currentSelection}"]`)) {

@@ -128,3 +128,15 @@ class Transaction(db.Model):
 
     def __repr__(self):
         return f'<Transaction {self.id}>'
+
+class PoemLength(db.Model):
+    """Model for storing poem length options and restrictions"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)  
+    display_name = db.Column(db.String(50), nullable=False)  
+    line_range = db.Column(db.String(50), nullable=False)  
+    is_premium = db.Column(db.Boolean, default=False)
+    order = db.Column(db.Integer, default=0)  
+
+    def __repr__(self):
+        return f'<PoemLength {self.name}>'

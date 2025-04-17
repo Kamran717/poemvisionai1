@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', function() {
         maxEmphasisCount: 10 // Maximum number of elements that can be selected for emphasis
     };
 
+    handleMobileUpload();
+
     // DOM Elements
     const uploadArea = document.getElementById('uploadArea');
     const imageInput = document.getElementById('imageInput');
@@ -327,22 +329,106 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!imageInput || !analyzeBtnMobile) return;
 
-        // Sync mobile button with main analyze button
-        analyzeBtnMobile.addEventListener('click', () => {
-            analyzeBtnMain.click();
+        // Independent click handler that fully replicates main button logic
+        analyzeBtnMobile.addEventListener('click', function() {
+            // First validate we have an image (same as main button)
+            if (!state.image && !state.imageBase64) {
+                showUploadError('Please upload an image first.');
+                return;
+            }
+
+            // Show loading indicator (same as main button)
+            loadingAnalysis.classList.remove('d-none');
+            analyzeBtnMobile.disabled = true;
+            if (analyzeBtnMain) analyzeBtnMain.disabled = true; // Also disable main button if exists
+
+            // Prepare fetch options (same as main button)
+            let fetchOptions = {};
+
+            if (state.image instanceof Blob) {
+                console.log("Mobile: Sending image as FormData");
+                const formData = new FormData();
+                formData.append('image', state.image);
+                fetchOptions = {
+                    method: 'POST',
+                    body: formData
+                };
+            } 
+            else if (state.imageBase64) {
+                console.log("Mobile: Sending image as base64 JSON");
+                fetchOptions = {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        image: state.imageBase64
+                    })
+                };
+            } else {
+                showUploadError('Invalid image data. Please try uploading again.');
+                loadingAnalysis.classList.add('d-none');
+                analyzeBtnMobile.disabled = false;
+                if (analyzeBtnMain) analyzeBtnMain.disabled = false;
+                return;
+            }
+
+            // Make the API request (same endpoint as desktop)
+            fetch('/analyze-image', fetchOptions)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Hide loading indicator
+                    loadingAnalysis.classList.add('d-none');
+                    analyzeBtnMobile.disabled = false;
+                    if (analyzeBtnMain) analyzeBtnMain.disabled = false;
+
+                    if (data.error) {
+                        console.error('Server returned error:', data.error);
+                        showUploadError(data.error);
+                        return;
+                    }
+
+                    // Update state (critical - same as main button)
+                    state.analysisId = data.analysisId;
+
+                    if (!data.results || typeof data.results !== 'object') {
+                        console.error('Invalid analysis results:', data.results);
+                        showUploadError('Failed to process image analysis results. Please try again.');
+                        return;
+                    }
+
+                    // Display results (same function as main button uses)
+                    displayAnalysisResults(data.results);
+
+                    // Update step 2 image
+                    if (step2Image) {
+                        step2Image.src = state.imageBase64;
+                    }
+
+                    // Navigate to next step
+                    goToStep(2);
+                })
+                .catch(error => {
+                    console.error('Mobile analysis error:', error);
+                    loadingAnalysis.classList.add('d-none');
+                    analyzeBtnMobile.disabled = false;
+                    if (analyzeBtnMain) analyzeBtnMain.disabled = false;
+                    showUploadError('An error occurred while analyzing the image. Please try again. If this issue persists, try with a smaller image.');
+                });
         });
 
-        // Show container with mobile-appropriate buttons
+        // Show/hide mobile UI on file selection
         imageInput.addEventListener('change', function() {
             if (window.innerWidth < 768) {
                 uploadedImageContainer.classList.remove('d-none');
             }
         });
     }
-
-    // Initialize on load and resize
-    document.addEventListener('DOMContentLoaded', handleMobileUpload);
-    window.addEventListener('resize', handleMobileUpload);
     
 
     // Display the analysis results and populate emphasis options
@@ -686,6 +772,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Gather poem preferences
         const poemType = poemTypeSelect.value;
+        const poemLength = poemLengthSelect.value
         
         // Get structured custom prompt inputs
         const customName = document.getElementById('customName');
@@ -714,6 +801,7 @@ document.addEventListener('DOMContentLoaded', function() {
             body: JSON.stringify({
                 analysisId: state.analysisId,
                 poemType: poemType,
+                poemLength: poemLength,
                 emphasis: state.selectedEmphasis,
                 customPrompt: customPromptData
             })
@@ -783,7 +871,7 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: JSON.stringify({
                 analysisId: state.analysisId,
-                frameStyle: state.selectedFrame
+                //frameStyle: state.selectedFrame
             })
         })
         .then(response => response.json())
@@ -817,6 +905,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Set up the download button properly with correct attributes
             downloadBtn.href = finalImageSrc;
             downloadBtn.setAttribute('download', 'my-custom-poem.jpg');
+
+            
             
             // Add event listener to handle download for browsers that don't support download attribute
             downloadBtn.addEventListener('click', function(e) {
@@ -871,6 +961,140 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('An error occurred while creating the final image. Please try again.');
         });
     });
+
+    document.getElementById('downloadBtn')?.addEventListener('click', function(e){
+        // Check if user is logged in
+        if (!this.hasAttribute('data-user-logged-in')) {
+            e.preventDefault();
+            showLoginPrompt();
+            return false;
+        }
+
+        // Regular download logic for logged-in users
+        const imageSrc = document.getElementById('finalCreation').src;
+        const link = document.createElement('a');
+        link.href = imageSrc;
+        link.download = 'my-poem-creation.jpg';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Show thank you message
+        showThankYouMessage();
+    });
+
+    // Add login check to all share buttons
+    document.querySelectorAll('.share-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            // Check if user is logged in
+            if (!this.hasAttribute('data-user-logged-in')) {
+                e.preventDefault();
+                showLoginPrompt();
+                return false;
+            }
+
+            
+
+            showThankYouMessage();
+        });
+    });
+
+    // Copy link button
+    document.getElementById('copyLinkBtn')?.addEventListener('click', function(e) {
+        // Check if user is logged in
+        if (!this.hasAttribute('data-user-logged-in')) {
+            e.preventDefault();
+            showLoginPrompt();
+            return false;
+        }
+
+        // Copy link logic for logged-in users
+        const shareUrl = document.getElementById('shareUrlInput').value;
+        navigator.clipboard.writeText(shareUrl).then(() => {
+            // Show a success message
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-check"></i>';
+            setTimeout(() => {
+                this.innerHTML = originalText;
+            }, 2000);
+        });
+    });
+
+    // Function to show login prompt
+    function showLoginPrompt() {
+        // Create a Bootstrap modal for login prompt
+        const modalHTML = `
+        <div class="modal fade" id="loginPromptModal" tabindex="-1" aria-labelledby="loginPromptModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="loginPromptModalLabel">Login Required</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <div class="mb-4">
+                            <i class="fas fa-user-lock fa-3x text-warning"></i>
+                        </div>
+                        <h5>Please login or create an account</h5>
+                        <p class="text-muted">You need to be logged in to download and share your poem creations.</p>
+                    </div>
+                    <div class="modal-footer justify-content-center">
+                        <a href="/login" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        </a>
+                        <a href="/signup" class="btn btn-success">
+                            <i class="fas fa-user-plus me-2"></i>Sign Up
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+
+        // Add modal to the body if it doesn't exist
+        if (!document.getElementById('loginPromptModal')) {
+            const modalContainer = document.createElement('div');
+            modalContainer.innerHTML = modalHTML;
+            document.body.appendChild(modalContainer);
+        }
+
+        // Show the modal using Bootstrap
+        const loginModal = new bootstrap.Modal(document.getElementById('loginPromptModal'));
+        loginModal.show();
+    }
+
+    // Function to show thank you message
+    function showThankYouMessage() {
+        const thankYouEl = document.getElementById('thankYouMessage');
+
+        // Only proceed if element exists and user is logged in
+        if (!thankYouEl) return;
+
+        // Show the thank you message
+        thankYouEl.classList.remove('d-none');
+
+        // Scroll to it if needed
+        thankYouEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // Hide the original page description temporarily if you want
+        const pageDescription = document.querySelector('.h4.mb-3.text-muted.fw-normal');
+        if (pageDescription) {
+            pageDescription.classList.add('d-none');
+        }
+
+        // Optionally, set a timeout to hide the message after some time
+        setTimeout(() => {
+            thankYouEl.classList.add('animate__fadeOut');
+            setTimeout(() => {
+                thankYouEl.classList.add('d-none');
+                thankYouEl.classList.remove('animate__fadeOut');
+                // Show the original description again if you hid it
+                if (pageDescription) {
+                    pageDescription.classList.remove('d-none');
+                }
+            }, 1000);
+        }, 10000); // Hide after 10 seconds
+    }
 
     // Navigation button event listeners
     backToStep1Btn.addEventListener('click', function() {
@@ -993,6 +1217,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to handle sharing when the creation is complete
     function setupSharing(shareCode) {
         const shareUrl = `${window.location.origin}/shared/${shareCode}`;
+        
         
         // Set the share URL in the input
         shareUrlInput.value = shareUrl;

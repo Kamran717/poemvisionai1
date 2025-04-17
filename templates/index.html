@@ -4,13 +4,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="{{ url_for('static', filename='frames/frame_data.js') }}"></script>
     <script src="{{ url_for('static', filename='js/image-processor.js') }}" defer></script>
+
 {% endblock %}
 
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <div class="card mb-4">
-            <div class="card-body text-center p-5">
+        <div class="card mb-1">
+            <div class="card-body text-center p-3">
                 <h1 class="display-4 mb-3">
                     <i class="fas fa-image me-2"></i>
                     <span class="brand-text">
@@ -19,16 +20,27 @@
                         <span class="regular">AI</span>
                     </span>
                 </h1>
+                <!-- Thank you message (initially hidden) -->
+                <div id="thankYouMessage" class="alert alert-success mb-4 d-none animate__animated animate__fadeIn">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-heart text-danger fa-2x me-3"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h4 class="alert-heading">Thank you for using PoemVision AI!</h4>
+                            <p class="mb-0">We hope you enjoyed your custom poem creation. Feel free to create another one or explore our gallery for inspiration!</p>
+                        </div>
+                    </div>
+                </div>
                 <h2 class="h4 mb-3 text-muted fw-normal">
                     <span class="d-block d-md-inline">Your Personal Poet</span>
                     <span class="d-none d-md-inline mx-2">•</span>
                     <span class="d-block d-md-inline">Need a Poem? Try Poem Vision AI - It's Free!</span>
                 </h2>
                 <p class="lead">Upload an image and get a custom-generated poem based on what's in your picture.</p>
-                <p class="mb-4">Our AI analyzes your image and creates personalized poems that capture its essence.</p>
 
                 {% if not session.get('user_id') %}
-                <div class="alert alert-info" role="alert">
+                <div class="alert alert-info d-none" role="alert">
                     <i class="fas fa-info-circle me-2"></i>
                     <strong>Create an account</strong> to save your poem creations and access more features!
                     <div class="mt-2">
@@ -93,7 +105,7 @@
                                             <h5>Drag & Drop Image Here</h5>
                                             <p class="text-muted">or</p>
                                             <div class="mb-3">
-                                                <button type="button" id="takePhotoBtn" class="btn btn-outline-primary mb-2">
+                                                <button type="button" id="takePhotoBtn" class="btn btn-custom-blue mb-2">
                                                     <i class="fas fa-camera me-2"></i>Take Photo
                                                 </button>
                                             </div>
@@ -111,8 +123,8 @@
                                                 <button id="changeImageBtn" class="btn btn-outline-secondary btn-sm">
                                                     <i class="fas fa-sync-alt me-1"></i> Change
                                                 </button>
-                                                <button id="analyzeImageBtnMobile" class="btn btn-primary">
-                                                    <i class="fas fa-magic me-1"></i> Analyze
+                                                <button id="analyzeImageBtnMobile" class="btn btn-custom-blue">
+                                                    <i class="fas fa-magic me-1"></i> Transform
                                                 </button>
                                             </div>
                                         </div>
@@ -130,23 +142,165 @@
                                             <li class="list-group-item">Both color and black & white images are supported</li>
                                             <li class="list-group-item">Maximum file size: 5MB</li>
                                         </ul>
+                                        <div class="d-flex justify-content-between mt-4">
+                                            <button id="analyzeImageBtn" class="btn btn-custom-blue" disabled>
+                                                <i class="fas fa-magic me-2"></i>Transform
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="d-flex justify-content-between mt-3">
-                            <div></div>
-                            <button id="analyzeImageBtn" class="btn btn-primary" disabled>
-                                <i class="fas fa-magic me-2"></i>Analyze Image
-                            </button>
-                        </div>
-                        <div id="uploadError" class="alert alert-danger mt-3 d-none"></div>
+
                         <div id="loadingAnalysis" class="text-center py-4 d-none">
                             <div class="spinner-border text-primary mb-3" role="status">
                                 <span class="visually-hidden">Loading...</span>
                             </div>
                             <p>Analyzing your image... This may take a few moments.</p>
                         </div>
+
+                        <!-- Features Section -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">Features</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="lead text-center mb-4">Discover the powerful capabilities of PoemVision and how it brings your poetic ideas to life.</p>
+                                        <div class="row">
+                                            <!-- AI Image Generation -->
+                                            <div class="col-md-6 col-lg-3 mb-4">
+                                                <div class="feature-card p-4 rounded h-100">
+                                                    <div class="feature-icon mb-3 text-center">
+                                                        <div class="icon-container bg-light rounded p-3 d-inline-block">
+                                                            <i class="fas fa-image text-primary fa-2x"></i>
+                                                        </div>
+                                                    </div>
+                                                    <h4>AI Image Generation</h4>
+                                                    <p>Create stunning visual interpretations of your poetic themes using our advanced AI image generation technology.</p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Poetic Text Generation -->
+                                            <div class="col-md-6 col-lg-3 mb-4">
+                                                <div class="feature-card p-4 rounded h-100">
+                                                    <div class="feature-icon mb-3 text-center">
+                                                        <div class="icon-container bg-light rounded p-3 d-inline-block">
+                                                            <i class="fas fa-book-open text-primary fa-2x"></i>
+                                                        </div>
+                                                    </div>
+                                                    <h4>Poetic Text Generation</h4>
+                                                    <p>Our AI crafts beautiful, meaningful poetry that complements your chosen theme and visual style.</p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Style Customization -->
+                                            <div class="col-md-6 col-lg-3 mb-4">
+                                                <div class="feature-card p-4 rounded h-100">
+                                                    <div class="feature-icon mb-3 text-center">
+                                                        <div class="icon-container bg-light rounded p-3 d-inline-block">
+                                                            <i class="fas fa-random text-primary fa-2x"></i>
+                                                        </div>
+                                                    </div>
+                                                    <h4>Style Customization</h4>
+                                                    <p>Choose from various artistic styles and poetic moods to perfectly express your creative vision.</p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Save & Share -->
+                                            <div class="col-md-6 col-lg-3 mb-4">
+                                                <div class="feature-card p-4 rounded h-100">
+                                                    <div class="feature-icon mb-3 text-center">
+                                                        <div class="icon-container bg-light rounded p-3 d-inline-block">
+                                                            <i class="fas fa-share-alt text-primary fa-2x"></i>
+                                                        </div>
+                                                    </div>
+                                                    <h4>Save & Share</h4>
+                                                    <p>Save your creations to your personal gallery and share them directly to social media or download as high-quality images.</p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Private Gallery -->
+                                            <div class="col-md-6 col-lg-3 mb-4">
+                                                <div class="feature-card p-4 rounded h-100">
+                                                    <div class="feature-icon mb-3 text-center">
+                                                        <div class="icon-container bg-light rounded p-3 d-inline-block">
+                                                            <i class="fas fa-lock text-primary fa-2x"></i>
+                                                        </div>
+                                                    </div>
+                                                    <h4>Private Gallery</h4>
+                                                    <p>Access all your previous creations in your personal gallery, organized by themes and dates.</p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Artistic Control -->
+                                            <div class="col-md-6 col-lg-3 mb-4">
+                                                <div class="feature-card p-4 rounded h-100">
+                                                    <div class="feature-icon mb-3 text-center">
+                                                        <div class="icon-container bg-light rounded p-3 d-inline-block">
+                                                            <i class="fas fa-sliders-h text-primary fa-2x"></i>
+                                                        </div>
+                                                    </div>
+                                                    <h4>Artistic Control</h4>
+                                                    <p>Fine-tune your creations with advanced settings, including poetry structure, length, and image aspect ratios.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- How It Works Section -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">How It Works</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="text-center mb-5">
+                                            <h2 class="display-5 fw-bold mb-3">How It Works</h2>
+                                            <p class="lead mb-5">Creating beautiful image-poem combinations is simple with our intuitive process.</p>
+                                        </div>
+
+                                        <div class="row justify-content-center">
+                                            <!-- Step 1 -->
+                                            <div class="col-md-4 mb-5 mb-md-0 text-center">
+                                                <div class="step-circle mx-auto mb-4 d-flex align-items-center justify-content-center">
+                                                    <span class="fs-2 fw-bold text-primary">1</span>
+                                                </div>
+                                                <h3 class="h3 mb-3">Enter Your Inspiration</h3>
+                                                <p class="text-muted">Start with a theme, emotion, or keywords that inspire you. Choose your preferred artistic style and poetic mood.</p>
+                                            </div>
+
+                                            <!-- Step 2 -->
+                                            <div class="col-md-4 mb-5 mb-md-0 text-center">
+                                                <div class="step-circle mx-auto mb-4 d-flex align-items-center justify-content-center">
+                                                    <span class="fs-2 fw-bold text-primary">2</span>
+                                                </div>
+                                                <h3 class="h3 mb-3">AI Creates Your Vision</h3>
+                                                <p class="text-muted">Our advanced AI analyzes your input and generates a unique image and complementary poem that captures your essence.</p>
+                                            </div>
+
+                                            <!-- Step 3 -->
+                                            <div class="col-md-4 mb-5 mb-md-0 text-center">
+                                                <div class="step-circle mx-auto mb-4 d-flex align-items-center justify-content-center">
+                                                    <span class="fs-2 fw-bold text-primary">3</span>
+                                                </div>
+                                                <h3 class="h3 mb-3">Save, Edit or Share</h3>
+                                                <p class="text-muted">Refine your creation if needed, save it to your personal gallery, or share it directly with friends and followers.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+
+                        <div id="uploadError" class="alert alert-danger mt-3 d-none"></div>
+                        
                     </div>
 
                     <!-- Step 2: Analysis & Preferences -->
@@ -159,7 +313,7 @@
                                 <div id="detectedFaces"></div>
                                 <div id="detectedLandmarks"></div>
                             </div>
-                            
+
                             <!-- Just show uploaded image -->
                             <div class="col-md-6 mb-4">
                                 <div class="card h-100">
@@ -185,6 +339,16 @@
                                                     <option value="free verse">Loading poem types...</option>
                                                 </select>
                                             </div>
+                                            <div class="mb-3">
+                                                <label for="poemLengthSelect" class="form-label">Poem Length</label>
+                                                <select id="poemLengthSelect" class="form-select enhanced-select">
+                                                    <!-- Will be populated by JavaScript -->
+                                                    <option value="">Loading lengths...</option>
+                                                </select>
+                                                <div class="form-text text-muted">
+                                                    <span id="poemLengthLegend"></span>
+                                                </div>
+                                            </div>
                                             <div class="mb-3 emphasis-container">
                                                 <label for="emphasisOptions" class="form-label">Elements to Emphasize <small class="text-muted">(Choose up to 4)</small></label>
                                                 <div id="emphasisOptions" class="mb-3">
@@ -192,12 +356,12 @@
                                                 </div>
                                                 <!-- Counter will be inserted here by JavaScript -->
                                             </div>
-                                            
+
                                             <!-- Personalization Section - Structured Input Design -->
                                             <div class="mb-4 p-4 bg-dark rounded-3 border border-secondary">
                                                 <h4 class="mb-3 text-info fw-bold">Make It More Personal</h4>
                                                 <p class="text-light opacity-75 mb-4">Add specific elements you'd like us to include in your poem.</p>
-                                                
+
                                                 <div class="row mb-4" id="structuredPromptInputs">
                                                     <!-- Name Input -->
                                                     <div class="col-md-6 mb-3">
@@ -213,7 +377,7 @@
                                                         </div>
                                                         <div class="form-text text-muted">Who should the poem mention?</div>
                                                     </div>
-                                                    
+
                                                     <!-- Place Input -->
                                                     <div class="col-md-6 mb-3">
                                                         <label for="customPlace" class="form-label text-light">Place</label>
@@ -228,7 +392,7 @@
                                                         </div>
                                                         <div class="form-text text-muted">Where is this taking place?</div>
                                                     </div>
-                                                    
+
                                                     <!-- Emotion Input -->
                                                     <div class="col-md-6 mb-3">
                                                         <label for="customEmotion" class="form-label text-light">Emotion</label>
@@ -254,7 +418,7 @@
                                                         </div>
                                                         <div class="form-text text-muted">What feeling should be expressed?</div>
                                                     </div>
-                                                    
+
                                                     <!-- Action Input -->
                                                     <div class="col-md-6 mb-3">
                                                         <label for="customAction" class="form-label text-light">Action</label>
@@ -270,7 +434,7 @@
                                                         <div class="form-text text-muted">What activity is happening?</div>
                                                     </div>
                                                 </div>
-                                                
+
                                                 <!-- Additional free-form input -->
                                                 <div class="mb-4">
                                                     <label for="customPromptInput" class="form-label text-light">Additional Details (optional)</label>
@@ -285,12 +449,12 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                
+
                                                 <div class="alert alert-info p-2 small">
                                                     <i class="fas fa-info-circle me-2"></i>
                                                     Your personalization will guide our AI to craft a more meaningful, custom poem based on the image and your inputs.
                                                 </div>
-                                                
+
                                                 <!-- Hidden category field -->
                                                 <input type="hidden" id="customPromptCategory" value="structured">
                                             </div>
@@ -323,7 +487,7 @@
                                     <h4 class="fw-bold mb-4">Your Generated Poem & Image</h4>
                                 </div>
                             </div>
-                            
+
                             <!-- Poem and Image Display -->
                             <div class="row g-4 mb-4 align-items-stretch">
                                 <!-- Image Column -->
@@ -337,17 +501,17 @@
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Poem Column -->
                                 <div class="col-12 col-lg-6 mb-4">
                                     <div class="h-100 d-flex flex-column">
                                         <h4 class="fw-bold mb-3">Your Generated Poem</h4>
 
                                         <div class="bg-white text-dark rounded-0 p-4 flex-grow-1 overflow-auto" style="min-height: 400px;">
-                                            
+
                                             <div id="generatedPoemContainer" class="h-100 d-flex flex-column justify-content-center">
                                                 <pre id="generatedPoem" class="poem-text mb-0 text-dark w-100" style="font-family: 'Georgia', serif; white-space: pre-wrap; font-size: 1.1rem; line-height: 1.6; overflow-y: auto;"></pre>
-                                                
+
                                             </div>
                                         </div>
 
@@ -360,74 +524,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="row mt-3">
-                            <div class="col-12 col-lg-10 mx-auto">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="card-title mb-0">Choose a Frame Style</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row" id="frameOptions">
-                                            <div class="col-4 col-md-2 mb-3">
-                                                <div class="frame-option text-center" data-frame="classic" data-frame-id="classic">
-                                                    <div class="frame-preview classic-frame mb-2">
-                                                        <div class="frame-preview-inner"></div>
-                                                    </div>
-                                                    <input type="radio" name="frameStyle" value="classic" class="d-none" checked>
-                                                    <span>Classic</span>
-                                                </div>
-                                            </div>
-                                            <div class="col-4 col-md-2 mb-3">
-                                                <div class="frame-option text-center" data-frame="elegant" data-frame-id="elegant">
-                                                    <div class="frame-preview elegant-frame mb-2">
-                                                        <div class="frame-preview-inner"></div>
-                                                    </div>
-                                                    <input type="radio" name="frameStyle" value="elegant" class="d-none">
-                                                    <span>Elegant</span>
-                                                </div>
-                                            </div>
-                                            <div class="col-4 col-md-2 mb-3">
-                                                <div class="frame-option text-center" data-frame="vintage" data-frame-id="vintage">
-                                                    <div class="frame-preview vintage-frame mb-2">
-                                                        <div class="frame-preview-inner"></div>
-                                                    </div>
-                                                    <input type="radio" name="frameStyle" value="vintage" class="d-none">
-                                                    <span>Vintage</span>
-                                                </div>
-                                            </div>
-                                            <div class="col-4 col-md-2 mb-3">
-                                                <div class="frame-option text-center" data-frame="minimalist" data-frame-id="minimalist">
-                                                    <div class="frame-preview minimalist-frame mb-2">
-                                                        <div class="frame-preview-inner"></div>
-                                                    </div>
-                                                    <input type="radio" name="frameStyle" value="minimalist" class="d-none">
-                                                    <span>Minimalist</span>
-                                                </div>
-                                            </div>
-                                            <div class="col-4 col-md-2 mb-3">
-                                                <div class="frame-option text-center" data-frame="ornate" data-frame-id="ornate">
-                                                    <div class="frame-preview ornate-frame mb-2">
-                                                        <div class="frame-preview-inner"></div>
-                                                    </div>
-                                                    <input type="radio" name="frameStyle" value="ornate" class="d-none">
-                                                    <span>Ornate</span>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-4 col-md-2 mb-3">
-                                                <div class="frame-option text-center" data-frame="none" data-frame-id="none">
-                                                    <div class="frame-preview none-frame mb-2">
-                                                        <div class="frame-preview-inner"></div>
-                                                    </div>
-                                                    <input type="radio" name="frameStyle" value="none" class="d-none">
-                                                    <span>No Frame</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        
                         <div class="d-flex justify-content-between mt-3">
                             <button id="backToStep2Btn" class="btn btn-outline-secondary">
                                 <i class="fas fa-arrow-left me-2"></i>Back
@@ -444,6 +541,7 @@
                         </div>
                     </div>
 
+                    
                     <!-- Step 4: Final Creation -->
                     <div class="tab-pane fade" id="step4" role="tabpanel">
                         <div class="card">
@@ -451,18 +549,22 @@
                                 <h5 class="card-title mb-0">Your Custom Poem Creation</h5>
                             </div>
                             <div class="card-body text-center">
+                                <!-- Image Display (visible to all users) -->
                                 <div class="mb-4 final-image-container">
-                                    <img id="finalCreation" class="img-fluid rounded shadow-lg preserve-orientation" alt="Final creation with poem">
+                                    <img id="finalCreation" class="img-fluid rounded-xl shadow-lg preserve-orientation" alt="Final creation with poem">
                                 </div>
+
+                                <!-- Download Section -->
                                 <div class="row justify-content-center">
                                     <div class="col-md-8">
+                                        <!-- Download button (shown to all users) -->
                                         <div class="d-grid gap-2 mb-3">
-                                            <a id="downloadBtn" href="#" class="btn btn-success" download="custom-poem.jpg">
+                                            <button id="downloadBtn" class="btn btn-success" {% if session.get('user_id') %}data-user-logged-in="true"{% endif %}>
                                                 <i class="fas fa-download me-2"></i>Download
-                                            </a>
+                                            </button>
                                         </div>
-                                        
-                                        <!-- Share Section -->
+
+                                        <!-- Share Section (visible to all users) -->
                                         <div class="card mb-3">
                                             <div class="card-header">
                                                 <h6 class="mb-0">Share Your Creation</h6>
@@ -472,52 +574,41 @@
                                                     <div class="col-12">
                                                         <div class="input-group">
                                                             <input type="text" id="shareUrlInput" class="form-control" readonly>
-                                                            <button id="copyLinkBtn" class="btn btn-outline-secondary">
+                                                            <button id="copyLinkBtn" class="btn btn-outline-secondary" {% if session.get('user_id') %}data-user-logged-in="true"{% endif %}>
                                                                 <i class="fas fa-copy"></i>
                                                             </button>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                
+
                                                 <div class="d-flex justify-content-center gap-2 flex-wrap">
-                                                    <!-- WhatsApp -->
-                                                    <button id="shareWhatsApp" class="btn btn-success share-btn" title="Share on WhatsApp">
+                                                    <!-- Social Share Buttons -->
+                                                    <button id="shareWhatsApp" class="btn btn-success share-btn" title="Share on WhatsApp" {% if session.get('user_id') %}data-user-logged-in="true"{% endif %}>
                                                         <i class="fab fa-whatsapp fa-lg"></i>
                                                     </button>
-                                                    
-                                                    <!-- Instagram (will open Instagram, user needs to paste) -->
-                                                    <button id="shareInstagram" class="btn btn-danger share-btn" title="Share on Instagram">
+                                                    <button id="shareInstagram" class="btn btn-danger share-btn" title="Share on Instagram" {% if session.get('user_id') %}data-user-logged-in="true"{% endif %}>
                                                         <i class="fab fa-instagram fa-lg"></i>
                                                     </button>
-                                                    
-                                                    <!-- Facebook -->
-                                                    <button id="shareFacebook" class="btn btn-primary share-btn" title="Share on Facebook">
+                                                    <button id="shareFacebook" class="btn btn-primary share-btn" title="Share on Facebook" {% if session.get('user_id') %}data-user-logged-in="true"{% endif %}>
                                                         <i class="fab fa-facebook fa-lg"></i>
                                                     </button>
-                                                    
-                                                    <!-- TikTok (will open TikTok, user needs to paste) -->
-                                                    <button id="shareTikTok" class="btn btn-dark share-btn" title="Share on TikTok">
+                                                    <button id="shareTikTok" class="btn btn-dark share-btn" title="Share on TikTok" {% if session.get('user_id') %}data-user-logged-in="true"{% endif %}>
                                                         <i class="fab fa-tiktok fa-lg"></i>
                                                     </button>
-                                                    
-                                                    <!-- Twitter/X -->
-                                                    <button id="shareTwitter" class="btn btn-info share-btn" title="Share on Twitter/X">
+                                                    <button id="shareTwitter" class="btn btn-info share-btn" title="Share on Twitter/X" {% if session.get('user_id') %}data-user-logged-in="true"{% endif %}>
                                                         <i class="fab fa-twitter fa-lg"></i>
                                                     </button>
-                                                    
-                                                    <!-- Pinterest -->
-                                                    <button id="sharePinterest" class="btn btn-danger share-btn" title="Share on Pinterest">
+                                                    <button id="sharePinterest" class="btn btn-danger share-btn" title="Share on Pinterest" {% if session.get('user_id') %}data-user-logged-in="true"{% endif %}>
                                                         <i class="fab fa-pinterest fa-lg"></i>
                                                     </button>
-                                                    
-                                                    <!-- Email -->
-                                                    <button id="shareEmail" class="btn btn-secondary share-btn" title="Share via Email">
+                                                    <button id="shareEmail" class="btn btn-secondary share-btn" title="Share via Email" {% if session.get('user_id') %}data-user-logged-in="true"{% endif %}>
                                                         <i class="fas fa-envelope fa-lg"></i>
                                                     </button>
                                                 </div>
                                             </div>
                                         </div>
-                                        
+
+                                        <!-- Action Buttons (visible to all) -->
                                         <div class="d-grid gap-2">
                                             <button id="startOverBtn" class="btn btn-outline-primary">
                                                 <i class="fas fa-redo me-2"></i>Create Another

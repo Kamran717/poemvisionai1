@@ -6,12 +6,13 @@ const frameStyles = {
         name: "Classic",
         description: "A timeless solid border frame that works well with any image.",
         borderWidth: 20,
-        borderColor: "#333333",
-        backgroundColor: "#FFFFFF",
+        borderColor: "#192a56",
+        backgroundColor: "#f5f6fa",
         textColor: "#000000",
-        fontFamily: "Georgia, serif"
+        fontFamily: "Georgia, serif",
+        hasDecorativeCorners: true
     },
-    
+
     // Elegant frame - sophisticated design with decorative corners
     elegant: {
         name: "Elegant",
@@ -23,7 +24,7 @@ const frameStyles = {
         fontFamily: "Garamond, serif",
         hasDecorativeCorners: true
     },
-    
+
     // Vintage frame - weathered, antique look
     vintage: {
         name: "Vintage",
@@ -35,7 +36,7 @@ const frameStyles = {
         fontFamily: "Times New Roman, serif",
         hasTexture: true
     },
-    
+
     // Minimalist frame - thin, simple lines
     minimalist: {
         name: "Minimalist",
@@ -46,7 +47,7 @@ const frameStyles = {
         textColor: "#333333",
         fontFamily: "Arial, sans-serif"
     },
-    
+
     // Ornate frame - decorative, elaborate design
     ornate: {
         name: "Ornate",
@@ -58,7 +59,7 @@ const frameStyles = {
         fontFamily: "Baskerville, serif",
         hasPattern: true
     },
-    
+
     // No frame option
     none: {
         name: "No Frame",

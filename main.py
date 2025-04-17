@@ -11,7 +11,7 @@ from app import app
 from models import db
 
 # Import membership utilities
-from utils.membership import create_default_plans
+from utils.membership import create_default_plans, create_default_poem_lengths
 
 def initialize_database():
     """Initialize database tables and default data"""
@@ -22,6 +22,7 @@ def initialize_database():
 
             # Create default membership plans
             create_default_plans()
+            create_default_poem_lengths()
 
             # Verify creation
             from models import Membership
