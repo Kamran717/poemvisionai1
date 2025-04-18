@@ -68,27 +68,13 @@
                 {% endif %}
                 <hr>
                 
-                <h5 class="mb-3">⏱️ Time Saved with AI</h5>
-                <div class="card bg-light mb-4">
-                    <div class="card-body">
-                        <div class="text-center mb-3">
-                            <div class="display-6 fw-bold text-primary">{{ time_saved_stats.hours }}h {{ time_saved_stats.minutes }}m</div>
-                            <p class="text-muted mb-0">Time saved creating poems</p>
-                        </div>
-                        
-                        <div class="row text-center small">
-                            <div class="col-4">
-                                <div class="fw-bold">{{ time_saved_stats.poem_counts.total }}</div>
-                                <div>Total Poems</div>
-                            </div>
-                            <div class="col-4">
-                                <div class="fw-bold">{{ time_saved_stats.poem_counts.short }}</div>
-                                <div>Short</div>
-                            </div>
-                            <div class="col-4">
-                                <div class="fw-bold">{{ time_saved_stats.poem_counts.medium + time_saved_stats.poem_counts.long }}</div>
-                                <div>Med/Long</div>
-                            </div>
+                <div class="d-flex align-items-center p-2 mb-3 border rounded bg-light">
+                    <div class="me-2 fs-4">⏱️</div>
+                    <div>
+                        <h6 class="mb-0">Time Saved with AI</h6>
+                        <div class="d-flex align-items-center">
+                            <span class="text-primary fw-bold me-1">{{ time_saved_stats.hours }}h {{ time_saved_stats.minutes }}m</span> 
+                            <span class="text-muted small">saved across {{ time_saved_stats.poem_counts.total }} poems</span>
                         </div>
                     </div>
                 </div>
