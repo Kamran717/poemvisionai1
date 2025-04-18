@@ -38,6 +38,34 @@ class User(db.Model):
     def __repr__(self):
         return f'<User {self.username}>'
 
+    def get_time_saved_stats(self):
+        """Calculate the total time saved in minutes and formatted as hours/minutes."""
+        total_minutes = 0
+        poem_counts = {'short': 0, 'medium': 0, 'long': 0, 'total': 0}
+        
+        for creation in self.creations:
+            if creation.time_saved_minutes:
+                total_minutes += creation.time_saved_minutes
+                
+            if creation.poem_length:
+                poem_counts[creation.poem_length] += 1
+                poem_counts['total'] += 1
+            else:
+                # For creations created before poem_length was added
+                poem_counts['total'] += 1
+        
+        # Calculate hours and remaining minutes for display
+        hours = total_minutes // 60
+        minutes = total_minutes % 60
+        
+        return {
+            'total_minutes': total_minutes,
+            'hours': hours,
+            'minutes': minutes,
+            'poem_counts': poem_counts,
+            'formatted': f"{hours} hours and {minutes} minutes" if hours > 0 else f"{minutes} minutes"
+        }
+
     def generate_password_reset_token(self, expires_in=3600):
         """Generate password reset token that expires in 1 hour by default"""
         return jwt.encode(
@@ -89,34 +117,6 @@ class User(db.Model):
     def check_password(self, password):
         """Check if the provided password matches the hash."""
         return check_password_hash(self.password_hash, password)
-        
-    def get_time_saved_stats(self):
-        """Calculate the total time saved in minutes and formatted as hours/minutes."""
-        total_minutes = 0
-        poem_counts = {'short': 0, 'medium': 0, 'long': 0, 'total': 0}
-        
-        for creation in self.creations:
-            if creation.time_saved_minutes:
-                total_minutes += creation.time_saved_minutes
-                
-            if creation.poem_length:
-                poem_counts[creation.poem_length] += 1
-                poem_counts['total'] += 1
-            else:
-                # For creations created before poem_length was added
-                poem_counts['total'] += 1
-        
-        # Calculate hours and remaining minutes for display
-        hours = total_minutes // 60
-        minutes = total_minutes % 60
-        
-        return {
-            'total_minutes': total_minutes,
-            'hours': hours,
-            'minutes': minutes,
-            'poem_counts': poem_counts,
-            'formatted': f"{hours} hours and {minutes} minutes" if hours > 0 else f"{minutes} minutes"
-        }
 
 
 class Membership(db.Model):
