@@ -1,8 +1,12 @@
 import os
 import logging
 import functools
+import secrets
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, jsonify, session, make_response, redirect, url_for, flash
+import jwt
+import time
+from flask import Flask, render_template, request, jsonify, session, make_response, redirect, url_for, flash, current_app
+from flask_mail import Mail, Message
 import base64
 import uuid
 import json
@@ -11,11 +15,14 @@ import random
 import re
 import stripe
 from stripe.error import StripeError
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from werkzeug.security import generate_password_hash, check_password_hash
 from utils.image_analyzer import analyze_image
 from utils.poem_generator import generate_poem
 from utils.image_manipulator import create_framed_image
-from models import db, Creation, User, Membership, Transaction
+from models import db, Creation, User, Membership, Transaction, ContactMessage
 from utils.membership import (create_default_plans, get_user_plan,
                               check_poem_type_access, check_frame_access,
                               process_payment, get_user_creations,
@@ -81,18 +88,26 @@ stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 stripe.api_version = "2023-08-16"
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
 
+# Set up email configuration
+app.config['MAIL_SERVER'] = 'smtp-relay.brevo.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.environ.get('BREVO_SMTP_USERNAME')  
+app.config['MAIL_PASSWORD'] = os.environ.get('BREVO_SMTP_PASSWORD')  
+app.config['MAIL_DEFAULT_SENDER'] = 'poem vision <josephmurage267@gmail.com>'
+
 # Set up database with connection pooling and retry settings
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_pre_ping": True,  # Check if connection is alive before using it
-    "pool_recycle": 280,  # Recycle connections after 280 seconds
-    "pool_timeout": 30,  # Timeout waiting for a connection from pool
-    "max_overflow": 15,  # Allow up to 15 connections beyond pool_size
-    "pool_size": 10,  # Keep up to 10 connections in the pool
+    "pool_pre_ping": True,  
+    "pool_recycle": 280,  
+    "pool_timeout": 30,  
+    "max_overflow": 15,  
+    "pool_size": 10,  
     "connect_args": {
         "connect_timeout": 10
-    }  # Connection timeout in seconds
+    }  
 }
 db.init_app(app)
 
@@ -397,7 +412,7 @@ def generate_poem_route():
 @app.route('/create-final-image', methods=['POST'])
 def create_final_image_route():
     """Create the final framed image with the poem."""
-        
+
     try:
         data = request.json
         analysis_id = data.get('analysisId')
@@ -447,7 +462,7 @@ def create_final_image_route():
 
 
 @app.route('/shared/<share_code>')
-@cache_view(timeout=3600)  
+@cache_view(timeout=3600)
 def view_shared_creation(share_code):
     """View a shared creation by its share code."""
     try:
@@ -516,14 +531,16 @@ def login():
 
         # Check if user exists and password is correct
         if user and user.check_password(password):
-            # Store user ID in session
+            if not user.is_email_verified:
+                return jsonify({
+                    'error': 'Please verify your email before logging in.',
+                    'verification_required': True
+                }), 401
+
             session['user_id'] = user.id
             return jsonify({'success': True, 'redirect': url_for('index')})
         else:
-            return jsonify({
-                'error':
-                'Login failed. Please check your email and password.'
-            }), 401
+            return jsonify({'error': 'Invalid email or password.'}), 401
 
     return render_template('login.html')
 
@@ -571,9 +588,13 @@ def signup():
             db.session.add(new_user)
             db.session.commit()
 
-            # Log the user in
-            session['user_id'] = new_user.id
-            return jsonify({'success': True, 'redirect': url_for('index')})
+            # Send verification email
+            send_verification_email(new_user)
+            return jsonify({
+                'success': True, 
+                'message': 'Please check your email to verify your account',
+                'redirect': url_for('verification_pending')
+            })
 
         except Exception as e:
             db.session.rollback()
@@ -585,6 +606,124 @@ def signup():
 
     return render_template('signup.html')
 
+@app.route('/verify-email/<token>')
+def verify_email(token):
+    """Verify user's email using the token"""
+    user = User.query.filter_by(email_verification_token=token).first()
+
+    if not user or not user.is_token_valid(token):
+        flash('Invalid or expired verification link. Please request a new one.', 'danger')
+        return redirect(url_for('login'))
+
+    user.verify_email()
+    db.session.commit()
+
+    # Log the user in
+    session['user_id'] = user.id
+    flash('Your email has been verified. Welcome!', 'success')
+    return redirect(url_for('index'))
+
+@app.route('/verification-pending')
+def verification_pending():
+    """Show a page informing the user to check their email"""
+    return render_template('verification_pending.html')
+
+@app.route('/resend-verification', methods=['GET', 'POST'])
+def resend_verification():
+    """Resend verification email"""
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        user = User.query.filter_by(email=email).first()
+
+        if user and not user.is_email_verified:
+            send_verification_email(user)
+            flash('Verification email has been resent. Please check your inbox.', 'success')
+        else:
+            flash('Email not found or already verified.', 'warning')
+
+        return redirect(url_for('login'))
+
+    return render_template('resend_verification.html')
+
+def send_verification_email(user):
+    """Send email verification link to the user using Brevo SMTP"""
+    token = user.generate_verification_token()
+    db.session.commit()
+    verification_url = url_for('verify_email', token=token, _external=True)
+
+    # Create message container
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = "Verify Your Email"
+    msg['From'] = app.config['MAIL_DEFAULT_SENDER']
+    msg['To'] = user.email
+
+    # Create the body of the message (plain-text and HTML versions)
+    text = f"""Hello {user.username},
+
+Thank you for signing up! Please verify your email by clicking on the link below:
+
+{verification_url}
+
+This link will expire in 24 hours.
+
+If you did not register for an account, please ignore this email.
+
+Best regards,
+Poem Vision Team
+"""
+
+    html = f"""\
+    <html>
+    <body>
+        <h2>Hello {user.username},</h2>
+        <p>Thank you for signing up! Please verify your email by clicking the button below:</p>
+        <p><a href="{verification_url}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify Email</a></p>
+        <p>Or copy this link into your browser:<br>{verification_url}</p>
+        <p>This link will expire in 24 hours.</p>
+        <p>If you did not register for an account, please ignore this email.</p>
+        <br>
+        <p>Best regards,<br>Poem Vision Team</p>
+    </body>
+    </html>
+    """
+
+    # Record the MIME types of both parts - text/plain and text/html
+    part1 = MIMEText(text, 'plain')
+    part2 = MIMEText(html, 'html')
+
+    # Attach parts into message container
+    msg.attach(part1)
+    msg.attach(part2)
+
+    try:
+        # Send the message via Brevo's SMTP server
+        with smtplib.SMTP(app.config['MAIL_SERVER'], app.config['MAIL_PORT']) as server:
+            server.starttls()
+            server.login(app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
+            server.send_message(msg)
+
+        logger.info(f"Verification email sent to {user.email}")
+    except Exception as e:
+        logger.error(f"Failed to send verification email: {str(e)}")
+        raise
+
+def check_user_verified():
+    # Routes accessible to anyone
+    public_routes = ['login', 'signup', 'verify_email', 'verification_pending', 'resend_verification', 'static', 'index', 'gallery', 'view_shared_creation','contact_form']
+
+    # Routes accessible to authenticated users regardless of verification
+    auth_only_routes = ['index', 'view_shared_creation','analyze_image_route', 'generate_poem_route', 'create_final_image_route', 'contact_form']  
+
+    if request.endpoint not in public_routes and 'user_id' in session:
+        user = User.query.get(session['user_id'])
+        if user and not user.is_email_verified and request.endpoint not in auth_only_routes:
+            # For API requests
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'error': 'Email verification required'}), 401
+            # For page requests
+            flash('Please verify your email to access this feature.', 'warning')
+            return redirect(url_for('verification_pending'))
+
 
 @app.route('/logout')
 def logout():
@@ -592,6 +731,136 @@ def logout():
     # Remove user ID from session
     session.pop('user_id', None)
     return redirect(url_for('index'))
+
+@app.route('/forgot-password', methods=['POST'])
+def forgot_password():
+    """Handle forgot password request using SMTP"""
+    try:
+        data = request.json
+        email = data.get('email', '').strip().lower()
+
+        if not email:
+            return jsonify({'error': 'Email is required'}), 400
+
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            # For security, don't reveal if email doesn't exist
+            return jsonify({
+                'success': True,
+                'message': 'If an account exists with this email, a password reset link has been sent.'
+            })
+
+        # Generate password reset token (expires in 1 hour)
+        token = user.generate_password_reset_token()
+        reset_url = url_for('reset_password', token=token, _external=True)
+
+        # Create message container
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = 'Password Reset Request'
+        msg['From'] = app.config['MAIL_DEFAULT_SENDER']
+        msg['To'] = user.email
+
+        # Create email content
+        text = f"""Password Reset Request
+
+You requested to reset your password. Click the link below to proceed:
+
+{reset_url}
+
+This link will expire in 1 hour.
+
+If you didn't request this, please ignore this email.
+
+Best regards,
+Poem Vision Team
+"""
+
+        html = f"""\
+        <html>
+        <body>
+            <h2>Password Reset</h2>
+            <p>You requested to reset your password. Click the button below to proceed:</p>
+            <p><a href="{reset_url}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Password</a></p>
+            <p>Or copy this link into your browser:<br>{reset_url}</p>
+            <p>This link will expire in 1 hour.</p>
+            <p>If you didn't request this, please ignore this email.</p>
+            <br>
+            <p>Best regards,<br>Poem Vision Team</p>
+        </body>
+        </html>
+        """
+
+        # Attach both text and HTML versions
+        part1 = MIMEText(text, 'plain')
+        part2 = MIMEText(html, 'html')
+        msg.attach(part1)
+        msg.attach(part2)
+
+        try:
+            # Send the message via Brevo's SMTP server
+            with smtplib.SMTP(app.config['MAIL_SERVER'], app.config['MAIL_PORT']) as server:
+                server.starttls()
+                server.login(app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
+                server.send_message(msg)
+
+            logger.info(f"Password reset email sent to {user.email}")
+            return jsonify({
+                'success': True,
+                'message': 'If an account exists with this email, a password reset link has been sent.'
+            })
+
+        except Exception as e:
+            logger.error(f"Failed to send password reset email: {str(e)}")
+            return jsonify({'error': 'Failed to send password reset email'}), 500
+
+    except Exception as e:
+        logger.error(f"Error in forgot password: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Failed to process password reset request'}), 500
+
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    """Handle password reset"""
+    if request.method == 'GET':
+        # Verify token and show reset form
+        user = User.verify_password_reset_token(token)
+        if not user:
+            flash('Invalid or expired password reset link', 'danger')
+            return redirect(url_for('login'))
+        return render_template('reset_password.html', token=token)
+
+    else:  # POST
+        try:
+            data = request.form
+            token = data.get('token')
+            password = data.get('password')
+            confirm_password = data.get('confirm_password')
+
+            if not password or not confirm_password:
+                flash('Please fill in all fields', 'danger')
+                return redirect(url_for('reset_password', token=token))
+
+            if password != confirm_password:
+                flash('Passwords do not match', 'danger')
+                return redirect(url_for('reset_password', token=token))
+
+            user = User.verify_password_reset_token(token)
+            if not user:
+                flash('Invalid or expired password reset link', 'danger')
+                return redirect(url_for('login'))
+
+            # Update password
+            user.set_password(password)
+            db.session.commit()
+
+            flash('Your password has been updated. Please log in.', 'success')
+            return redirect(url_for('login'))
+
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error resetting password: {str(e)}", exc_info=True)
+            flash('An error occurred while resetting your password', 'danger')
+            return redirect(url_for('reset_password', token=token))
 
 
 @app.route('/profile')
@@ -605,12 +874,12 @@ def profile():
     user = User.query.get(user_id)
 
     if not user:
-        session.pop('user_id', None)  
+        session.pop('user_id', None)
         return redirect(url_for('login'))
 
     # Get user's creations
     user_creations = get_user_creations(user_id, limit=20)
-
+    
     # Get user's membership plan
     plan = get_user_plan(user_id)
 
@@ -618,6 +887,39 @@ def profile():
                            user=user,
                            creations=user_creations,
                            plan=plan)
+
+@app.route('/api/contact', methods=['POST'])
+def contact_form():
+    """Handle contact form submissions"""
+    try:
+        data = request.json
+        logger.debug(f"Received contact form data: {data}")
+
+        # Validate required fields
+        if not all(key in data for key in ['name', 'email', 'subject', 'message']):
+            return jsonify({'error': 'All fields are required'}), 400
+
+        # Basic email validation
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", data['email']):
+            return jsonify({'error': 'Invalid email address'}), 400
+
+        # Create new contact message
+        new_message = ContactMessage(
+            name=data['name'],
+            email=data['email'],
+            subject=data['subject'],
+            message=data['message']
+        )
+
+        db.session.add(new_message)
+        db.session.commit()
+
+        return jsonify({'success': True, 'message': 'Thank you for your message!'})
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error saving contact message: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Failed to send message. Please try again later.'}), 500
 
 
 @app.route('/membership')
@@ -644,7 +946,7 @@ def upgrade_membership():
     user = User.query.get(user_id)
 
     if not user:
-        session.pop('user_id', None)  
+        session.pop('user_id', None)
         return redirect(url_for('login'))
 
     # If user is already premium
@@ -702,10 +1004,12 @@ def upgrade_membership():
             user.subscription_id = subscription.id
 
             # Check if we actually got the expanded objects
-            if hasattr(subscription, 'latest_invoice') and isinstance(subscription.latest_invoice, stripe.Invoice):
+            if hasattr(subscription, 'latest_invoice') and isinstance(
+                    subscription.latest_invoice, stripe.Invoice):
                 invoice = subscription.latest_invoice
 
-                if hasattr(invoice, 'payment_intent') and invoice.payment_intent:
+                if hasattr(invoice,
+                           'payment_intent') and invoice.payment_intent:
                     # Access the payment intent status
                     if invoice.payment_intent.status == 'succeeded':
                         # Update user to premium
@@ -730,31 +1034,41 @@ def upgrade_membership():
                         db.session.commit()
 
                         return jsonify({
-                            'success': True,
-                            'redirect': url_for('profile'),
-                            'message': 'Subscription created successfully!'
+                            'success':
+                            True,
+                            'redirect':
+                            url_for('profile'),
+                            'message':
+                            'Subscription created successfully!'
                         })
                     else:
                         # Handle payment that requires action
                         return jsonify({
-                            'error': 'Payment requires additional action',
-                            'requires_action': True,
-                            'payment_intent_client_secret': invoice.payment_intent.client_secret
+                            'error':
+                            'Payment requires additional action',
+                            'requires_action':
+                            True,
+                            'payment_intent_client_secret':
+                            invoice.payment_intent.client_secret
                         }), 400
                 else:
                     # Handle case where payment intent is not available
-                    logger.error(f"Payment intent not available in the invoice: {invoice.id}")
-                    return jsonify({'error': 'Payment processing issue. Please try again.'}), 500
+                    logger.error(
+                        f"Payment intent not available in the invoice: {invoice.id}"
+                    )
+                    return jsonify({
+                        'error':
+                        'Payment processing issue. Please try again.'
+                    }), 500
             else:
                 # Handle case where latest_invoice is not expanded
-                logger.error("Latest invoice not expanded in subscription response")
+                logger.error(
+                    "Latest invoice not expanded in subscription response")
 
                 # Try to retrieve the invoice separately
                 try:
                     invoice = stripe.Invoice.retrieve(
-                        subscription.latest_invoice,
-                        expand=['payment_intent']
-                    )
+                        subscription.latest_invoice, expand=['payment_intent'])
 
                     if invoice.payment_intent.status == 'succeeded':
                         # Update user to premium
@@ -779,27 +1093,36 @@ def upgrade_membership():
                         db.session.commit()
 
                         return jsonify({
-                            'success': True,
-                            'redirect': url_for('profile'),
-                            'message': 'Subscription created successfully!'
+                            'success':
+                            True,
+                            'redirect':
+                            url_for('profile'),
+                            'message':
+                            'Subscription created successfully!'
                         })
                     else:
                         return jsonify({
-                            'error': 'Payment requires additional action',
-                            'requires_action': True,
-                            'payment_intent_client_secret': invoice.payment_intent.client_secret
+                            'error':
+                            'Payment requires additional action',
+                            'requires_action':
+                            True,
+                            'payment_intent_client_secret':
+                            invoice.payment_intent.client_secret
                         }), 400
                 except Exception as e:
                     logger.error(f"Error retrieving invoice: {str(e)}")
-                    return jsonify({'error': 'Payment processing issue. Please try again.'}), 500
+                    return jsonify({
+                        'error':
+                        'Payment processing issue. Please try again.'
+                    }), 500
 
         except StripeError as e:
             logger.error(f"Stripe error during payment: {str(e)}",
                          exc_info=True)
             return jsonify({
                 'error':
-                str(e.user_message)
-                if hasattr(e, 'user_message') and e.user_message else 'Payment processing failed'
+                str(e.user_message) if hasattr(e, 'user_message')
+                and e.user_message else 'Payment processing failed'
             }), 500
         except Exception as e:
             logger.error(f"Error processing payment: {str(e)}", exc_info=True)
@@ -869,23 +1192,74 @@ def handle_payment_succeeded(invoice):
         logger.error(f"Error handling payment succeeded webhook: {str(e)}")
 
 
+@app.route('/cancel-subscription', methods=['POST'])
+def cancel_subscription():
+    """Handle subscription cancellation request from frontend"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+
+    user = User.query.get(session['user_id'])
+    if not user or not user.is_premium or not user.subscription_id:
+        return jsonify({'error': 'No active subscription'}), 400
+
+    try:
+        # Set subscription to cancel at period end
+        stripe.Subscription.modify(user.subscription_id,
+                                   cancel_at_period_end=True)
+
+        # Update user state
+        user.is_cancelled = True
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Subscription will cancel at period end',
+            'end_date': user.membership_end.strftime('%B %d, %Y')
+        })
+
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe cancellation error: {str(e)}")
+        return jsonify({
+            'error':
+            str(e.user_message)
+            if hasattr(e, 'user_message') else 'Cancellation failed'
+        }), 500
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Subscription cancellation error: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+
 def handle_subscription_cancelled(subscription):
-    """Handle subscription cancellation webhook"""
+    """Handle subscription cancellation from Stripe webhook"""
     try:
         user_id = subscription.metadata.get('user_id')
+        if not user_id:
+            return
 
-        if user_id:
-            user = User.query.get(user_id)
-            if user:
-                user.is_premium = False
-                user.membership_end = datetime.utcnow()
-                db.session.commit()
-                logger.info(
-                    f"Downgraded user {user_id} after subscription cancellation"
-                )
+        user = User.query.get(user_id)
+        if not user:
+            return
+
+        # Case 1: Scheduled cancellation reached end date
+        if subscription.status == 'canceled':
+            user.is_premium = False
+            user.membership_end = datetime.utcnow()
+            user.is_cancelled = False  
+            logger.info(f"Fully canceled subscription for user {user_id}")
+
+        # Case 2: User requested future cancellation
+        elif subscription.cancel_at_period_end:
+            user.is_cancelled = True
+            logger.info(
+                f"Marked subscription for future cancellation for user {user_id}"
+            )
+
+        db.session.commit()
+
     except Exception as e:
-        logger.error(
-            f"Error handling subscription cancelled webhook: {str(e)}")
+        logger.error(f"Webhook cancellation handling error: {str(e)}")
+        db.session.rollback()
 
 
 @app.route('/api/available-poem-lengths')

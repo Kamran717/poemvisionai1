@@ -340,7 +340,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Show loading indicator (same as main button)
             loadingAnalysis.classList.remove('d-none');
             analyzeBtnMobile.disabled = true;
-            if (analyzeBtnMain) analyzeBtnMain.disabled = true; // Also disable main button if exists
+            if (analyzeBtnMain) analyzeBtnMain.disabled = true; 
 
             // Prepare fetch options (same as main button)
             let fetchOptions = {};
@@ -947,6 +947,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.shareCode) {
                 console.log('Share code received:', data.shareCode);
                 state.shareCode = data.shareCode;
+                setupSharing(data.shareCode)
             } else {
                 console.error('No share code received from server');
             }
@@ -981,43 +982,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Show thank you message
         showThankYouMessage();
-    });
-
-    // Add login check to all share buttons
-    document.querySelectorAll('.share-btn').forEach(button => {
-        button.addEventListener('click', function(e) {
-            // Check if user is logged in
-            if (!this.hasAttribute('data-user-logged-in')) {
-                e.preventDefault();
-                showLoginPrompt();
-                return false;
-            }
-
-            
-
-            showThankYouMessage();
-        });
-    });
-
-    // Copy link button
-    document.getElementById('copyLinkBtn')?.addEventListener('click', function(e) {
-        // Check if user is logged in
-        if (!this.hasAttribute('data-user-logged-in')) {
-            e.preventDefault();
-            showLoginPrompt();
-            return false;
-        }
-
-        // Copy link logic for logged-in users
-        const shareUrl = document.getElementById('shareUrlInput').value;
-        navigator.clipboard.writeText(shareUrl).then(() => {
-            // Show a success message
-            const originalText = this.innerHTML;
-            this.innerHTML = '<i class="fas fa-check"></i>';
-            setTimeout(() => {
-                this.innerHTML = originalText;
-            }, 2000);
-        });
     });
 
     // Function to show login prompt
@@ -1063,37 +1027,41 @@ document.addEventListener('DOMContentLoaded', function() {
         loginModal.show();
     }
 
+    // Store the original text content
+    const originalHeadingHTML = document.querySelector('.h4.mb-3.text-muted.fw-normal').innerHTML;
+    const originalParagraphText = document.querySelector('p.lead').textContent;
+
     // Function to show thank you message
     function showThankYouMessage() {
-        const thankYouEl = document.getElementById('thankYouMessage');
+        const heading = document.querySelector('.h4.mb-3.text-muted.fw-normal');
+        const leadParagraph = document.querySelector('p.lead');
 
-        // Only proceed if element exists and user is logged in
-        if (!thankYouEl) return;
+        if (!heading || !leadParagraph) return;
 
-        // Show the thank you message
-        thankYouEl.classList.remove('d-none');
+        // Update the heading
+        heading.innerHTML = '<span class="d-block">Thank you for Creating with Poem Vision AI!</span>';
+        heading.classList.add('text-success', 'animate__animated', 'animate__fadeIn');
 
-        // Scroll to it if needed
-        thankYouEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Update the paragraph
+        leadParagraph.innerHTML = '<i class="fas fa-heart text-danger me-2"></i> Your poem has been crafted, framed and made personal - just like you imagined. Keep us close for the moments that matter. Birthdays, love notes, reflections, celebrations - whenever words need to shine, we are here. Save, share, or create again anytime. We are always one click away.';
+        leadParagraph.classList.add('animate__animated', 'animate__fadeIn');
 
-        // Hide the original page description temporarily if you want
-        const pageDescription = document.querySelector('.h4.mb-3.text-muted.fw-normal');
-        if (pageDescription) {
-            pageDescription.classList.add('d-none');
-        }
+        // Scroll to the heading if needed
+        heading.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-        // Optionally, set a timeout to hide the message after some time
+        // Set a timeout to revert back to original text after some time
         setTimeout(() => {
-            thankYouEl.classList.add('animate__fadeOut');
+            heading.classList.add('animate__fadeOut');
+            leadParagraph.classList.add('animate__fadeOut');
+
             setTimeout(() => {
-                thankYouEl.classList.add('d-none');
-                thankYouEl.classList.remove('animate__fadeOut');
-                // Show the original description again if you hid it
-                if (pageDescription) {
-                    pageDescription.classList.remove('d-none');
-                }
+                heading.innerHTML = originalHeadingHTML;
+                leadParagraph.innerHTML = originalParagraphText;
+
+                heading.classList.remove('text-success', 'animate__animated', 'animate__fadeIn', 'animate__fadeOut');
+                leadParagraph.classList.remove('animate__animated', 'animate__fadeIn', 'animate__fadeOut');
             }, 1000);
-        }, 10000); // Hide after 10 seconds
+        }, 20000); 
     }
 
     // Navigation button event listeners
@@ -1217,77 +1185,101 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to handle sharing when the creation is complete
     function setupSharing(shareCode) {
         const shareUrl = `${window.location.origin}/shared/${shareCode}`;
-        
-        
-        // Set the share URL in the input
-        shareUrlInput.value = shareUrl;
-        
-        // Copy link button
-        copyLinkBtn.addEventListener('click', function() {
-            shareUrlInput.select();
-            document.execCommand('copy');
-            
-            // Visual feedback
-            copyLinkBtn.innerHTML = '<i class="fas fa-check"></i>';
-            setTimeout(() => {
-                copyLinkBtn.innerHTML = '<i class="fas fa-copy"></i>';
-            }, 2000);
+
+        // Set the share URL in the input field
+        const shareUrlInput = document.getElementById('shareUrlInput');
+        if (shareUrlInput) {
+            shareUrlInput.value = shareUrl;
+        }
+
+        // Universal login check and thank you message
+        function handleShareAction(e, callback) {
+            if (!this.hasAttribute('data-user-logged-in')) {
+                e.preventDefault();
+                showLoginPrompt();
+                return false;
+            }
+
+            // Execute the share action if provided
+            if (typeof callback === 'function') {
+                callback();
+            }
+
+            showThankYouMessage();
+            return true;
+        }
+
+        // Copy Link Button - Modern Approach with Fallback
+        document.getElementById('copyLinkBtn')?.addEventListener('click', async function(e) {
+            if (!handleShareAction.call(this, e)) return;
+
+            try {
+                // Modern clipboard API
+                await navigator.clipboard.writeText(shareUrl);
+
+                // Visual feedback
+                const originalHTML = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-check"></i>';
+                this.classList.add('btn-success');
+                this.classList.remove('btn-outline-secondary');
+
+                // Revert after 2 seconds
+                setTimeout(() => {
+                    this.innerHTML = originalHTML;
+                    this.classList.remove('btn-success');
+                    this.classList.add('btn-outline-secondary');
+                }, 2000);
+            } catch (err) {
+                // Fallback for older browsers
+                shareUrlInput.select();
+                document.execCommand('copy');
+
+                // Visual feedback for fallback
+                const originalHTML = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(() => {
+                    this.innerHTML = originalHTML;
+                }, 2000);
+            }
         });
-        
-        // WhatsApp sharing
-        shareWhatsApp.addEventListener('click', function() {
-            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent('Check out my custom poem generated from an image: ' + shareUrl)}`;
-            window.open(whatsappUrl, '_blank');
-        });
-        
-        // Instagram doesn't support direct sharing links, open Instagram and instruct to paste
-        shareInstagram.addEventListener('click', function() {
-            alert('Instagram requires manual sharing. We\'ve copied the link for you to paste into Instagram.');
-            shareUrlInput.select();
-            document.execCommand('copy');
-            
-            // Try to open Instagram
-            window.open('https://www.instagram.com/', '_blank');
-        });
-        
-        // Facebook sharing
-        shareFacebook.addEventListener('click', function() {
-            const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
-            window.open(facebookUrl, '_blank');
-        });
-        
-        // TikTok doesn't have a direct sharing API, open TikTok and instruct to paste
-        shareTikTok.addEventListener('click', function() {
-            alert('TikTok requires manual sharing. We\'ve copied the link for you to paste into TikTok.');
-            shareUrlInput.select();
-            document.execCommand('copy');
-            
-            // Try to open TikTok
-            window.open('https://www.tiktok.com/', '_blank');
-        });
-        
-        // Twitter sharing
-        shareTwitter.addEventListener('click', function() {
-            const twitterText = 'Check out my custom poem generated from an image with Poem Vision AI:';
-            const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(twitterText)}&url=${encodeURIComponent(shareUrl)}`;
-            window.open(twitterUrl, '_blank');
-        });
-        
-        // Pinterest sharing
-        sharePinterest.addEventListener('click', function() {
-            // Get the final image URL
-            const imageUrl = document.getElementById('finalCreation').src;
-            const description = 'Custom AI-generated poem based on my image from Poem Vision AI';
-            const pinterestUrl = `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(shareUrl)}&media=${encodeURIComponent(imageUrl)}&description=${encodeURIComponent(description)}`;
-            window.open(pinterestUrl, '_blank');
-        });
-        
-        // Email sharing
-        shareEmail.addEventListener('click', function() {
-            const subject = 'Check out my custom poem from Poem Vision AI';
-            const body = `I created this custom poem from an image using Poem Vision AI! Check it out here: ${shareUrl}`;
-            const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-            window.open(mailtoUrl);
+
+        // Social Share Buttons
+        const shareButtons = {
+            shareWhatsApp: () => {
+                window.open(`https://wa.me/?text=${encodeURIComponent('Check out my poem: ' + shareUrl)}`, '_blank');
+            },
+            shareInstagram: () => {
+                shareUrlInput.select();
+                document.execCommand('copy');
+                alert('Instagram requires manual sharing. We\'ve copied the link to your clipboard.');
+                window.open('https://www.instagram.com/', '_blank');
+            },
+            shareFacebook: () => {
+                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank');
+            },
+            shareTikTok: () => {
+                shareUrlInput.select();
+                document.execCommand('copy');
+                alert('TikTok requires manual sharing. We\'ve copied the link to your clipboard.');
+                window.open('https://www.tiktok.com/', '_blank');
+            },
+            shareTwitter: () => {
+                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent('Check out my poem:')}&url=${encodeURIComponent(shareUrl)}`, '_blank');
+            },
+            sharePinterest: () => {
+                const imageUrl = document.getElementById('finalCreation').src;
+                window.open(`https://pinterest.com/pin/create/button/?url=${encodeURIComponent(shareUrl)}&media=${encodeURIComponent(imageUrl)}`, '_blank');
+            },
+            shareEmail: () => {
+                window.open(`mailto:?subject=Check out my poem&body=I created this with Poem Vision AI: ${encodeURIComponent(shareUrl)}`);
+            }
+        };
+
+        // Attach event listeners to all share buttons
+        Object.keys(shareButtons).forEach(buttonId => {
+            document.getElementById(buttonId)?.addEventListener('click', function(e) {
+                handleShareAction.call(this, e, shareButtons[buttonId]);
+            });
         });
     }
     
@@ -1303,4 +1295,5 @@ document.addEventListener('DOMContentLoaded', function() {
             return this._shareCode;
         }
     });
+
 });

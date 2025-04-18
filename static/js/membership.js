@@ -274,7 +274,7 @@ function updatePoemTypeDropdown(poemTypes) {
         congratulations: ['new-job', 'graduation', 'wedding', 'engagement', 'new-baby', 'promotion', 'new-home', 'new-car', 'new-pet', 'first-day-of-school', 'retirement'],
         holidays: ['new-year', 'valentines-day', 'ramadan', 'easter', 'mother-day', 'father-day','independence-day', 'halloween', 'thanksgiving', 'christmas','hanukkah','diwali','new-year-eve'],
         music: ['rap/hiphop', 'country', 'rock', 'pop', 'jazz'],
-        artist: ['eminem','taylor-swift','drake','50cent','lil-wayne','doja-cat','nicki-minaj','kendrick-lamar','j. cole','elvis-presley','buddy-holly','luis-armstrong'],
+        artist: ['eminem','taylor-swift','drake','50cent','lil-wayne','doja-cat','nicki-minaj','kendrick-lamar','j. cole','elvis-presley', 'tupac','biggie-smalls','buddy-holly','luis-armstrong'],
         classic: ['haiku', 'limerick', 'tanka', 'senryu'],
         tribulations: ['memorial', 'farewell', 'get-well-soon','apology','divorce','hard-times','missing-you','conflict','lost-pet']
     };
@@ -354,6 +354,8 @@ function updatePoemTypeDropdown(poemTypes) {
         'kendrick-lamar': 'Kendrick Lamar',
         'j. cole': 'J. Cole',
         'elvis-presley': 'Elvis Presley',
+        'tupac': 'Tupac Shakur',
+        'biggie-smalls': 'Biggie Smalls',
         'buddy-holly': 'Buddy Holly',
         'luis-armstrong': 'Luis Armstrong',
         'haiku': 'Haiku',

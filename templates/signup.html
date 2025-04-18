@@ -45,32 +45,32 @@
 document.addEventListener('DOMContentLoaded', function() {
     const signupForm = document.getElementById('signupForm');
     const signupAlert = document.getElementById('signupAlert');
-    
+
     signupForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        
+
         // Clear previous alerts
         signupAlert.classList.add('d-none');
-        
+
         // Basic validation
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirm_password').value;
-        
+
         if (password.length < 8) {
             signupAlert.textContent = 'Password must be at least 8 characters long.';
             signupAlert.classList.remove('d-none');
             return;
         }
-        
+
         if (password !== confirmPassword) {
             signupAlert.textContent = 'Passwords do not match.';
             signupAlert.classList.remove('d-none');
             return;
         }
-        
+
         // Get form data
         const formData = new FormData(signupForm);
-        
+
         // Send signup request
         fetch('/signup', {
             method: 'POST',
@@ -82,6 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                // If successful, redirect to the verification pending page
                 window.location.href = data.redirect;
             } else {
                 signupAlert.textContent = data.error;

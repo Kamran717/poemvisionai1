@@ -17,21 +17,10 @@
                     <span class="brand-text">
                         <span class="blue">P</span><span class="red">o</span><span class="yellow">e</span><span class="blue">m</span>
                         <span class="green">V</span><span class="red">i</span><span class="yellow">s</span><span class="blue">i</span><span class="green">o</span><span class="red">n</span>
-                        <span class="regular">AI</span>
+                        <span class="ai-purple">AI</span>
                     </span>
                 </h1>
-                <!-- Thank you message (initially hidden) -->
-                <div id="thankYouMessage" class="alert alert-success mb-4 d-none animate__animated animate__fadeIn">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-heart text-danger fa-2x me-3"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <h4 class="alert-heading">Thank you for using PoemVision AI!</h4>
-                            <p class="mb-0">We hope you enjoyed your custom poem creation. Feel free to create another one or explore our gallery for inspiration!</p>
-                        </div>
-                    </div>
-                </div>
+                
                 <h2 class="h4 mb-3 text-muted fw-normal">
                     <span class="d-block d-md-inline">Your Personal Poet</span>
                     <span class="d-none d-md-inline mx-2">•</span>
@@ -158,6 +147,50 @@
                             </div>
                             <p>Analyzing your image... This may take a few moments.</p>
                         </div>
+                        <div id="uploadError" class="alert alert-danger mt-3 d-none"></div>
+                        
+                        <!-- How It Works Section -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <div class="text-center mb-5">
+                                            <h2 class="display-5 fw-bold mb-3">How It Works</h2>
+                                            <p class="lead mb-5">Creating beautiful image-poem combinations is simple with our intuitive process.</p>
+                                        </div>
+
+                                        <div class="row justify-content-center">
+                                            <!-- Step 1 -->
+                                            <div class="col-md-4 mb-5 mb-md-0 text-center">
+                                                <div class="step-circle mx-auto mb-4 d-flex align-items-center justify-content-center">
+                                                    <span class="fs-2 fw-bold text-primary">1</span>
+                                                </div>
+                                                <h3 class="h3 mb-3">Enter Your Inspiration</h3>
+                                                <p class="text-muted">Start with a theme, emotion, or keywords that inspire you. Choose your preferred artistic style and poetic mood.</p>
+                                            </div>
+
+                                            <!-- Step 2 -->
+                                            <div class="col-md-4 mb-5 mb-md-0 text-center">
+                                                <div class="step-circle mx-auto mb-4 d-flex align-items-center justify-content-center">
+                                                    <span class="fs-2 fw-bold text-primary">2</span>
+                                                </div>
+                                                <h3 class="h3 mb-3">AI Creates Your Vision</h3>
+                                                <p class="text-muted">Our advanced AI analyzes your input and generates a unique image and complementary poem that captures your essence.</p>
+                                            </div>
+
+                                            <!-- Step 3 -->
+                                            <div class="col-md-4 mb-5 mb-md-0 text-center">
+                                                <div class="step-circle mx-auto mb-4 d-flex align-items-center justify-content-center">
+                                                    <span class="fs-2 fw-bold text-primary">3</span>
+                                                </div>
+                                                <h3 class="h3 mb-3">Save, Edit or Share</h3>
+                                                <p class="text-muted">Refine your creation if needed, save it to your personal gallery, or share it directly with friends and followers.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Features Section -->
                         <div class="row mt-4">
@@ -251,56 +284,108 @@
                                 </div>
                             </div>
                         </div>
-                        
-                        <!-- How It Works Section -->
+
+                        <!-- Contact Us Section -->
                         <div class="row mt-4">
                             <div class="col-12">
                                 <div class="card mb-4">
                                     <div class="card-header">
-                                        <h5 class="card-title mb-0">How It Works</h5>
+                                        <h5 class="card-title mb-0">Contact Us</h5>
                                     </div>
                                     <div class="card-body">
-                                        <div class="text-center mb-5">
-                                            <h2 class="display-5 fw-bold mb-3">How It Works</h2>
-                                            <p class="lead mb-5">Creating beautiful image-poem combinations is simple with our intuitive process.</p>
-                                        </div>
-
-                                        <div class="row justify-content-center">
-                                            <!-- Step 1 -->
-                                            <div class="col-md-4 mb-5 mb-md-0 text-center">
-                                                <div class="step-circle mx-auto mb-4 d-flex align-items-center justify-content-center">
-                                                    <span class="fs-2 fw-bold text-primary">1</span>
+                                        <div class="row">
+                                            <!-- Contact Form -->
+                                            <div class="col-md-6 mb-4 mb-md-0">
+                                                <div class="contact-card p-4 rounded h-100">
+                                                    <h3 class="h4 mb-4">Send us a message</h3>
+                                                    <form id="contactForm">
+                                                        <div class="mb-3">
+                                                            <label for="name" class="form-label">Your Name</label>
+                                                            <input type="text" class="form-control" id="name" required>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label for="email" class="form-label">Email Address</label>
+                                                            <input type="email" class="form-control" id="email" required>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label for="subject" class="form-label">Subject</label>
+                                                            <input type="text" class="form-control" id="subject" required>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label for="message" class="form-label">Message</label>
+                                                            <textarea class="form-control" id="message" rows="4" required></textarea>
+                                                        </div>
+                                                        <button type="submit" class="btn btn-custom-blue">
+                                                            <i class="fas fa-paper-plane me-2"></i>Send Message
+                                                        </button>
+                                                    </form>
+                                                    <div id="formSuccess" class="alert alert-success mt-3 d-none">
+                                                        Thank you! Your message has been sent successfully.
+                                                    </div>
                                                 </div>
-                                                <h3 class="h3 mb-3">Enter Your Inspiration</h3>
-                                                <p class="text-muted">Start with a theme, emotion, or keywords that inspire you. Choose your preferred artistic style and poetic mood.</p>
                                             </div>
 
-                                            <!-- Step 2 -->
-                                            <div class="col-md-4 mb-5 mb-md-0 text-center">
-                                                <div class="step-circle mx-auto mb-4 d-flex align-items-center justify-content-center">
-                                                    <span class="fs-2 fw-bold text-primary">2</span>
-                                                </div>
-                                                <h3 class="h3 mb-3">AI Creates Your Vision</h3>
-                                                <p class="text-muted">Our advanced AI analyzes your input and generates a unique image and complementary poem that captures your essence.</p>
-                                            </div>
+                                            <!-- Contact Information -->
+                                            <div class="col-md-6">
+                                                <div class="contact-card p-4 rounded h-100">
+                                                    <h3 class="h4 mb-4">Get in touch</h3>
+                                                    <div class="contact-info mb-4">
+                                                        <div class="d-flex align-items-start mb-3">
+                                                            <div class="icon-container me-3">
+                                                                <i class="fas fa-map-marker-alt text-primary fa-lg"></i>
+                                                            </div>
+                                                            <div>
+                                                                <h5 class="h6 mb-1">Address</h5>
+                                                                <p class="mb-0 text-muted">123 Creative Street, Art District<br>San Francisco, CA 94102</p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="d-flex align-items-start mb-3">
+                                                            <div class="icon-container me-3">
+                                                                <i class="fas fa-envelope text-primary fa-lg"></i>
+                                                            </div>
+                                                            <div>
+                                                                <h5 class="h6 mb-1">Email</h5>
+                                                                <p class="mb-0 text-muted">support@poemvision.com<br>info@poemvision.com</p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="d-flex align-items-start mb-3">
+                                                            <div class="icon-container me-3">
+                                                                <i class="fas fa-phone-alt text-primary fa-lg"></i>
+                                                            </div>
+                                                            <div>
+                                                                <h5 class="h6 mb-1">Phone</h5>
+                                                                <p class="mb-0 text-muted">+1 (555) 123-4567<br>Mon-Fri, 9am-5pm PST</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
 
-                                            <!-- Step 3 -->
-                                            <div class="col-md-4 mb-5 mb-md-0 text-center">
-                                                <div class="step-circle mx-auto mb-4 d-flex align-items-center justify-content-center">
-                                                    <span class="fs-2 fw-bold text-primary">3</span>
+                                                    <div class="social-links mt-4">
+                                                        <h5 class="h6 mb-3">Follow Us</h5>
+                                                        <div class="d-flex">
+                                                            <a href="#" class="btn btn-outline-primary btn-sm me-2 social-icon">
+                                                                <i class="fab fa-facebook-f"></i>
+                                                            </a>
+                                                            <a href="#" class="btn btn-outline-primary btn-sm me-2 social-icon">
+                                                                <i class="fab fa-twitter"></i>
+                                                            </a>
+                                                            <a href="#" class="btn btn-outline-primary btn-sm me-2 social-icon">
+                                                                <i class="fab fa-instagram"></i>
+                                                            </a>
+                                                            <a href="#" class="btn btn-outline-primary btn-sm me-2 social-icon">
+                                                                <i class="fab fa-linkedin-in"></i>
+                                                            </a>
+                                                            <a href="#" class="btn btn-outline-primary btn-sm social-icon">
+                                                                <i class="fab fa-youtube"></i>
+                                                            </a>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <h3 class="h3 mb-3">Save, Edit or Share</h3>
-                                                <p class="text-muted">Refine your creation if needed, save it to your personal gallery, or share it directly with friends and followers.</p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
-
-                        <div id="uploadError" class="alert alert-danger mt-3 d-none"></div>
-                        
                     </div>
 
                     <!-- Step 2: Analysis & Preferences -->
@@ -352,12 +437,12 @@
                                             <div class="mb-3 emphasis-container">
                                                 <label for="emphasisOptions" class="form-label">Elements to Emphasize <small class="text-muted">(Choose up to 4)</small></label>
                                                 <div id="emphasisOptions" class="mb-3">
-                                                    <!-- Dynamically populated based on analysis results -->
+                                                    
                                                 </div>
-                                                <!-- Counter will be inserted here by JavaScript -->
+                                                
                                             </div>
 
-                                            <!-- Personalization Section - Structured Input Design -->
+                                            
                                             <div class="mb-4 p-4 bg-dark rounded-3 border border-secondary">
                                                 <h4 class="mb-3 text-info fw-bold">Make It More Personal</h4>
                                                 <p class="text-light opacity-75 mb-4">Add specific elements you'd like us to include in your poem.</p>

@@ -15,7 +15,7 @@
                     <p class="mb-1"><strong>Email:</strong> betatest@example.com</p>
                     <p class="mb-0"><strong>Password:</strong> poemvision123</p>
                 </div>
-                
+
                 <form id="loginForm">
                     <div class="mb-3">
                         <label for="email" class="form-label">Email address</label>
@@ -24,6 +24,9 @@
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
                         <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="mb-3 text-end">
+                        <a href="#" id="forgotPasswordLink">Forgot password?</a>
                     </div>
                     <div id="loginAlert" class="alert alert-danger d-none" role="alert"></div>
                     <div class="d-grid gap-2">
@@ -37,6 +40,31 @@
         </div>
     </div>
 </div>
+
+<!-- Forgot Password Modal -->
+<div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="forgotPasswordModalLabel">Reset Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="forgotPasswordForm">
+                    <div class="mb-3">
+                        <label for="resetEmail" class="form-label">Enter your email address</label>
+                        <input type="email" class="form-control" id="resetEmail" name="email" required>
+                    </div>
+                    <div id="forgotPasswordAlert" class="alert d-none" role="alert"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" id="submitForgotPassword" class="btn btn-primary">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -44,17 +72,19 @@
 document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('loginForm');
     const loginAlert = document.getElementById('loginAlert');
-    
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    const forgotPasswordModal = new bootstrap.Modal(document.getElementById('forgotPasswordModal'));
+    const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+    const forgotPasswordAlert = document.getElementById('forgotPasswordAlert');
+    const submitForgotPassword = document.getElementById('submitForgotPassword');
+
+    // Login form handling
     loginForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        
-        // Clear previous alerts
         loginAlert.classList.add('d-none');
-        
-        // Get form data
+
         const formData = new FormData(loginForm);
-        
-        // Send login request
+
         fetch('/login', {
             method: 'POST',
             body: formData,
@@ -77,6 +107,54 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error:', error);
         });
     });
+
+    // Forgot password link handling
+    forgotPasswordLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        forgotPasswordForm.reset();
+        forgotPasswordAlert.classList.add('d-none');
+        forgotPasswordModal.show();
+    });
+
+    // Forgot password form handling
+    submitForgotPassword.addEventListener('click', function() {
+        const email = document.getElementById('resetEmail').value.trim();
+
+        if (!email) {
+            showForgotPasswordAlert('Please enter your email address', 'danger');
+            return;
+        }
+
+        fetch('/forgot-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ email: email })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showForgotPasswordAlert(data.message, 'success');
+                setTimeout(() => {
+                    forgotPasswordModal.hide();
+                }, 2000);
+            } else {
+                showForgotPasswordAlert(data.error, 'danger');
+            }
+        })
+        .catch(error => {
+            showForgotPasswordAlert('An error occurred. Please try again.', 'danger');
+            console.error('Error:', error);
+        });
+    });
+
+    function showForgotPasswordAlert(message, type) {
+        forgotPasswordAlert.textContent = message;
+        forgotPasswordAlert.classList.remove('d-none', 'alert-success', 'alert-danger');
+        forgotPasswordAlert.classList.add(`alert-${type}`);
+    }
 });
 </script>
 {% endblock %}

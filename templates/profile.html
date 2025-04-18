@@ -15,30 +15,58 @@
                 
                 <h5 class="mb-3">Membership Status</h5>
                 {% if user.is_premium %}
-                    <div class="alert alert-success">
-                        <i class="fas fa-star me-2"></i>
-                        <strong>Premium Member</strong>
-                        <p class="mb-0 mt-2 small">
-                            Valid until: {{ user.membership_end.strftime('%B %d, %Y') }}
-                        </p>
+                    <div class="alert alert-{% if user.is_cancelled %}warning{% else %}success{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <i class="fas fa-{% if user.is_cancelled %}hourglass-end{% else %}star{% endif %} me-2"></i>
+                                <strong>Premium Member</strong>
+                                <p class="mb-0 mt-2 small">
+                                    Valid until: {{ user.membership_end.strftime('%B %d, %Y') }}
+                                </p>
+                                {% if user.is_cancelled %}
+                                    <p class="small text-muted mt-1">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Subscription ending - access continues until expiration
+                                    </p>
+                                {% endif %}
+                            </div>
+                            {% if not user.is_cancelled %}
+                                <button class="btn btn-sm btn-outline-danger" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#cancelSubscriptionModal">
+                                    <i class="fas fa-times me-1"></i> Cancel
+                                </button>
+                            {% endif %}
+                        </div>
                     </div>
-                <hr>
-                <div class="text-center">
-                    <a href="/gallery" class="btn btn-outline-primary btn-sm" title="Gallery">
-                        <i class="fas fa-images me-1"></i> View Public Gallery
-                    </a>
-                </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <a href="/gallery" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-images me-1"></i> View Gallery
+                        </a>
+                        {% if user.is_cancelled %}
+                            <a href="{{ url_for('upgrade_membership') }}" class="btn btn-success btn-sm">
+                                <i class="fas fa-sync-alt me-1"></i> Renew
+                            </a>
+                        {% endif %}
+                    </div>
                 {% else %}
                     <div class="alert alert-secondary">
-                        <i class="fas fa-user me-2"></i>
-                        <strong>Free Member</strong>
-                        <p class="mb-0 mt-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-user me-2"></i>
+                                <strong>Free Member</strong>
+                                <p class="mb-0 mt-2 small">
+                                    Upgrade for full features
+                                </p>
+                            </div>
                             <a href="{{ url_for('upgrade_membership') }}" class="btn btn-sm btn-primary">
-                                <i class="fas fa-arrow-up me-1"></i> Upgrade to Premium
+                                <i class="fas fa-arrow-up me-1"></i> Upgrade
                             </a>
-                        </p>
+                        </div>
                     </div>
                 {% endif %}
+                <hr>
                 
                 <h5 class="mt-4 mb-3">Plan Benefits</h5>
                 <div class="list-group mb-3">
@@ -148,6 +176,28 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="cancelSubscriptionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cancel Subscription</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel your premium subscription?</p>
+                <ul class="text-muted small">
+                    <li>You'll lose access to premium features</li>
+                    <li>Your existing creations will remain</li>
+                    <li>You can resubscribe anytime</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Go Back</button>
+                <button type="button" class="btn btn-danger" id="confirmCancelSubscription">Cancel Subscription</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -207,7 +257,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': '{{ csrf_token() }}'
                     }
                 })
                 .then(response => {
@@ -238,6 +287,61 @@ document.addEventListener('DOMContentLoaded', function() {
                     alert('Failed to delete creation. Please try again.');
                 });
             }
+        });
+    });
+    // Add this new handler for subscription cancellation
+    document.getElementById('confirmCancelSubscription')?.addEventListener('click', function() {
+        const button = this;
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Processing...';
+
+        fetch('/cancel-subscription', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Network response was not ok');
+        })
+        .then(data => {
+            if (data.success) {
+                // Show success message and reload
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-success alert-dismissible fade show mt-3';
+                alert.innerHTML = `
+                    <i class="fas fa-check-circle me-2"></i>
+                    Your subscription has been cancelled. You'll remain premium until the end of your billing period.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.querySelector('.card-body').prepend(alert);
+
+                // Close the modal
+                bootstrap.Modal.getInstance(document.getElementById('cancelSubscriptionModal')).hide();
+
+                // Reload the page after a short delay
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                throw new Error(data.error || 'Unknown error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            button.disabled = false;
+            button.textContent = 'Cancel Subscription';
+
+            // Show error message
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-danger alert-dismissible fade show mt-3';
+            alert.innerHTML = `
+                <i class="fas fa-exclamation-circle me-2"></i>
+                Failed to cancel subscription: ${error.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.querySelector('.card-body').prepend(alert);
         });
     });
 });

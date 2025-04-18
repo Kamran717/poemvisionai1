@@ -39,7 +39,6 @@ def create_default_plans():
         premium_plan.description = "Full access to Poem Vision AI features"
         premium_plan.features = [
             "Access to all poem categories",
-            "Unlock all creative frame designs",
             "Personal gallery storage", 
             "Smarter AI customization",
             "Exclusive early access to new features"
@@ -606,6 +605,16 @@ def get_available_poem_types(user_id):
         {
             "id": "elvis-presley",
             "name": "Elvis Presley",
+            "free": False
+        },
+        {
+            "id": "tupac",
+            "name": "Tupac Shakur",
+            "free": False
+        },
+        {
+            "id": "biggie-smalls",
+            "name": "Biggie Smalls",
             "free": False
         },
         {

@@ -5,10 +5,16 @@
     <h1 class="display-4 fw-bold">Membership Plans</h1>
     <p class="lead">Choose the plan that works best for you</p>
 </div>
+<div class="text-center mb-4">
+    <h3 class="d-inline-block px-3 position-relative">
+        <i class="fas fa-exchange-alt me-2 text-primary"></i>Compare Plans
+    </h3>
+    <hr class="mt-2">
+</div>
 
 <div class="row justify-content-center">
     {% for plan in plans %}
-        <div class="col-md-5 mb-4" id="{% if plan.name == 'Premium' %}premium-plan{% endif %}">
+        <div class="col-6 px-1 px-sm-2 mb-3 mb-sm-4" id="{% if plan.name == 'Premium' %}premium-plan{% endif %}">
             <div class="card h-100 {% if plan.name == 'Premium' %}shadow-lg border-primary border-2{% else %}shadow{% endif %}">
                 <div class="card-header text-center {% if plan.name == 'Premium' %}bg-gradient-primary text-white py-3{% else %}py-3{% endif %}">
                     <h3 class="my-0 fw-normal">{{ plan.name }}</h3>
@@ -54,6 +60,55 @@
             </div>
         </div>
     {% endfor %}
+</div>
+
+<!-- Compare Plans Section -->
+<div class="row mt-5">
+    <div class="col-md-12">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h4>Compare Plans</h4>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Feature</th>
+                                <th class="text-center">Free</th>
+                                <th class="text-center">Premium</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Poem Types</td>
+                                <td class="text-center">3 Basic Types</td>
+                                <td class="text-center">Over 90 Categories</td>
+                            </tr>
+                            <tr>
+                                <td>Saved Poems</td>
+                                <td class="text-center">5 Creations</td>
+                                <td class="text-center">Unlimited</td>
+                            </tr>
+                            <tr>
+                                <td>Gallery Storage</td>
+                                <td class="text-center"><i class="fas fa-times text-danger"></i></td>
+                                <td class="text-center"><i class="fas fa-check text-success"></i></td>
+                            </tr>
+                            <tr>
+                                <td>AI Customization</td>
+                                <td class="text-center"><i class="fas fa-times text-danger"></i></td>
+                                <td class="text-center"><i class="fas fa-check text-success"></i></td>
+                            </tr>
+                            <tr>
+                                <td>Early Access Features</td>
+                                <td class="text-center"><i class="fas fa-times text-danger"></i></td>
+                                <td class="text-center"><i class="fas fa-check text-success"></i></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- New 7 Reasons Section -->
@@ -183,58 +238,6 @@
     </div>
 </div>
 
-<div class="row mt-5">
-    <div class="col-md-12">
-        <div class="card bg-light">
-            <div class="card-body">
-                <h4>Compare Plans</h4>
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Feature</th>
-                                <th class="text-center">Free</th>
-                                <th class="text-center">Premium</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Poem Types</td>
-                                <td class="text-center">3 Basic Types</td>
-                                <td class="text-center">All Categories</td>
-                            </tr>
-                            <tr>
-                                <td>Frame Designs</td>
-                                <td class="text-center">3 Basic Designs</td>
-                                <td class="text-center">All Designs</td>
-                            </tr>
-                            <tr>
-                                <td>Saved Poems</td>
-                                <td class="text-center">5 Creations</td>
-                                <td class="text-center">Unlimited</td>
-                            </tr>
-                            <tr>
-                                <td>Gallery Storage</td>
-                                <td class="text-center"><i class="fas fa-times text-danger"></i></td>
-                                <td class="text-center"><i class="fas fa-check text-success"></i></td>
-                            </tr>
-                            <tr>
-                                <td>AI Customization</td>
-                                <td class="text-center"><i class="fas fa-times text-danger"></i></td>
-                                <td class="text-center"><i class="fas fa-check text-success"></i></td>
-                            </tr>
-                            <tr>
-                                <td>Early Access Features</td>
-                                <td class="text-center"><i class="fas fa-times text-danger"></i></td>
-                                <td class="text-center"><i class="fas fa-check text-success"></i></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <div class="text-center mt-5">
     <h2>Frequently Asked Questions</h2>
