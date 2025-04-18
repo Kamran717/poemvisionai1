@@ -396,10 +396,24 @@ def generate_poem_route():
             poem = generate_poem(analysis_results, poem_type, poem_length,
                                  emphasis)
 
-        # Update the temporary creation with the poem
+        # Calculate time saved based on poem length
+        time_saved_minutes = 0
+        if poem_length == 'short':
+            time_saved_minutes = 25  # Average 25 minutes saved for short poems (4-6 lines)
+        elif poem_length == 'medium':
+            time_saved_minutes = 90  # Average 90 minutes (1.5 hours) saved for medium poems (10-12 lines)
+        elif poem_length == 'long':
+            time_saved_minutes = 180  # Average 180 minutes (3 hours) saved for long poems (20+ lines)
+        else:
+            time_saved_minutes = 45  # Default to 45 minutes if length is unknown
+            
+        # Update the temporary creation with the poem and time saved data
         temp_creation.poem_text = poem
         temp_creation.poem_type = poem_type
         temp_creation.emphasis = emphasis
+        temp_creation.poem_length = poem_length
+        temp_creation.time_saved_minutes = time_saved_minutes
+        
         db.session.commit()
 
         return jsonify({'success': True, 'poem': poem})
@@ -882,11 +896,15 @@ def profile():
     
     # Get user's membership plan
     plan = get_user_plan(user_id)
+    
+    # Calculate time saved statistics
+    time_saved_stats = user.get_time_saved_stats()
 
     return render_template('profile.html',
                            user=user,
                            creations=user_creations,
-                           plan=plan)
+                           plan=plan,
+                           time_saved_stats=time_saved_stats)
 
 @app.route('/api/contact', methods=['POST'])
 def contact_form():

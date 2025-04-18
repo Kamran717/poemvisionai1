@@ -68,6 +68,31 @@
                 {% endif %}
                 <hr>
                 
+                <h5 class="mb-3">⏱️ Time Saved with AI</h5>
+                <div class="card bg-light mb-4">
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <div class="display-6 fw-bold text-primary">{{ time_saved_stats.hours }}h {{ time_saved_stats.minutes }}m</div>
+                            <p class="text-muted mb-0">Time saved creating poems</p>
+                        </div>
+                        
+                        <div class="row text-center small">
+                            <div class="col-4">
+                                <div class="fw-bold">{{ time_saved_stats.poem_counts.total }}</div>
+                                <div>Total Poems</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="fw-bold">{{ time_saved_stats.poem_counts.short }}</div>
+                                <div>Short</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="fw-bold">{{ time_saved_stats.poem_counts.medium + time_saved_stats.poem_counts.long }}</div>
+                                <div>Med/Long</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <h5 class="mt-4 mb-3">Plan Benefits</h5>
                 <div class="list-group mb-3">
                     {% for feature in plan.features %}
