@@ -409,6 +409,10 @@ def generate_poem(analysis_results, poem_type, poem_length, emphasis, custom_ter
     Returns:
         str: The generated poem
     """
+    # Debug logging
+    logger.info(f"Generating poem of type: '{poem_type}', length: '{poem_length}'")
+    if poem_type.lower() in ['pickup', 'flirt']:
+        logger.info("PICKUP LINE detected - Will generate hilarious pickup lines")
     try:
         # Create a unique cache key based on all inputs
         # First, convert emphasis list to a stable string representation
@@ -987,6 +991,21 @@ def _create_prompt(analysis_results, poem_type, poem_length, emphasis, custom_te
     Returns:
         str: The generated prompt
     """
+    # Add more debug logging for pickup line type detection
+    original_poem_type = poem_type
+    poem_type_lower = poem_type.lower()
+    
+    # Check if this is a pickup line related poem type
+    if poem_type_lower == 'pickup' or poem_type_lower == 'flirt':
+        logger.info(f"Found pickup line request: '{poem_type}' - Will use pickup instructions")
+    elif poem_type_lower in ['pick-up', 'pick up', 'pickup line', 'pick-up line']:
+        poem_type = 'pickup'
+        logger.info(f"Normalized poem type from '{original_poem_type}' to 'pickup'")
+    
+    # Map pickup types
+    if poem_type_lower in ['flirt', 'flirty', 'flirting', 'pick-up', 'pick up', 'pickup line', 'pick-up line']:
+        poem_type = 'pickup'
+        logger.info(f"Mapped poem type from '{original_poem_type}' to 'pickup'")
     # Get the line range for the specified length
     length_config = POEM_LENGTHS.get(poem_length, POEM_LENGTHS["medium"])
     min_lines = length_config["min_lines"]
@@ -1246,7 +1265,7 @@ Think deeply about the essential qualities that make {poem_type} poetry powerful
         "knock-knock": "Create a playful knock-knock joke in poem form, incorporating elements from the image. Begin with the traditional 'Knock, knock / Who's there?' format, then craft a punchline that cleverly relates to the visual elements. Add a brief poetic conclusion that ties the joke together with the image's mood or theme.",
         "roast-you": "Craft a no-holds-barred roast poem in the style of the greatest roast comedians from both classic and modern eras. Structure the roast as a rotating mic session, channeling the sharp-tongued spirits of the following masters. Start with **Don Rickles’** old-school rapid-fire insult style—punchy, direct, and delivered with effortless charm. Use classic set-up/payoff punchlines that land hard but somehow still feel like a warm hug from your least favorite uncle. Shift into **Joan Rivers’** brutally elegant venom. Go for glamorous savagery—sharp burns dressed in designer shade. Tap into her unapologetic fearlessness and make the insults sound both classy and cutting, with punchlines that would make the room gasp, then erupt in laughter.Bring in the high-IQ heat of **Greg Giraldo**—think smart, biting, and scalpel-precise jabs. Layer your burns with cleverness, unexpected turns, and a lawyer’s logic disguised as pure comedic venom. Every line should feel like a court exhibit of humiliation.Add **Jeff Ross’s** roast ringmaster energy—the seasoned Roastmaster General. Use his well-rounded, everyone’s fair game tone. Mix personal digs with cultural jabs. Make your insults feel like they're coming from a professional who’s done this for sport—and keeps score. Channel **Lisa Lampanelli’s** fearless, edgy savagery. Go bold, loud, and unfiltered. Dive into taboo topics with confidence, and push boundaries while somehow making the audience root for you. Her roasts hit like a hammer, and you should too. Then, transition to the **Modern-Day Roast Killers**: Let **Anthony Jeselnik’s** cold, calculated darkness creep in. Go for deadpan delivery and punchlines that lull the audience into calm, only to cut deep with an icepick of a twist. Timing is everything—make the room hold its breath before the gut punch lands. Bring in **Nikki Glaser’s** modern savage energy—especially her talent for slicing through ego with a smile. Her roasts are personal, specific, and brutal. Your burns should be relentless, clever, and feel like they come from someone who *really* did their research. Drop some nerdy intelligence from **Patton Oswalt**—incorporate layered references, literary burns, and intellectual takedowns. Think of it like roasting with a thesaurus in one hand and a comic book in the other. Sprinkle in **Snoop Dogg’s** laid-back style: smooth but surgical. Keep the tone chill but deadly. Use charisma and streetwise charm to throw shade that feels like a vibe check from someone who already knows they’ve won. And close with a nod to **Dave Chappelle**’s poetic roasting style. While not a traditional roast comic, when he aims his insight at someone, it lands with precision and rhythm. Use layered social commentary and storytelling to create burns that are not only funny—but unforgettable. This poem type should be savage, stylish, and smart. Use sharp rhythm, controlled pacing, and clever phrasing to deliver brutal honesty wrapped in top-tier entertainment. Every insult should feel earned, intelligent, and timed for maximum impact. No line wasted. No ego spared.",
 
-        "pickup": "Compose the most hilarious, over-the-top pickup lines imaginable that will make someone laugh out loud. Go beyond just cheesy - aim for clever wordplay, unexpected twists, and absurdly funny scenarios using elements from the image analysis. If custom details are provided (like names, places, or interests), make them central to the pickup lines and create personalized jokes that feel tailored specifically to those details. Balance humor with just enough charm to be endearing rather than cringe-worthy. Create memorable lines in varying lengths (short one-liners and longer multi-line setups) that are quotable, shareable, and genuinely funny. Think of pickup lines that would go viral on social media for their creativity and humor. Aim to surprise the reader with original, unexpected punchlines that stand out from typical pickup line clichés.",
+        "pickup": "Create 3-5 incredibly hilarious, witty, and outrageously memorable pickup lines that will make someone burst out laughing. These should be absolute comedy gold - use clever wordplay, puns, absurd scenarios, and unexpected twists. Make heavy use of the unique elements identified in the image analysis (objects, colors, facial expressions, etc.) to create truly original lines that couldn't apply to any other situation. If custom details are provided (names, places, interests, etc.), these MUST be central to each line - create personalized jokes that feel custom-tailored specifically to those details, not generic templates. Balance humor with just enough charm to be entertaining rather than awkward. Vary between short zingers and longer narrative setups with punchlines. Aim for lines that would go viral for their creativity and humor - the kind people would screenshot and share with friends. Avoid old clichés completely and surprise with fresh, unexpected approaches. Include at least one truly outrageous over-the-top line that's so absurd it becomes funny. Create these as individual separated lines, not a connected poem.",
 
         # Classical forms
         "haiku": "Create a pristine haiku following the traditional 5-7-5 syllable structure. Capture a single, powerful moment with precise imagery and seasonal references in the spirit of Matsuo Bashō. Distill the essence of the image into three lines that reveal a profound truth through simplicity and careful observation.",
