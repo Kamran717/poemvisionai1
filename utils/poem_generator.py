@@ -9,7 +9,7 @@ import hashlib
 logger = logging.getLogger(__name__)
 
 # Template version to invalidate cache when templates change
-TEMPLATE_VERSION = "2.6"  # Updated with enhanced pickup line templates and examples
+TEMPLATE_VERSION = "2.8"  # Updated to generate only a single pickup line with simplified templates
 
 # Poem generation cache
 _poem_cache = {}
@@ -222,19 +222,16 @@ POEM_TEMPLATES = {
         "Knock, knock!\nWho's there?\n{element1} and {element2}.\n{element1} and {element2} who?\nI didn't know {element3} could be so {adj1} and {adj2}!\nNow that's a joke you won't forget!"
     ],
     "pickup": [
-        "Is your name {element1}? Because you're absolutely {adj1}.\nDo you believe in love at first {element2}?\nBecause my heart just went {adj2} when I saw you.\nI've been looking for {element3} all my life, but you're even better.",
-        
-        "Are you made of {element1}? Because you're {adj1}-utiful.\nIf you were a vegetable, you'd be a cute-{element2}.\nI'm not a photographer, but I can {adj2} picture us together.\nDo you like {element3}? How about a date?",
-        
-        "Do you have a map? I just got lost in your {element1}.\nAre you a {adj1} magician? Because whenever I look at you, everyone else disappears.\nIs your name {element2}? Or can I call you {adj2}?\nYou must be a snowflake, because you're one in a {element3}.",
-        
-        "Are you from {element1}? Because you're {adj1} out of this world.\nDo you have a Band-Aid? I just scraped my knee falling for your {element2}.\nIs your dad a {adj2}? Because you're a knock-{element3}!",
-        
-        "I must be a {element1}, because I've fallen for you.\nAre you a {adj1} WiFi signal? Because I'm feeling a connection.\nYou must be a {element2}, because you've got fine written all over you.\nI knew you looked familiar - your picture is next to {adj2} in the dictionary for {element3}.",
-        
-        "If you were a fruit, you'd be a fine-{element1}.\nAre you from {adj1}? Because you're the only ten I see.\nDo you like {element2}? Because I want to {adj2} time with you.\nAre you a camera? Because every time I look at you, I {element3}.",
-        
-        "I'm not a {element1}, but I think we'd look {adj1} together in a photo.\nDo you have a name, or can I call you {element2}?\nYou must be a time traveler, because I see you in my {adj2} future.\nIs your favorite drink {element3}? Mine's seeing you smile."
+        "Is your name {element1}? Because you're absolutely {adj1}.",
+        "Are you made of {element2}? Because you're looking Cu-{adj2}.",
+        "Do you have a map? I just got lost in your {element3}.",
+        "Are you from {element1}? Because you're {adj1} out of this world.",
+        "I must be a {element2}, because I've fallen for you.",
+        "If you were a fruit, you'd be a fine-{element3}.",
+        "Do you like {element1}? How about a {adj2}?",
+        "Are you a {element2}? Because I'm {adj1} a connection between us.",
+        "I'd cross an ocean of {element3} just to meet someone like you.",
+        "Are you Google? Because you've got everything I'm {adj2} for."
     ],
     "haiku": [
         "{element1} in light\n{element2} {adj1} and {adj2}\n{element3} remains",
@@ -1269,7 +1266,7 @@ Think deeply about the essential qualities that make {poem_type} poetry powerful
         "knock-knock": "Create a playful knock-knock joke in poem form, incorporating elements from the image. Begin with the traditional 'Knock, knock / Who's there?' format, then craft a punchline that cleverly relates to the visual elements. Add a brief poetic conclusion that ties the joke together with the image's mood or theme.",
         "roast-you": "Craft a no-holds-barred roast poem in the style of the greatest roast comedians from both classic and modern eras. Structure the roast as a rotating mic session, channeling the sharp-tongued spirits of the following masters. Start with **Don Rickles’** old-school rapid-fire insult style—punchy, direct, and delivered with effortless charm. Use classic set-up/payoff punchlines that land hard but somehow still feel like a warm hug from your least favorite uncle. Shift into **Joan Rivers’** brutally elegant venom. Go for glamorous savagery—sharp burns dressed in designer shade. Tap into her unapologetic fearlessness and make the insults sound both classy and cutting, with punchlines that would make the room gasp, then erupt in laughter.Bring in the high-IQ heat of **Greg Giraldo**—think smart, biting, and scalpel-precise jabs. Layer your burns with cleverness, unexpected turns, and a lawyer’s logic disguised as pure comedic venom. Every line should feel like a court exhibit of humiliation.Add **Jeff Ross’s** roast ringmaster energy—the seasoned Roastmaster General. Use his well-rounded, everyone’s fair game tone. Mix personal digs with cultural jabs. Make your insults feel like they're coming from a professional who’s done this for sport—and keeps score. Channel **Lisa Lampanelli’s** fearless, edgy savagery. Go bold, loud, and unfiltered. Dive into taboo topics with confidence, and push boundaries while somehow making the audience root for you. Her roasts hit like a hammer, and you should too. Then, transition to the **Modern-Day Roast Killers**: Let **Anthony Jeselnik’s** cold, calculated darkness creep in. Go for deadpan delivery and punchlines that lull the audience into calm, only to cut deep with an icepick of a twist. Timing is everything—make the room hold its breath before the gut punch lands. Bring in **Nikki Glaser’s** modern savage energy—especially her talent for slicing through ego with a smile. Her roasts are personal, specific, and brutal. Your burns should be relentless, clever, and feel like they come from someone who *really* did their research. Drop some nerdy intelligence from **Patton Oswalt**—incorporate layered references, literary burns, and intellectual takedowns. Think of it like roasting with a thesaurus in one hand and a comic book in the other. Sprinkle in **Snoop Dogg’s** laid-back style: smooth but surgical. Keep the tone chill but deadly. Use charisma and streetwise charm to throw shade that feels like a vibe check from someone who already knows they’ve won. And close with a nod to **Dave Chappelle**’s poetic roasting style. While not a traditional roast comic, when he aims his insight at someone, it lands with precision and rhythm. Use layered social commentary and storytelling to create burns that are not only funny—but unforgettable. This poem type should be savage, stylish, and smart. Use sharp rhythm, controlled pacing, and clever phrasing to deliver brutal honesty wrapped in top-tier entertainment. Every insult should feel earned, intelligent, and timed for maximum impact. No line wasted. No ego spared.",
 
-        "pickup": "Create 3-5 light-hearted, witty, and family-friendly pickup lines that will make someone smile. Focus on clever wordplay, puns, and innocent humor that's charming rather than cringe-worthy. Use elements from the image analysis (objects, colors, etc.) to create unique, creative lines. If custom details are provided (names, places, interests), incorporate these as central elements to create personalized jokes that feel specially made for those details. Vary your approach between short one-liners and slightly longer setups with punchlines. Use these classic pickup lines as DIRECT INSPIRATION (follow their exact style and humor level): 'Are you French? Because Eiffel for you.', 'Do you have a name, or can I call you mine?', 'Are you a magician? Because whenever I look at you, everyone else disappears.', 'Do you have a Band-Aid? Because I just scraped my knee falling for you.', 'If you were a vegetable, you'd be a cute-cumber.', 'Are you a parking ticket? Because you've got FINE written all over you.', 'Is your name Wi-Fi? Because I'm feeling a strong connection.', 'Are you made of copper and tellurium? Because you're Cu-Te.', 'Are you a loan from a bank? Because you have my interest!', 'Do you believe in love at first sight—or should I walk by again?', 'If you were a fruit, you'd be a fineapple.', 'Are you Google? Because you've got everything I'm searching for.', 'Are you a time traveler? Because I can see you in my future.', 'Do you like raisins? How do you feel about a date?', 'Are you a campfire? Because you're hot and I want s'more.', 'Are you a cat? Because I'm feline a connection between us.', 'Is your dad a boxer? Because you're a knockout!', 'Are you the ocean? Because I'm lost at sea.', 'I must be a snowflake, because I've fallen for you.', 'Are you a beaver? Because daaaaam.' Create your lines as individual separated entries, not as a connected poem. Keep everything clean, non-sexual, respectful, and appropriate for all audiences. Your lines should be unique but follow the exact tone, style, and humor level of the examples.",
+        "pickup": "Create ONE light-hearted, witty, and family-friendly pickup line that will make someone smile. Focus on clever wordplay, puns, and innocent humor that's charming rather than cringe-worthy. Use elements from the image analysis (objects, colors, etc.) to create a unique, creative line. If custom details are provided (names, places, interests), incorporate these as central elements to create a personalized joke that feels specially made for those details. Use these classic pickup lines as DIRECT INSPIRATION (follow their exact style and humor level): 'Are you French? Because Eiffel for you.', 'Do you have a name, or can I call you mine?', 'Are you a magician? Because whenever I look at you, everyone else disappears.', 'Do you have a Band-Aid? Because I just scraped my knee falling for you.', 'If you were a vegetable, you'd be a cute-cumber.', 'Are you a parking ticket? Because you've got FINE written all over you.', 'Is your name Wi-Fi? Because I'm feeling a strong connection.', 'Are you made of copper and tellurium? Because you're Cu-Te.', 'Are you a loan from a bank? Because you have my interest!', 'Do you believe in love at first sight—or should I walk by again?', 'If you were a fruit, you'd be a fineapple.', 'Are you Google? Because you've got everything I'm searching for.', 'Are you a time traveler? Because I can see you in my future.', 'Do you like raisins? How do you feel about a date?', 'Are you a campfire? Because you're hot and I want s'more.', 'Are you a cat? Because I'm feline a connection between us.', 'Is your dad a boxer? Because you're a knockout!', 'Are you the ocean? Because I'm lost at sea.', 'I must be a snowflake, because I've fallen for you.', 'Are you a beaver? Because daaaaam.' Keep everything clean, non-sexual, respectful, and appropriate for all audiences. Your line should be unique but follow the exact tone, style, and humor level of the examples.",
 
         # Classical forms
         "haiku": "Create a pristine haiku following the traditional 5-7-5 syllable structure. Capture a single, powerful moment with precise imagery and seasonal references in the spirit of Matsuo Bashō. Distill the essence of the image into three lines that reveal a profound truth through simplicity and careful observation.",
@@ -1284,15 +1281,15 @@ Think deeply about the essential qualities that make {poem_type} poetry powerful
 
     # Different formatting instructions for pickup lines vs regular poems
     if poem_type.lower() in ['pickup', 'flirt', 'flirty']:
-        prompt += f"""Create {min_lines}-{max_lines} distinct, separate pickup lines (not a connected poem). Each pickup line should:
+        prompt += f"""Create ONE perfect pickup line with these characteristics:
 
-1. Be clearly separated from others with blank lines between them
-2. Follow the style and humor of the example pickup lines provided above
-3. Be clever, witty, and use wordplay appropriate for all audiences
-4. Incorporate elements from the image analysis in creative ways
-5. Include any custom details provided (if any) as central elements
+1. Follow the exact style and humor of the example pickup lines provided above
+2. Be clever, witty, and use wordplay appropriate for all audiences
+3. Incorporate elements from the image analysis in creative ways
+4. Include any custom details provided (if any) as central elements
+5. Keep it to 1-2 lines maximum (like the examples)
 
-Do not include explanatory text or titles, just the pickup lines themselves, each one on its own set of lines with space between them."""
+Do not include explanatory text, titles, or multiple options - just one perfect pickup line."""
     else:
         prompt += f"""The poem should be {min_lines}-{max_lines} lines long with the following expert-level characteristics:
 
