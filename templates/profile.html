@@ -15,40 +15,40 @@
                 
                 <h5 class="mb-3">Membership Status</h5>
                 {% if user.is_premium %}
-                    <div class="alert alert-{% if user.is_cancelled %}warning{% else %}success{% endif %}">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <i class="fas fa-{% if user.is_cancelled %}hourglass-end{% else %}star{% endif %} me-2"></i>
-                                <strong>Premium Member</strong>
-                                <p class="mb-0 mt-2 small">
-                                    Valid until: {{ user.membership_end.strftime('%B %d, %Y') }}
-                                </p>
-                                {% if user.is_cancelled %}
-                                    <p class="small text-muted mt-1">
-                                        <i class="fas fa-info-circle me-1"></i>
-                                        Subscription ending - access continues until expiration
+                    <button class="btn btn-sm btn-outline-primary mb-3" 
+                            type="button" 
+                            data-bs-toggle="collapse" 
+                            data-bs-target="#membershipDetails"
+                            aria-expanded="false" 
+                            aria-controls="membershipDetails">
+                        <i class="fas fa-chevron-down me-1"></i> Click to view details
+                    </button>
+
+                    <div class="collapse" id="membershipDetails">
+                        <div class="alert alert-{% if user.is_cancelled %}warning{% else %}success{% endif %}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <i class="fas fa-{% if user.is_cancelled %}hourglass-end{% else %}star{% endif %} me-2"></i>
+                                    <strong>Premium Member</strong>
+                                    <p class="mb-0 mt-2 small">
+                                        Valid until: {{ user.membership_end.strftime('%B %d, %Y') }}
                                     </p>
+                                    {% if user.is_cancelled %}
+                                        <p class="small text-muted mt-1">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Subscription ending - access continues until expiration
+                                        </p>
+                                    {% endif %}
+                                </div>
+                                {% if not user.is_cancelled %}
+                                    <button class="btn btn-sm btn-outline-danger" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#cancelSubscriptionModal">
+                                        <i class="fas fa-times me-1"></i> Cancel
+                                    </button>
                                 {% endif %}
                             </div>
-                            {% if not user.is_cancelled %}
-                                <button class="btn btn-sm btn-outline-danger" 
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#cancelSubscriptionModal">
-                                    <i class="fas fa-times me-1"></i> Cancel
-                                </button>
-                            {% endif %}
                         </div>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center mt-2">
-                        <a href="/gallery" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-images me-1"></i> View Gallery
-                        </a>
-                        {% if user.is_cancelled %}
-                            <a href="{{ url_for('upgrade_membership') }}" class="btn btn-success btn-sm">
-                                <i class="fas fa-sync-alt me-1"></i> Renew
-                            </a>
-                        {% endif %}
                     </div>
                 {% else %}
                     <div class="alert alert-secondary">
@@ -102,16 +102,16 @@
     </div>
     
     <div class="col-md-8">
-        <div class="card shadow">
+        <div class="card shadow mb-4"> 
             <div class="card-header bg-primary text-white">
                 <h4 class="mb-0"><i class="fas fa-images me-2"></i>My Creations</h4>
             </div>
             <div class="card-body">
                 {% if creations %}
-                    <div class="row row-cols-1 row-cols-md-2 g-4">
+                    <div class="row row-cols-1 row-cols-md-2 g-4"> 
                         {% for creation in creations %}
-                            <div class="col">
-                                <div class="card h-100">
+                            <div class="col d-flex"> 
+                                <div class="card w-100">
                                     <div class="card-img-top creation-thumbnail">
                                         {% if creation.final_image_data %}
                                             <img src="data:image/jpeg;base64,{{ creation.final_image_data }}" 
@@ -134,7 +134,7 @@
                                                     <i class="fas fa-eye me-1"></i> View
                                                 </button>
                                             {% else %}
-                                                <span class="text-muted">Processing...</span>
+                                                <span class="text-muted small" style="font-size: 0.7rem;">Processing...</span>
                                             {% endif %}
 
                                             <!-- Share button - links to share page -->
@@ -156,7 +156,7 @@
                             </div>
                         {% endfor %}
                     </div>
-                    
+
                     {% if not user.is_premium and creations|length >= 5 %}
                         <div class="alert alert-warning mt-4">
                             <i class="fas fa-exclamation-triangle me-2"></i>
@@ -165,7 +165,7 @@
                             to unlock unlimited storage!
                         </div>
                     {% endif %}
-                    
+
                 {% else %}
                     <div class="text-center py-5">
                         <i class="fas fa-image fa-4x mb-3 text-muted"></i>
@@ -310,7 +310,20 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-    // Add this new handler for subscription cancellation
+    
+    // Toggle membership details
+    document.querySelector('[data-bs-target="#membershipDetails"]').addEventListener('click', function() {
+        const icon = this.querySelector('i');
+        if (this.getAttribute('aria-expanded') === 'true') {
+            icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+            this.innerHTML = '<i class="fas fa-chevron-up me-1"></i> Hide details';
+        } else {
+            icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+            this.innerHTML = '<i class="fas fa-chevron-down me-1"></i> Click to view details';
+        }
+    });
+    
+    // Handler for subscription cancellation
     document.getElementById('confirmCancelSubscription')?.addEventListener('click', function() {
         const button = this;
         button.disabled = true;

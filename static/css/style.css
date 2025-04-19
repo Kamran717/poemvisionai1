@@ -530,6 +530,10 @@ textarea#customPromptInput:focus {
     z-index: 2;
 }
 
+#membershipDetails.collapsing {
+    transition: height 0.2s ease;
+}
+
 .pricing-box {
     border: 2px solid #6f42c1;
     border-radius: 8px;
