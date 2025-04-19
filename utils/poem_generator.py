@@ -8,6 +8,9 @@ import hashlib
 # Set up logging
 logger = logging.getLogger(__name__)
 
+# Template version to invalidate cache when templates change
+TEMPLATE_VERSION = "2.1"
+
 # Poem generation cache
 _poem_cache = {}
 
@@ -426,7 +429,8 @@ def generate_poem(analysis_results, poem_type, poem_length, emphasis, custom_ter
             'poem_length': poem_length,
             'emphasis': emphasis_str,
             'custom_terms': custom_terms,
-            'custom_category': custom_category
+            'custom_category': custom_category,
+            'template_version': TEMPLATE_VERSION  # Add version to invalidate cache when templates change
         }
 
         # Convert to string and hash

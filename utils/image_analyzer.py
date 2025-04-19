@@ -13,6 +13,9 @@ from functools import lru_cache
 # Set up logging
 logger = logging.getLogger(__name__)
 
+# Cache version to invalidate when needed
+ANALYSIS_CACHE_VERSION = "1.1"
+
 # Image analysis cache
 _analysis_cache = {}
 
@@ -47,8 +50,8 @@ def analyze_image(image_file):
         # Read the image content
         content = image_file.read()
         
-        # Create a hash of the image content for cache lookup
-        content_hash = hashlib.md5(content).hexdigest()
+        # Create a hash of the image content plus the version for cache lookup
+        content_hash = hashlib.md5(content + ANALYSIS_CACHE_VERSION.encode('utf-8')).hexdigest()
         
         # Check if we have this image in the cache
         if content_hash in _analysis_cache:
