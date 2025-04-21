@@ -36,26 +36,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Collapsible sidebar toggle
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', function() {
-            document.body.classList.toggle('sidebar-toggled');
-            document.querySelector('.sidebar').classList.toggle('toggled');
-        });
-    }
-
-    // Close sidebar when window is small
-    function checkScreenSize() {
-        if (window.innerWidth < 768) {
-            document.querySelector('.sidebar')?.classList.add('toggled');
+    // Removed unused sidebar toggle code since we're using a top navbar design
+    
+    // Safe check for elements before adding classes
+    function safeToggleClass(selector, className) {
+        const element = document.querySelector(selector);
+        if (element) {
+            element.classList.toggle(className);
         }
     }
     
-    // Check on page load
-    checkScreenSize();
+    // Add basic responsive check for mobile
+    function checkScreenSize() {
+        if (window.innerWidth < 768) {
+            // Adjust layout for mobile if needed
+        }
+    }
     
-    // Check on resize
+    // Check on page load and resize
+    checkScreenSize();
     window.addEventListener('resize', checkScreenSize);
 
     // Initialize datepickers if any exist
