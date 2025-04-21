@@ -285,7 +285,7 @@
     font-size: 14px;
 }
 </style>
-{% endblock %}
+{% endblock content %}
 
 {% block scripts %}
 <script>
@@ -406,171 +406,52 @@
         }
         
         // Handle refresh button
-        document.getElementById('refreshData').addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            // Add refresh animation
-            this.classList.add('disabled');
-            this.innerHTML = '<i class="fas fa-sync-alt fa-spin me-1"></i> Refreshing...';
-            
-            // Simulate refresh (would be an actual fetch in production)
-            setTimeout(() => {
-                this.classList.remove('disabled');
-                this.innerHTML = '<i class="fas fa-sync-alt me-1"></i> Refresh Data';
+        const refreshBtn = document.getElementById('refreshData');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', function(e) {
+                e.preventDefault();
                 
-                // Show toast notification
-                const toastContainer = document.createElement('div');
-                toastContainer.classList.add('position-fixed', 'bottom-0', 'end-0', 'p-3');
-                toastContainer.style.zIndex = 5;
+                // Add refresh animation
+                this.classList.add('disabled');
+                this.innerHTML = '<i class="fas fa-sync-alt fa-spin me-1"></i> Refreshing...';
                 
-                const toast = document.createElement('div');
-                toast.classList.add('toast', 'show', 'bg-success', 'text-white');
-                toast.innerHTML = `
-                    <div class="toast-header bg-success text-white">
-                        <i class="fas fa-check-circle me-2"></i>
-                        <strong class="me-auto">Success</strong>
-                        <small>Just now</small>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
-                    </div>
-                    <div class="toast-body">
-                        Dashboard data has been refreshed successfully!
-                    </div>
-                `;
-                
-                toastContainer.appendChild(toast);
-                document.body.appendChild(toastContainer);
-                
-                // Auto dismiss after 3 seconds
+                // Simulate refresh (would be an actual fetch in production)
                 setTimeout(() => {
-                    toast.classList.remove('show');
+                    this.classList.remove('disabled');
+                    this.innerHTML = '<i class="fas fa-sync-alt me-1"></i> Refresh Data';
+                    
+                    // Show toast notification
+                    const toastContainer = document.createElement('div');
+                    toastContainer.classList.add('position-fixed', 'bottom-0', 'end-0', 'p-3');
+                    toastContainer.style.zIndex = 5;
+                    
+                    const toast = document.createElement('div');
+                    toast.classList.add('toast', 'show', 'bg-success', 'text-white');
+                    toast.innerHTML = `
+                        <div class="toast-header bg-success text-white">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong class="me-auto">Success</strong>
+                            <small>Just now</small>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body">
+                            Dashboard data has been refreshed successfully!
+                        </div>
+                    `;
+                    
+                    toastContainer.appendChild(toast);
+                    document.body.appendChild(toastContainer);
+                    
+                    // Auto dismiss after 3 seconds
                     setTimeout(() => {
-                        document.body.removeChild(toastContainer);
-                    }, 500);
-                }, 3000);
-            }, 1000);
-        });
-    });
-</script>
-{% endblock %}
-{% endblock %}
-
-{% block scripts %}
-<script>
-    // Use safer initialization for charts
-    document.addEventListener('DOMContentLoaded', function() {
-        // Get the current month (0-11)
-        const now = new Date();
-        const currentMonth = now.getMonth();
-        
-        // Generate labels for the past 12 months
-        const userLabels = [];
-        for (let i = 11; i >= 0; i--) {
-            let monthIndex = (currentMonth - i + 12) % 12; // Handle wrapping around
-            let monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            userLabels.push(monthNames[monthIndex]);
-        }
-        
-        // Generate realistic sample data trending up to current new users count
-        let userData = [5, 8, 12, 15, 20, 25, 30, 35, 40, 45, 48, {{ new_users }}];
-        
-        // Safety check if canvas element exists
-        const userGrowthCanvas = document.getElementById('userGrowthChart');
-        if (userGrowthCanvas) {
-            const userGrowthCtx = userGrowthCanvas.getContext('2d');
-            
-            try {
-                new Chart(userGrowthCtx, {
-                    type: 'line',
-                    data: {
-                        labels: userLabels,
-                        datasets: [{
-                            label: 'New Users',
-                            data: userData,
-                            backgroundColor: 'rgba(78, 115, 223, 0.05)',
-                            borderColor: 'rgba(78, 115, 223, 1)',
-                            pointRadius: 3,
-                            pointBackgroundColor: 'rgba(78, 115, 223, 1)',
-                            pointBorderColor: 'rgba(78, 115, 223, 1)',
-                            pointHoverRadius: 5,
-                            pointHoverBackgroundColor: 'rgba(78, 115, 223, 1)',
-                            pointHoverBorderColor: 'rgba(78, 115, 223, 1)',
-                            pointHitRadius: 10,
-                            pointBorderWidth: 2,
-                            tension: 0.3,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                grid: {
-                                    color: 'rgba(255, 255, 255, 0.1)'
-                                }
-                            },
-                            x: {
-                                grid: {
-                                    color: 'rgba(255, 255, 255, 0.1)'
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        }
-                    }
-                });
-            } catch (e) {
-                console.error("Error creating user growth chart:", e);
-            }
-        }
-
-        // More realistic revenue data trending up to current
-        let revenueData = [800, 950, 1200, 1500, 1800, 2000, 2200, 2400, 2600, 2800, 3000, {{ recent_revenue|default(0)|round(2) }}];
-        
-        // Safety check if canvas element exists
-        const revenueCanvas = document.getElementById('revenueChart');
-        if (revenueCanvas) {
-            const revenueCtx = revenueCanvas.getContext('2d');
-            
-            try {
-                new Chart(revenueCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: userLabels, // Reuse the same labels
-                        datasets: [{
-                            label: 'Revenue ($)',
-                            data: revenueData,
-                            backgroundColor: 'rgba(54, 185, 204, 0.7)',
-                            borderColor: 'rgba(54, 185, 204, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                grid: {
-                                    color: 'rgba(255, 255, 255, 0.1)'
-                                }
-                            },
-                            x: {
-                                grid: {
-                                    color: 'rgba(255, 255, 255, 0.1)'
-                                }
-                            }
-                        }
-                    }
-                });
-            } catch (e) {
-                console.error("Error creating revenue chart:", e);
-            }
+                        toast.classList.remove('show');
+                        setTimeout(() => {
+                            document.body.removeChild(toastContainer);
+                        }, 500);
+                    }, 3000);
+                }, 1000);
+            });
         }
     });
 </script>
-{% endblock %}
+{% endblock scripts %}
