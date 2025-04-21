@@ -92,22 +92,22 @@ STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
 app.config['MAIL_SERVER'] = 'smtp-relay.brevo.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = os.environ.get('BREVO_SMTP_USERNAME')  
-app.config['MAIL_PASSWORD'] = os.environ.get('BREVO_SMTP_PASSWORD')  
+app.config['MAIL_USERNAME'] = os.environ.get('BREVO_SMTP_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('BREVO_SMTP_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = 'poem vision <josephmurage267@gmail.com>'
 
 # Set up database with connection pooling and retry settings
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_pre_ping": True,  
-    "pool_recycle": 280,  
-    "pool_timeout": 30,  
-    "max_overflow": 15,  
-    "pool_size": 10,  
+    "pool_pre_ping": True,
+    "pool_recycle": 280,
+    "pool_timeout": 30,
+    "max_overflow": 15,
+    "pool_size": 10,
     "connect_args": {
         "connect_timeout": 10
-    }  
+    }
 }
 db.init_app(app)
 
@@ -349,6 +349,7 @@ def generate_poem_route():
         poem_type = data.get('poemType', 'free verse')
         poem_length = data.get('poemLength', 'short')
         emphasis = data.get('emphasis', [])
+        is_regeneration = data.get('isRegeneration', False)
 
         # Get structured custom prompt info if provided
         custom_prompt = data.get('customPrompt', {})
@@ -390,11 +391,15 @@ def generate_poem_route():
                                  poem_length,
                                  emphasis,
                                  custom_terms=custom_terms,
-                                 custom_category=custom_category)
+                                 custom_category=custom_category,
+                                 is_regeneration=is_regeneration)
         else:
             # Generate poem without custom prompt
-            poem = generate_poem(analysis_results, poem_type, poem_length,
-                                 emphasis)
+            poem = generate_poem(analysis_results,
+                                 poem_type,
+                                 poem_length,
+                                 emphasis,
+                                 is_regeneration=is_regeneration)
 
         # Calculate time saved based on poem length
         time_saved_minutes = 0
@@ -406,14 +411,14 @@ def generate_poem_route():
             time_saved_minutes = 180  # Average 180 minutes (3 hours) saved for long poems (20+ lines)
         else:
             time_saved_minutes = 45  # Default to 45 minutes if length is unknown
-            
+
         # Update the temporary creation with the poem and time saved data
         temp_creation.poem_text = poem
         temp_creation.poem_type = poem_type
         temp_creation.emphasis = emphasis
         temp_creation.poem_length = poem_length
         temp_creation.time_saved_minutes = time_saved_minutes
-        
+
         db.session.commit()
 
         return jsonify({'success': True, 'poem': poem})
@@ -605,7 +610,7 @@ def signup():
             # Send verification email
             send_verification_email(new_user)
             return jsonify({
-                'success': True, 
+                'success': True,
                 'message': 'Please check your email to verify your account',
                 'redirect': url_for('verification_pending')
             })
@@ -620,13 +625,16 @@ def signup():
 
     return render_template('signup.html')
 
+
 @app.route('/verify-email/<token>')
 def verify_email(token):
     """Verify user's email using the token"""
     user = User.query.filter_by(email_verification_token=token).first()
 
     if not user or not user.is_token_valid(token):
-        flash('Invalid or expired verification link. Please request a new one.', 'danger')
+        flash(
+            'Invalid or expired verification link. Please request a new one.',
+            'danger')
         return redirect(url_for('login'))
 
     user.verify_email()
@@ -637,10 +645,12 @@ def verify_email(token):
     flash('Your email has been verified. Welcome!', 'success')
     return redirect(url_for('index'))
 
+
 @app.route('/verification-pending')
 def verification_pending():
     """Show a page informing the user to check their email"""
     return render_template('verification_pending.html')
+
 
 @app.route('/resend-verification', methods=['GET', 'POST'])
 def resend_verification():
@@ -651,13 +661,16 @@ def resend_verification():
 
         if user and not user.is_email_verified:
             send_verification_email(user)
-            flash('Verification email has been resent. Please check your inbox.', 'success')
+            flash(
+                'Verification email has been resent. Please check your inbox.',
+                'success')
         else:
             flash('Email not found or already verified.', 'warning')
 
         return redirect(url_for('login'))
 
     return render_template('resend_verification.html')
+
 
 def send_verification_email(user):
     """Send email verification link to the user using Brevo SMTP"""
@@ -711,9 +724,11 @@ Poem Vision Team
 
     try:
         # Send the message via Brevo's SMTP server
-        with smtplib.SMTP(app.config['MAIL_SERVER'], app.config['MAIL_PORT']) as server:
+        with smtplib.SMTP(app.config['MAIL_SERVER'],
+                          app.config['MAIL_PORT']) as server:
             server.starttls()
-            server.login(app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
+            server.login(app.config['MAIL_USERNAME'],
+                         app.config['MAIL_PASSWORD'])
             server.send_message(msg)
 
         logger.info(f"Verification email sent to {user.email}")
@@ -721,12 +736,20 @@ Poem Vision Team
         logger.error(f"Failed to send verification email: {str(e)}")
         raise
 
+
 def check_user_verified():
     # Routes accessible to anyone
-    public_routes = ['login', 'signup', 'verify_email', 'verification_pending', 'resend_verification', 'static', 'index', 'gallery', 'view_shared_creation','contact_form']
+    public_routes = [
+        'login', 'signup', 'verify_email', 'verification_pending',
+        'resend_verification', 'static', 'index', 'gallery',
+        'view_shared_creation', 'contact_form'
+    ]
 
     # Routes accessible to authenticated users regardless of verification
-    auth_only_routes = ['index', 'view_shared_creation','analyze_image_route', 'generate_poem_route', 'create_final_image_route', 'contact_form']  
+    auth_only_routes = [
+        'index', 'view_shared_creation', 'analyze_image_route',
+        'generate_poem_route', 'create_final_image_route', 'contact_form'
+    ]
 
     if request.endpoint not in public_routes and 'user_id' in session:
         user = User.query.get(session['user_id'])
@@ -735,7 +758,8 @@ def check_user_verified():
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return jsonify({'error': 'Email verification required'}), 401
             # For page requests
-            flash('Please verify your email to access this feature.', 'warning')
+            flash('Please verify your email to access this feature.',
+                  'warning')
             return redirect(url_for('verification_pending'))
 
 
@@ -745,6 +769,7 @@ def logout():
     # Remove user ID from session
     session.pop('user_id', None)
     return redirect(url_for('index'))
+
 
 @app.route('/forgot-password', methods=['POST'])
 def forgot_password():
@@ -760,8 +785,10 @@ def forgot_password():
         if not user:
             # For security, don't reveal if email doesn't exist
             return jsonify({
-                'success': True,
-                'message': 'If an account exists with this email, a password reset link has been sent.'
+                'success':
+                True,
+                'message':
+                'If an account exists with this email, a password reset link has been sent.'
             })
 
         # Generate password reset token (expires in 1 hour)
@@ -812,24 +839,30 @@ Poem Vision Team
 
         try:
             # Send the message via Brevo's SMTP server
-            with smtplib.SMTP(app.config['MAIL_SERVER'], app.config['MAIL_PORT']) as server:
+            with smtplib.SMTP(app.config['MAIL_SERVER'],
+                              app.config['MAIL_PORT']) as server:
                 server.starttls()
-                server.login(app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
+                server.login(app.config['MAIL_USERNAME'],
+                             app.config['MAIL_PASSWORD'])
                 server.send_message(msg)
 
             logger.info(f"Password reset email sent to {user.email}")
             return jsonify({
-                'success': True,
-                'message': 'If an account exists with this email, a password reset link has been sent.'
+                'success':
+                True,
+                'message':
+                'If an account exists with this email, a password reset link has been sent.'
             })
 
         except Exception as e:
             logger.error(f"Failed to send password reset email: {str(e)}")
-            return jsonify({'error': 'Failed to send password reset email'}), 500
+            return jsonify({'error':
+                            'Failed to send password reset email'}), 500
 
     except Exception as e:
         logger.error(f"Error in forgot password: {str(e)}", exc_info=True)
-        return jsonify({'error': 'Failed to process password reset request'}), 500
+        return jsonify({'error':
+                        'Failed to process password reset request'}), 500
 
 
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
@@ -893,10 +926,10 @@ def profile():
 
     # Get user's creations
     user_creations = get_user_creations(user_id, limit=20)
-    
+
     # Get user's membership plan
     plan = get_user_plan(user_id)
-    
+
     # Calculate time saved statistics
     time_saved_stats = user.get_time_saved_stats()
 
@@ -906,6 +939,7 @@ def profile():
                            plan=plan,
                            time_saved_stats=time_saved_stats)
 
+
 @app.route('/api/contact', methods=['POST'])
 def contact_form():
     """Handle contact form submissions"""
@@ -914,7 +948,8 @@ def contact_form():
         logger.debug(f"Received contact form data: {data}")
 
         # Validate required fields
-        if not all(key in data for key in ['name', 'email', 'subject', 'message']):
+        if not all(key in data
+                   for key in ['name', 'email', 'subject', 'message']):
             return jsonify({'error': 'All fields are required'}), 400
 
         # Basic email validation
@@ -922,22 +957,24 @@ def contact_form():
             return jsonify({'error': 'Invalid email address'}), 400
 
         # Create new contact message
-        new_message = ContactMessage(
-            name=data['name'],
-            email=data['email'],
-            subject=data['subject'],
-            message=data['message']
-        )
+        new_message = ContactMessage(name=data['name'],
+                                     email=data['email'],
+                                     subject=data['subject'],
+                                     message=data['message'])
 
         db.session.add(new_message)
         db.session.commit()
 
-        return jsonify({'success': True, 'message': 'Thank you for your message!'})
+        return jsonify({
+            'success': True,
+            'message': 'Thank you for your message!'
+        })
 
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error saving contact message: {str(e)}", exc_info=True)
-        return jsonify({'error': 'Failed to send message. Please try again later.'}), 500
+        return jsonify(
+            {'error': 'Failed to send message. Please try again later.'}), 500
 
 
 @app.route('/membership')
@@ -1263,7 +1300,7 @@ def handle_subscription_cancelled(subscription):
         if subscription.status == 'canceled':
             user.is_premium = False
             user.membership_end = datetime.utcnow()
-            user.is_cancelled = False  
+            user.is_cancelled = False
             logger.info(f"Fully canceled subscription for user {user_id}")
 
         # Case 2: User requested future cancellation

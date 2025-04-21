@@ -218,7 +218,7 @@ class Transaction(db.Model):
     payment_method = db.Column(db.String(50), nullable=True)
     currency = db.Column(db.String(3), nullable=False, default='USD')
     transaction_id = db.Column(db.String(100),
-                               nullable=True)  # External payment processor ID
+                               nullable=True)  
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Foreign key to the Membership table
@@ -245,3 +245,74 @@ class PoemLength(db.Model):
 
     def __repr__(self):
         return f'<PoemLength {self.name}>'
+
+
+# Admin-related models
+class AdminRole(db.Model):
+    """Model for admin roles and permissions"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True)
+    description = db.Column(db.String(255))
+    
+    # Permissions as JSON field
+    permissions = db.Column(db.JSON, nullable=False, default=dict)
+    
+    # Relationships
+    users = db.relationship('AdminUser', backref='role', lazy=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<AdminRole {self.name}>'
+
+
+class AdminUser(db.Model):
+    """Model for admin users with role-based permissions"""
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    
+    # Role relationship
+    role_id = db.Column(db.Integer, db.ForeignKey('admin_role.id'), nullable=False)
+    
+    is_active = db.Column(db.Boolean, default=True)
+    last_login = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<AdminUser {self.username}>'
+    
+    def set_password(self, password):
+        """Set the password hash for the admin user."""
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        """Check if the provided password matches the hash."""
+        return check_password_hash(self.password_hash, password)
+        
+    def has_permission(self, permission):
+        """Check if the admin has a specific permission"""
+        if not self.role or not self.role.permissions:
+            return False
+        return permission in self.role.permissions.get('allowed', [])
+
+
+class AdminLog(db.Model):
+    """Model for tracking admin activity"""
+    id = db.Column(db.Integer, primary_key=True)
+    admin_id = db.Column(db.Integer, db.ForeignKey('admin_user.id'), nullable=False)
+    action = db.Column(db.String(100), nullable=False)
+    entity_type = db.Column(db.String(50), nullable=True)  # e.g., 'user', 'membership', etc.
+    entity_id = db.Column(db.Integer, nullable=True)
+    details = db.Column(db.JSON, nullable=True)
+    ip_address = db.Column(db.String(50), nullable=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship
+    admin = db.relationship('AdminUser', backref='logs', lazy=True)
+    
+    def __repr__(self):
+        return f'<AdminLog {self.action} by {self.admin_id} at {self.timestamp}>'

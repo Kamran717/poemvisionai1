@@ -1,0 +1,119 @@
+Poem Vision AI – Backend Admin Panel Structure
+👥 1. Users & Customer Management
+View all registered users
+
+Filter by plan (Free / Premium)
+
+Track poem count per user
+
+View time saved (auto-calculated tracker)
+
+Export user data (CSV, Excel)
+
+Manually upgrade/downgrade accounts
+
+Suspend or delete users
+
+💳 2. Memberships & Payments
+View active subscriptions
+
+Payment history per user
+
+Failed payments log
+
+Auto-renewal status
+
+Manual refunds or credits
+
+Connect to Stripe, PayPal, etc.
+
+📈 3. Financial Reports
+Monthly recurring revenue (MRR)
+
+Total revenue (filtered by date, plan, region)
+
+Refunds issued
+
+Churn rate tracking
+
+Growth KPIs (new paid users, upgrade rates, etc.)
+
+🧾 4. Poem & Usage Analytics
+Total poems generated (global & per user)
+
+Popular poem categories
+
+Frame designs used most
+
+Average generation time
+
+Time saved (total for all users)
+
+Feature usage breakdown (e.g., AI style, language setting)
+
+🏷️ 5. Coupons & Promotions
+Create/manage discount codes
+
+Limit by time, usage, or user type
+
+Track coupon usage stats
+
+Auto-apply for onboarding or referral
+
+📢 6. Marketing Tools
+Email marketing integrations (Mailchimp, SendGrid, etc.)
+
+Push notifications setup
+
+Referral program tracking
+
+Campaign manager (send custom promos to segments)
+
+AI-recommended marketing insights (optional)
+
+📲 7. Social Media Tools
+Schedule posts to Twitter, IG, Facebook
+
+Track top-performing shared poems
+
+Link user posts back to their accounts
+
+Hashtag performance tracker
+
+Social-share templates or quick exports
+
+🧠 8. AI Management Tools (Optional)
+View most used AI tones/styles
+
+Flagged outputs (for review/moderation)
+
+Prompt adjustment/testing sandbox
+
+Feature toggles (enable/disable by user tier)
+
+🧩 9. Feature Flags & Access Control
+Enable beta features for specific users
+
+Toggle frame designs, poem types, or customization tools
+
+Manage Early Access content visibility
+
+🔐 10. Admin Access & Roles
+Super Admin
+
+Support Staff
+
+Marketing Manager
+
+Finance View Only
+
+Custom roles w/ permission settings
+
+📝 11. Logs & Support
+Login & activity logs
+
+Admin notes per user
+
+Support tickets (integrated or external like Zendesk)
+
+Automated alerts for payment failures, abuse, or bugs

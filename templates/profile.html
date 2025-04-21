@@ -12,8 +12,8 @@
                 <p><strong>Email:</strong> {{ user.email }}</p>
                 <p><strong>Member since:</strong> {{ user.created_at.strftime('%B %d, %Y') }}</p>
                 <hr>
-                
-                <h5 class="mb-3">Membership Status</h5>
+
+                <h5 class="mb-3">Membership Details</h5>
                 {% if user.is_premium %}
                     <button class="btn btn-sm btn-outline-primary mb-3" 
                             type="button" 
@@ -21,31 +21,60 @@
                             data-bs-target="#membershipDetails"
                             aria-expanded="false" 
                             aria-controls="membershipDetails">
-                        <i class="fas fa-chevron-down me-1"></i> Click to view details
+                        <i class="fas fa-chevron-down me-1"></i> Click to view
                     </button>
 
                     <div class="collapse" id="membershipDetails">
-                        <div class="alert alert-{% if user.is_cancelled %}warning{% else %}success{% endif %}">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <i class="fas fa-{% if user.is_cancelled %}hourglass-end{% else %}star{% endif %} me-2"></i>
-                                    <strong>Premium Member</strong>
-                                    <p class="mb-0 mt-2 small">
-                                        Valid until: {{ user.membership_end.strftime('%B %d, %Y') }}
-                                    </p>
-                                    {% if user.is_cancelled %}
-                                        <p class="small text-muted mt-1">
-                                            <i class="fas fa-info-circle me-1"></i>
-                                            Subscription ending - access continues until expiration
+                        <div class="card border-0 shadow-sm mb-3">
+                            <div class="card-body">
+                                <!-- 1. Plan Summary -->
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <h6 class="fw-bold mb-1">Premium Plan</h6>
+                                        <p class="small text-muted mb-0">
+                                            <i class="fas fa-check-circle text-success me-1"></i>
+                                            Includes: Unlimited poems, gallery storage, AI customization
                                         </p>
-                                    {% endif %}
+                                    </div>
+                                    <span class="badge bg-{% if user.is_cancelled %}warning{% else %}success{% endif %}">
+                                        {% if user.is_cancelled %}Ending Soon{% else %}Active{% endif %}
+                                    </span>
                                 </div>
+
+                                <hr class="my-2">
+
+                                <!-- 2. Auto-Renew Info -->
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted small">Renewal Date</span>
+                                    <span class="fw-medium">{{ user.membership_end.strftime('%B %d, %Y') }}</span>
+                                </div>
+
+                                <!-- 3. Billing Info -->
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted small">Billing</span>
+                                    <span class="fw-medium">$1.99/month via {{ user.payment_method or 'Credit Card' }}</span>
+                                </div>
+
+                                <!-- 4. Next Invoice Preview -->
+                                <div class="d-flex justify-content-between mb-3">
+                                    <span class="text-muted small">Next Payment</span>
+                                    <span class="fw-medium">$1.99 on {{ user.membership_end.strftime('%B %d, %Y') }}</span>
+                                </div>
+
+                                <!-- Cancel Button -->
                                 {% if not user.is_cancelled %}
+                                <div class="d-grid mt-3">
                                     <button class="btn btn-sm btn-outline-danger" 
                                             data-bs-toggle="modal" 
                                             data-bs-target="#cancelSubscriptionModal">
-                                        <i class="fas fa-times me-1"></i> Cancel
+                                        <i class="fas fa-times me-1"></i> Cancel Subscription
                                     </button>
+                                </div>
+                                {% else %}
+                                <div class="alert alert-warning small mt-3 mb-0">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Subscription ending - access continues until expiration
+                                </div>
                                 {% endif %}
                             </div>
                         </div>
@@ -67,28 +96,28 @@
                     </div>
                 {% endif %}
                 <hr>
-                
-                <div class="d-flex align-items-center p-3 mb-3 border rounded bg-white shadow-sm">
-                    <div class="me-3 fs-4">⏱️</div>
-                    <div>
-                        <h6 class="mb-1 fw-bold">Time Saved with AI</h6>
-                        <div class="d-flex align-items-center">
-                            <span class="text-primary fw-bold fs-5 me-2">{{ time_saved_stats.hours }}h {{ time_saved_stats.minutes }}m</span> 
-                            <span class="text-dark">saved across {{ time_saved_stats.poem_counts.total }} poems</span>
-                        </div>
-                        <div class="d-flex justify-content-start mt-2">
-                            <div class="me-3">
-                                <span class="fw-bold text-dark d-block">{{ time_saved_stats.poem_counts.short }}</span>
-                                <span class="text-dark">Short</span>
-                            </div>
-                            <div>
-                                <span class="fw-bold text-dark d-block">{{ time_saved_stats.poem_counts.medium + time_saved_stats.poem_counts.long }}</span>
-                                <span class="text-dark">Med/Long</span>
-                            </div>
-                        </div>
+
+                <div class="card border-light shadow-sm rounded p-4 mx-auto" style="max-width: 600px;">
+                  <div class="mb-3">
+                    <h2 class="fs-3 fw-bold mb-2">⏰ Time Saved with Poem Vision AI</h2>
+
+                    <p class="text-muted mb-4">Your creativity. Our speed.</p>
+
+                    <div class="mb-3 fs-5">
+                      You've generated {{ time_saved_stats.poem_counts.total }} poems
                     </div>
+
+                    <div class="d-flex align-items-center mb-4">
+                      <span class="me-2 fs-5">⏱</span> 
+                      <span>You've saved <span class="fw-bold">{{ time_saved_stats.hours }} hours and {{ time_saved_stats.minutes }} minutes</span> of your precious time!</span>
+                    </div>
+
+                    <div>
+                      <a href="#" class="btn btn-outline-secondary">[ Keep Creating → ]</a>
+                    </div>
+                  </div>
                 </div>
-                
+
                 <h5 class="mt-4 mb-3">Plan Benefits</h5>
                 <div class="list-group mb-3">
                     {% for feature in plan.features %}
@@ -100,7 +129,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-8">
         <div class="card shadow mb-4"> 
             <div class="card-header bg-primary text-white">
@@ -310,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-    
+
     // Toggle membership details
     document.querySelector('[data-bs-target="#membershipDetails"]').addEventListener('click', function() {
         const icon = this.querySelector('i');
@@ -319,10 +348,10 @@ document.addEventListener('DOMContentLoaded', function() {
             this.innerHTML = '<i class="fas fa-chevron-up me-1"></i> Hide details';
         } else {
             icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
-            this.innerHTML = '<i class="fas fa-chevron-down me-1"></i> Click to view details';
+            this.innerHTML = '<i class="fas fa-chevron-down me-1"></i> Membership Details';
         }
     });
-    
+
     // Handler for subscription cancellation
     document.getElementById('confirmCancelSubscription')?.addEventListener('click', function() {
         const button = this;

@@ -393,7 +393,7 @@ POEM_TEMPLATES = {
     ]
 }
 
-def generate_poem(analysis_results, poem_type, poem_length, emphasis, custom_terms='', custom_category=''):
+def generate_poem(analysis_results, poem_type, poem_length, emphasis, custom_terms='', custom_category='', is_regeneration=False):
     """
     Generate a poem based on image analysis and user preferences using Google's Gemini API.
     If the API is not available, generates a basic poem using templates.
@@ -442,7 +442,7 @@ def generate_poem(analysis_results, poem_type, poem_length, emphasis, custom_ter
         cache_key = hashlib.md5(json.dumps(cache_key_data, sort_keys=True).encode('utf-8')).hexdigest()
 
         # Check if we have a cached poem for this input
-        if cache_key in _poem_cache:
+        if not is_regeneration and cache_key in _poem_cache:
             logger.info(f"Using cached poem for key: {cache_key[:8]}...")
             return _poem_cache[cache_key]
 

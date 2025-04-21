@@ -760,20 +760,34 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log("Selected emphasis elements:", state.selectedEmphasis);
     }
 
-    // Generate the poem
-    generatePoemBtn.addEventListener('click', function() {
+    // Create a separate function for poem generation
+    function generatePoem(isRegeneration = false) {
+        console.log('Generating poem - regeneration:', isRegeneration);
+        console.log('Current analysisId:', state.analysisId);
+
         if (!state.analysisId) {
+            console.error('Cannot generate poem - no analysisId in state');
+            alert('Session expired. Please upload your image again.');
+            goToStep(1);
             return;
         }
         
+        
+
         // Show loading indicator
         loadingPoem.classList.remove('d-none');
-        generatePoemBtn.disabled = true;
-        
+
+        // Disable the appropriate button based on which one was clicked
+        if (isRegeneration) {
+            regeneratePoemBtn.disabled = true;
+        } else {
+            generatePoemBtn.disabled = true;
+        }
+
         // Gather poem preferences
         const poemType = poemTypeSelect.value;
-        const poemLength = poemLengthSelect.value
-        
+        const poemLength = poemLengthSelect.value;
+
         // Get structured custom prompt inputs
         const customName = document.getElementById('customName');
         const customPlace = document.getElementById('customPlace');
@@ -781,7 +795,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const customAction = document.getElementById('customAction');
         const customPromptInput = document.getElementById('customPromptInput');
         const customPromptCategory = document.getElementById('customPromptCategory');
-        
+
         // Build a structured prompt object
         const customPromptData = {
             category: customPromptCategory ? customPromptCategory.value : 'structured',
@@ -791,7 +805,7 @@ document.addEventListener('DOMContentLoaded', function() {
             action: customAction ? customAction.value.trim() : '',
             additional: customPromptInput ? customPromptInput.value.trim() : ''
         };
-        
+
         // Send the request to generate a poem
         fetch('/generate-poem', {
             method: 'POST',
@@ -803,40 +817,55 @@ document.addEventListener('DOMContentLoaded', function() {
                 poemType: poemType,
                 poemLength: poemLength,
                 emphasis: state.selectedEmphasis,
-                customPrompt: customPromptData
+                customPrompt: customPromptData,
+                isRegeneration: isRegeneration
             })
         })
         .then(response => response.json())
         .then(data => {
             // Hide loading indicator
             loadingPoem.classList.add('d-none');
+
+            // Re-enable the buttons
             generatePoemBtn.disabled = false;
-            
+            regeneratePoemBtn.disabled = false;
+            if (data.analysisId) {
+                state.analysisId = data.analysisId;
+            }
+
             if (data.error) {
                 alert(data.error);
                 return;
             }
-            
+
             // Display the generated poem
             generatedPoem.textContent = data.poem;
-            
+
             // Copy the image to the poem step
             poemStepImage.src = uploadedImage.src;
-            
-            // Move to the next step
-            goToStep(3);
+
+            // Move to the next step - only if this isn't a regeneration
+            if (!isRegeneration) {
+                goToStep(3);
+            }
         })
         .catch(error => {
             console.error('Error generating poem:', error);
             loadingPoem.classList.add('d-none');
             generatePoemBtn.disabled = false;
+            regeneratePoemBtn.disabled = false;
             alert('An error occurred while generating the poem. Please try again.');
         });
+    }
+
+    // Generate the poem - initial generation
+    generatePoemBtn.addEventListener('click', function() {
+        generatePoem(false); // Not a regeneration
     });
 
     // Regenerate the poem
     regeneratePoemBtn.addEventListener('click', function() {
-        generatePoemBtn.click();
+        generatePoem(true); // This is a regeneration
     });
 
     // Select a frame
