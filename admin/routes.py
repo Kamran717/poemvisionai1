@@ -304,13 +304,43 @@ def delete_user(user_id):
 @permission_required('view_memberships')
 def memberships():
     memberships = Membership.query.all()
-    return render_template('admin/memberships.html', memberships=memberships)
+    
+    # Get additional data for the template
+    total_users = User.query.count()
+    active_premium = User.query.filter_by(is_premium=True).count()
+    premium_percent = (active_premium / total_users * 100) if total_users > 0 else 0
+    
+    # Average revenue per user
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    revenue = db.session.query(func.sum(Transaction.amount)).filter(
+        Transaction.created_at >= thirty_days_ago,
+        Transaction.status == 'completed'
+    ).scalar() or 0
+    
+    arpu = revenue / total_users if total_users > 0 else 0
+    
+    return render_template(
+        'admin/memberships.html', 
+        memberships=memberships,
+        total_users=total_users,
+        active_premium=active_premium,
+        premium_percent=premium_percent,
+        arpu=arpu
+    )
 
 @admin_bp.route('/memberships/<int:membership_id>/edit', methods=['GET', 'POST'])
 @admin_required
 @permission_required('edit_memberships')
 def edit_membership(membership_id):
     membership = Membership.query.get_or_404(membership_id)
+    
+    # Count users on this membership plan
+    if membership.price > 0:
+        # This is a premium plan
+        membership_usage = User.query.filter_by(is_premium=True).count()
+    else:
+        # This is a free plan
+        membership_usage = User.query.filter_by(is_premium=False).count()
     
     if request.method == 'POST':
         membership.name = request.form.get('name')
@@ -321,6 +351,11 @@ def edit_membership(membership_id):
         membership.max_saved_poems = int(request.form.get('max_saved_poems'))
         membership.has_gallery = 'has_gallery' in request.form
         
+        # Optional fields
+        stripe_price_id = request.form.get('stripe_price_id')
+        if stripe_price_id:
+            membership.stripe_price_id = stripe_price_id
+        
         db.session.commit()
         
         # Log the action
@@ -329,7 +364,9 @@ def edit_membership(membership_id):
         flash(f"Membership {membership.name} has been updated.", 'success')
         return redirect(url_for('admin.memberships'))
     
-    return render_template('admin/edit_membership.html', membership=membership)
+    return render_template('admin/edit_membership.html', 
+                          membership=membership,
+                          membership_usage=membership_usage)
 
 # Financial Reports
 @admin_bp.route('/financial')

@@ -1,0 +1,129 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Membership Plans - Poem Vision AI Admin{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-id-card me-2"></i>Membership Plans
+        </h1>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 fw-bold text-primary">Available Plans</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Price</th>
+                                <th>Features</th>
+                                <th>Max Poem Types</th>
+                                <th>Max Frame Types</th>
+                                <th>Max Saved Poems</th>
+                                <th>Gallery Access</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for membership in memberships %}
+                            <tr>
+                                <td class="fw-bold">{{ membership.name }}</td>
+                                <td>${{ membership.price }}</td>
+                                <td>
+                                    {% if membership.description %}
+                                        <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ membership.description }}">
+                                            <i class="fas fa-info-circle"></i>
+                                        </button>
+                                    {% endif %}
+                                </td>
+                                <td>{{ membership.max_poem_types }}</td>
+                                <td>{{ membership.max_frame_types }}</td>
+                                <td>{{ membership.max_saved_poems }}</td>
+                                <td>
+                                    {% if membership.has_gallery %}
+                                        <span class="badge bg-success">Yes</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">No</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('admin.edit_membership', membership_id=membership.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit me-1"></i> Edit
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center">No membership plans found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-info">Membership Statistics</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="card-title">Active Subscriptions</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Plan</th>
+                                        <th>Active Users</th>
+                                        <th>Monthly Revenue</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for membership in memberships %}
+                                    <tr>
+                                        <td>{{ membership.name }}</td>
+                                        <td>{% if membership.price > 0 %}{{ active_premium|default(0) }}{% else %}{{ total_users|default(0) - active_premium|default(0) }}{% endif %}</td>
+                                        <td>${{ (membership.price * (active_premium|default(0) if membership.price > 0 else 0))|round(2) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="card-title">Conversion Rate</h5>
+                        <p>Overall conversion rate: <strong>{{ premium_percent|default(0)|round(1) }}%</strong> of users are premium members.</p>
+                        <p>Average revenue per user: <strong>${{ arpu|default(0)|round(2) }}</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    });
+</script>
+{% endblock %}

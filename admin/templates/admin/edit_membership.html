@@ -1,0 +1,104 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Edit Membership Plan - Poem Vision AI Admin{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-edit me-2"></i>Edit Membership Plan
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-primary">{{ membership.name }}</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('admin.edit_membership', membership_id=membership.id) }}">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Plan Name</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ membership.name }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="price" class="form-label">Price ($)</label>
+                        <input type="number" class="form-control" id="price" name="price" value="{{ membership.price }}" step="0.01" min="0" required>
+                        <div class="form-text">Monthly subscription price in USD</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3">{{ membership.description }}</textarea>
+                        <div class="form-text">Brief description of the plan</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="max_poem_types" class="form-label">Max Poem Types</label>
+                        <input type="number" class="form-control" id="max_poem_types" name="max_poem_types" value="{{ membership.max_poem_types }}" min="0" required>
+                        <div class="form-text">Maximum number of poem types accessible with this plan</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="max_frame_types" class="form-label">Max Frame Types</label>
+                        <input type="number" class="form-control" id="max_frame_types" name="max_frame_types" value="{{ membership.max_frame_types }}" min="0" required>
+                        <div class="form-text">Maximum number of frame designs accessible with this plan</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="max_saved_poems" class="form-label">Max Saved Poems</label>
+                        <input type="number" class="form-control" id="max_saved_poems" name="max_saved_poems" value="{{ membership.max_saved_poems }}" min="0" required>
+                        <div class="form-text">Maximum number of poems that can be saved in user's account</div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="has_gallery" name="has_gallery" {% if membership.has_gallery %}checked{% endif %}>
+                        <label class="form-check-label" for="has_gallery">Gallery Access</label>
+                        <div class="form-text">Allow users with this plan to access the public gallery</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="stripe_price_id" class="form-label">Stripe Price ID</label>
+                        <input type="text" class="form-control" id="stripe_price_id" name="stripe_price_id" value="{{ membership.stripe_price_id or '' }}">
+                        <div class="form-text">Stripe price ID for automatic billing (leave empty to disable Stripe)</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('admin.memberships') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 fw-bold text-info">Plan Usage</h6>
+            </div>
+            <div class="card-body">
+                <p>Users on this plan: <strong>{{ membership_usage|default(0) }}</strong></p>
+                <p>Last updated: <strong>{{ membership.updated_at.strftime('%Y-%m-%d %H:%M') if membership.updated_at else 'Never' }}</strong></p>
+                
+                <hr>
+                
+                <h6 class="fw-bold">Plan Visibility</h6>
+                <p>This plan is {% if membership.price > 0 %}<span class="badge bg-success">Premium</span>{% else %}<span class="badge bg-primary">Free</span>{% endif %}</p>
+            </div>
+        </div>
+        
+        <div class="alert alert-warning">
+            <h6 class="alert-heading fw-bold"><i class="fas fa-exclamation-triangle me-1"></i>Important Note</h6>
+            <p class="mb-0">Changing plan details will affect all users currently subscribed to this plan.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
