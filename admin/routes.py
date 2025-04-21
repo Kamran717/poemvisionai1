@@ -420,9 +420,13 @@ def financial():
     
     # Convert to sorted list for chart
     revenue_data = [
-        {'date': k, 'amount': v} 
+        {'date': k, 'amount': float(v)}  # Ensure amount is a float for JSON serialization
         for k, v in sorted(daily_revenue.items())
     ]
+    
+    # Add tojson filter for Jinja2
+    from flask import json
+    app.jinja_env.filters['tojson'] = lambda obj: json.dumps(obj)
     
     return render_template(
         'admin/financial.html',
