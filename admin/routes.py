@@ -11,6 +11,11 @@ from admin import admin_bp
 # Set up logging
 logger = logging.getLogger(__name__)
 
+# Add context processor to provide current date/time to all templates
+@admin_bp.context_processor
+def inject_now():
+    return {'now': datetime.now()}
+
 # Admin authentication decorator
 def admin_required(f):
     @functools.wraps(f)
