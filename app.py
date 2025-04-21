@@ -92,6 +92,9 @@ STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
 from admin import admin_bp
 app.register_blueprint(admin_bp)
 
+# Add global current_admin for templates
+app.jinja_env.globals['current_admin'] = None
+
 # Set up email configuration
 app.config['MAIL_SERVER'] = 'smtp-relay.brevo.com'
 app.config['MAIL_PORT'] = 587
