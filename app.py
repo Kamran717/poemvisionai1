@@ -22,7 +22,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from utils.image_analyzer import analyze_image
 from utils.poem_generator import generate_poem
 from utils.image_manipulator import create_framed_image
-from models import db, Creation, User, Membership, Transaction, ContactMessage
+from models import db, Creation, User, Membership, Transaction, ContactMessage, AdminUser, AdminRole, AdminLog
 from utils.membership import (create_default_plans, get_user_plan,
                               check_poem_type_access, check_frame_access,
                               process_payment, get_user_creations,
@@ -87,6 +87,10 @@ app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 stripe.api_version = "2023-08-16"
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
+
+# Register admin blueprint
+from admin import admin_bp
+app.register_blueprint(admin_bp)
 
 # Set up email configuration
 app.config['MAIL_SERVER'] = 'smtp-relay.brevo.com'

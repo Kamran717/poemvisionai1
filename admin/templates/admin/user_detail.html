@@ -1,0 +1,332 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}User Details - {{ user.username }} - Poem Vision AI Admin{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <h1 class="mb-3">
+            <i class="fas fa-user me-2"></i>User Profile: {{ user.username }}
+        </h1>
+    </div>
+    <div class="col-lg-4 text-lg-end">
+        <div class="btn-group">
+            <form method="post" action="{{ url_for('admin.toggle_premium', user_id=user.id) }}" class="me-2">
+                <button type="submit" class="btn {% if user.is_premium %}btn-warning{% else %}btn-success{% endif %}">
+                    {% if user.is_premium %}
+                    <i class="fas fa-level-down-alt me-1"></i> Downgrade to Free
+                    {% else %}
+                    <i class="fas fa-level-up-alt me-1"></i> Upgrade to Premium
+                    {% endif %}
+                </button>
+            </form>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                <i class="fas fa-trash me-1"></i> Delete User
+            </button>
+        </div>
+        
+        <!-- Delete Modal -->
+        <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to delete the user <strong>{{ user.username }}</strong>? This action cannot be undone and will delete all user data including poems, payment history, and account settings.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <form method="post" action="{{ url_for('admin.delete_user', user_id=user.id) }}">
+                            <button type="submit" class="btn btn-danger">Delete User</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- User Info -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold">Account Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">ID:</div>
+                    <div class="col-sm-8">{{ user.id }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Username:</div>
+                    <div class="col-sm-8">{{ user.username }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Email:</div>
+                    <div class="col-sm-8">{{ user.email }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Verified:</div>
+                    <div class="col-sm-8">
+                        {% if user.is_email_verified %}
+                            <span class="badge bg-success">Yes</span>
+                        {% else %}
+                            <span class="badge bg-danger">No</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Membership:</div>
+                    <div class="col-sm-8">
+                        {% if user.is_premium %}
+                            <span class="badge bg-success">Premium</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Free</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Joined:</div>
+                    <div class="col-sm-8">{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                </div>
+                {% if user.is_premium %}
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Premium Start:</div>
+                    <div class="col-sm-8">{{ user.membership_start.strftime('%Y-%m-%d') if user.membership_start else 'N/A' }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Premium End:</div>
+                    <div class="col-sm-8">{{ user.membership_end.strftime('%Y-%m-%d') if user.membership_end else 'N/A' }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Status:</div>
+                    <div class="col-sm-8">
+                        {% if user.is_cancelled %}
+                            <span class="badge bg-warning">Will Cancel</span>
+                        {% else %}
+                            <span class="badge bg-success">Active</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Stripe ID:</div>
+                    <div class="col-sm-8">{{ user.stripe_customer_id or 'None' }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Sub ID:</div>
+                    <div class="col-sm-8">{{ user.subscription_id or 'None' }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Metrics -->
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold">User Metrics</h6>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <!-- Poem Counts -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Poems Created</h5>
+                                <div class="display-4">{{ time_saved.poem_counts.total }}</div>
+                                <hr>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p class="mb-0"><strong>{{ time_saved.poem_counts.short }}</strong></p>
+                                        <p class="text-muted">Short</p>
+                                    </div>
+                                    <div class="col-4">
+                                        <p class="mb-0"><strong>{{ time_saved.poem_counts.medium }}</strong></p>
+                                        <p class="text-muted">Medium</p>
+                                    </div>
+                                    <div class="col-4">
+                                        <p class="mb-0"><strong>{{ time_saved.poem_counts.long }}</strong></p>
+                                        <p class="text-muted">Long</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Time Saved -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Time Saved</h5>
+                                <div class="display-4">{{ time_saved.hours }}h {{ time_saved.minutes }}m</div>
+                                <hr>
+                                <p class="mb-0">Total of <strong>{{ time_saved.total_minutes }}</strong> minutes saved</p>
+                                <p class="text-muted">Based on poem length</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Activity Chart -->
+                <div class="mb-4">
+                    <h5>User Activity</h5>
+                    <canvas id="userActivityChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs for Detailed Data -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <ul class="nav nav-tabs card-header-tabs" id="userDetailTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="poems-tab" data-bs-toggle="tab" data-bs-target="#poems" type="button" role="tab" aria-controls="poems" aria-selected="true">Poems</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="transactions-tab" data-bs-toggle="tab" data-bs-target="#transactions" type="button" role="tab" aria-controls="transactions" aria-selected="false">Transactions</button>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body">
+        <div class="tab-content" id="userDetailTabsContent">
+            <!-- Poems Tab -->
+            <div class="tab-pane fade show active" id="poems" role="tabpanel" aria-labelledby="poems-tab">
+                {% if creations %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Type</th>
+                                    <th>Length</th>
+                                    <th>Time Saved</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for creation in creations %}
+                                <tr>
+                                    <td>{{ creation.id }}</td>
+                                    <td>{{ creation.poem_type }}</td>
+                                    <td>{{ creation.poem_length }}</td>
+                                    <td>{{ creation.time_saved_minutes }} min</td>
+                                    <td>{{ creation.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>
+                                        {% if creation.share_code %}
+                                            <a href="{{ url_for('view_shared_creation', share_code=creation.share_code) }}" target="_blank" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Not Shared</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        This user has not created any poems yet.
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Transactions Tab -->
+            <div class="tab-pane fade" id="transactions" role="tabpanel" aria-labelledby="transactions-tab">
+                {% if transactions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Method</th>
+                                    <th>Date</th>
+                                    <th>Stripe ID</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transaction in transactions %}
+                                <tr>
+                                    <td>{{ transaction.id }}</td>
+                                    <td>${{ transaction.amount }}</td>
+                                    <td>
+                                        {% if transaction.status == 'completed' %}
+                                            <span class="badge bg-success">Completed</span>
+                                        {% elif transaction.status == 'pending' %}
+                                            <span class="badge bg-warning">Pending</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Failed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ transaction.payment_method }}</td>
+                                    <td>{{ transaction.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>{{ transaction.transaction_id }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        This user has no transaction history.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Activity Chart
+    const activityCtx = document.getElementById('userActivityChart').getContext('2d');
+    
+    // Sample data - would be replaced with real data
+    const activityData = {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        datasets: [{
+            label: 'Poems Created',
+            data: [2, 3, 5, 2, 1, 0, 3, 4, 6, 2, 4, {{ time_saved.poem_counts.total }}],
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            tension: 0.3,
+            fill: true
+        }]
+    };
+    
+    new Chart(activityCtx, {
+        type: 'line',
+        data: activityData,
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Poems'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

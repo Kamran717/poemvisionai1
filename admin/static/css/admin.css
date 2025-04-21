@@ -1,0 +1,154 @@
+/* Admin Panel Custom Styles */
+:root {
+    --primary-color: #4e73df;
+    --success-color: #1cc88a;
+    --info-color: #36b9cc;
+    --warning-color: #f6c23e;
+    --danger-color: #e74a3b;
+    --light-color: #f8f9fc;
+    --dark-color: #2d3748;
+}
+
+/* Card Styles */
+.card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: #2a2a2a;
+    background-clip: border-box;
+    border: 1px solid rgba(255, 255, 255, 0.125);
+    border-radius: 0.35rem;
+}
+
+.card-header {
+    background-color: #222;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.125);
+}
+
+.font-weight-bold {
+    font-weight: 700 !important;
+}
+
+/* Border Cards */
+.border-left-primary {
+    border-left: 0.25rem solid var(--primary-color) !important;
+}
+
+.border-left-success {
+    border-left: 0.25rem solid var(--success-color) !important;
+}
+
+.border-left-info {
+    border-left: 0.25rem solid var(--info-color) !important;
+}
+
+.border-left-warning {
+    border-left: 0.25rem solid var(--warning-color) !important;
+}
+
+.border-left-danger {
+    border-left: 0.25rem solid var(--danger-color) !important;
+}
+
+/* Table styles */
+.table thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.125);
+}
+
+.table td, .table th {
+    padding: 0.75rem;
+    vertical-align: top;
+    border-top: 1px solid rgba(255, 255, 255, 0.125);
+}
+
+/* Pagination */
+.page-item.active .page-link {
+    z-index: 3;
+    color: #fff;
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.page-link {
+    position: relative;
+    display: block;
+    padding: 0.5rem 0.75rem;
+    margin-left: -1px;
+    line-height: 1.25;
+    color: var(--primary-color);
+    background-color: #333;
+    border: 1px solid rgba(255, 255, 255, 0.125);
+}
+
+.page-link:hover {
+    z-index: 2;
+    color: #fff;
+    text-decoration: none;
+    background-color: #444;
+    border-color: rgba(255, 255, 255, 0.125);
+}
+
+/* Nav Tabs */
+.nav-tabs .nav-link.active {
+    color: #fff;
+    background-color: #333;
+    border-color: rgba(255, 255, 255, 0.125);
+}
+
+.nav-tabs .nav-link {
+    border: 1px solid transparent;
+    border-top-left-radius: 0.25rem;
+    border-top-right-radius: 0.25rem;
+    color: #ccc;
+}
+
+/* Shadows */
+.shadow {
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Dropdown styles */
+.dropdown-menu {
+    background-color: #333;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.dropdown-item {
+    color: #f8f9fc;
+}
+
+.dropdown-item:hover, .dropdown-item:focus {
+    color: #fff;
+    background-color: #444;
+}
+
+.dropdown-item.active, .dropdown-item:active {
+    color: #fff;
+    background-color: var(--primary-color);
+}
+
+.dropdown-divider {
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Chart customization */
+canvas {
+    background-color: #2a2a2a;
+    border-radius: 0.25rem;
+}
+
+/* Footer */
+footer {
+    margin-top: 3rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.125);
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+    .card {
+        margin-bottom: 1rem;
+    }
+}

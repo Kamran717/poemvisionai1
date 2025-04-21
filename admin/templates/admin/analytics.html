@@ -1,0 +1,347 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Poem Analytics - Poem Vision AI Admin{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-chart-bar me-2"></i>Poem Analytics
+        </h1>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <!-- Time Saved -->
+    <div class="col-xl-6 col-md-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total Time Saved</div>
+                        <div class="h5 mb-0 font-weight-bold">{{ hours_saved }} hours, {{ minutes_saved }} minutes</div>
+                        <small class="text-muted">Estimated time saved for all users</small>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-clock fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Poems Created -->
+    <div class="col-xl-6 col-md-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Total Poems Created</div>
+                        <div class="h5 mb-0 font-weight-bold">{{ poem_types|map(attribute=1)|sum }}</div>
+                        <small class="text-muted">All-time poem generation count</small>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-feather-alt fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <!-- Daily Creation Chart -->
+    <div class="col-xl-12 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold">Daily Poem Creation (30 Days)</h6>
+            </div>
+            <div class="card-body">
+                <div class="pt-4 pb-3">
+                    <canvas id="dailyCreationChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Distribution Charts -->
+<div class="row mb-4">
+    <!-- Poem Type Distribution -->
+    <div class="col-xl-4 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold">Poem Type Distribution</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-pie pt-4 pb-3">
+                    <canvas id="poemTypeChart"></canvas>
+                </div>
+                <div class="mt-4 text-center small">
+                    {% for poem_type, count in poem_types %}
+                        <span class="mr-2">
+                            <i class="fas fa-circle" style="color: hsl({{ loop.index0 * 37 }}, 70%, 60%)"></i> {{ poem_type or 'Unknown' }}: {{ count }}
+                        </span>
+                        {% if not loop.last %}<br>{% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Frame Style Distribution -->
+    <div class="col-xl-4 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold">Frame Style Distribution</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-pie pt-4 pb-3">
+                    <canvas id="frameStyleChart"></canvas>
+                </div>
+                <div class="mt-4 text-center small">
+                    {% for frame_style, count in frame_styles %}
+                        <span class="mr-2">
+                            <i class="fas fa-circle" style="color: hsl({{ loop.index0 * 37 + 120 }}, 70%, 60%)"></i> {{ frame_style or 'Unknown' }}: {{ count }}
+                        </span>
+                        {% if not loop.last %}<br>{% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Poem Length Distribution -->
+    <div class="col-xl-4 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold">Poem Length Distribution</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-pie pt-4 pb-3">
+                    <canvas id="poemLengthChart"></canvas>
+                </div>
+                <div class="mt-4 text-center small">
+                    {% for poem_length, count in poem_lengths %}
+                        <span class="mr-2">
+                            <i class="fas fa-circle" style="color: hsl({{ loop.index0 * 60 + 240 }}, 70%, 60%)"></i> {{ poem_length or 'Unknown' }}: {{ count }}
+                        </span>
+                        {% if not loop.last %}<br>{% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Statistics -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold">Poem Type Details</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Poem Type</th>
+                                <th>Count</th>
+                                <th>Percentage</th>
+                                <th>Popularity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set total_poems = poem_types|map(attribute=1)|sum %}
+                            {% for poem_type, count in poem_types|sort(attribute=1, reverse=true) %}
+                                <tr>
+                                    <td>{{ poem_type or 'Unknown' }}</td>
+                                    <td>{{ count }}</td>
+                                    <td>{{ ((count / total_poems) * 100)|round(1) }}%</td>
+                                    <td>
+                                        <div class="progress">
+                                            <div class="progress-bar" role="progressbar" style="width: {{ (count / total_poems) * 100 }}%;" 
+                                                 aria-valuenow="{{ (count / total_poems) * 100 }}" aria-valuemin="0" aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Chart.js options for all charts
+    const chartOptions = {
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'right',
+                labels: {
+                    color: '#f8f9fc'
+                }
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                bodyColor: '#fff',
+                titleColor: '#fff',
+                borderColor: 'rgba(255, 255, 255, 0.2)',
+                borderWidth: 1
+            }
+        }
+    };
+    
+    // Poem Type Chart
+    const poemTypeCtx = document.getElementById('poemTypeChart').getContext('2d');
+    new Chart(poemTypeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [
+                {% for poem_type, count in poem_types %}
+                    '{{ poem_type or "Unknown" }}',
+                {% endfor %}
+            ],
+            datasets: [{
+                data: [
+                    {% for poem_type, count in poem_types %}
+                        {{ count }},
+                    {% endfor %}
+                ],
+                backgroundColor: [
+                    {% for poem_type, count in poem_types %}
+                        'hsl({{ loop.index0 * 37 }}, 70%, 60%)',
+                    {% endfor %}
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: chartOptions
+    });
+    
+    // Frame Style Chart
+    const frameStyleCtx = document.getElementById('frameStyleChart').getContext('2d');
+    new Chart(frameStyleCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [
+                {% for frame_style, count in frame_styles %}
+                    '{{ frame_style or "Unknown" }}',
+                {% endfor %}
+            ],
+            datasets: [{
+                data: [
+                    {% for frame_style, count in frame_styles %}
+                        {{ count }},
+                    {% endfor %}
+                ],
+                backgroundColor: [
+                    {% for frame_style, count in frame_styles %}
+                        'hsl({{ loop.index0 * 37 + 120 }}, 70%, 60%)',
+                    {% endfor %}
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: chartOptions
+    });
+    
+    // Poem Length Chart
+    const poemLengthCtx = document.getElementById('poemLengthChart').getContext('2d');
+    new Chart(poemLengthCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [
+                {% for poem_length, count in poem_lengths %}
+                    '{{ poem_length or "Unknown" }}',
+                {% endfor %}
+            ],
+            datasets: [{
+                data: [
+                    {% for poem_length, count in poem_lengths %}
+                        {{ count }},
+                    {% endfor %}
+                ],
+                backgroundColor: [
+                    {% for poem_length, count in poem_lengths %}
+                        'hsl({{ loop.index0 * 60 + 240 }}, 70%, 60%)',
+                    {% endfor %}
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: chartOptions
+    });
+    
+    // Daily Creation Chart
+    const dailyCreationCtx = document.getElementById('dailyCreationChart').getContext('2d');
+    new Chart(dailyCreationCtx, {
+        type: 'line',
+        data: {
+            labels: [
+                {% for item in creation_data %}
+                    '{{ item.date }}',
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Poems Created',
+                data: [
+                    {% for item in creation_data %}
+                        {{ item.count }},
+                    {% endfor %}
+                ],
+                backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                borderColor: 'rgba(78, 115, 223, 1)',
+                pointRadius: 3,
+                pointBackgroundColor: 'rgba(78, 115, 223, 1)',
+                pointBorderColor: 'rgba(78, 115, 223, 1)',
+                pointHoverRadius: 5,
+                pointHoverBackgroundColor: 'rgba(78, 115, 223, 1)',
+                pointHoverBorderColor: 'rgba(78, 115, 223, 1)',
+                pointHitRadius: 10,
+                pointBorderWidth: 2,
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: '#f8f9fc'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: '#f8f9fc'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
