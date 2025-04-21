@@ -4,454 +4,84 @@
 
 {% block content %}
 <div class="row mb-4">
-    <div class="col-12 d-flex justify-content-between align-items-center">
-        <h1 class="mb-0">
+    <div class="col-12">
+        <h1 class="mb-4">
             <i class="fas fa-tachometer-alt me-2"></i>Dashboard
         </h1>
-        <div class="d-flex">
-            <div class="dropdown me-2">
-                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="timeRangeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-calendar-alt me-1"></i> Last 30 Days
-                </button>
-                <ul class="dropdown-menu" aria-labelledby="timeRangeDropdown">
-                    <li><a class="dropdown-item active" href="#">Last 30 Days</a></li>
-                    <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
-                    <li><a class="dropdown-item" href="#">This Month</a></li>
-                    <li><a class="dropdown-item" href="#">This Year</a></li>
-                </ul>
-            </div>
-            <button class="btn btn-primary" id="refreshData">
-                <i class="fas fa-sync-alt me-1"></i> Refresh Data
-            </button>
+        <div class="alert alert-success">
+            Dashboard has been simplified for troubleshooting
         </div>
     </div>
 </div>
 
-<!-- Overview Stats Row -->
-<div class="row g-3 mb-4">
-    <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100 bg-gradient" style="background-color: rgba(78, 115, 223, 0.05); border-left: 4px solid var(--bs-primary) !important;">
-            <div class="card-body p-3">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div class="text-primary fw-bold text-uppercase small">Total Users</div>
-                    <div class="rounded-circle bg-primary bg-opacity-10 p-2">
-                        <i class="fas fa-users text-primary"></i>
-                    </div>
-                </div>
-                <div class="d-flex align-items-end">
-                    <h3 class="mb-0 fw-bold me-2">{{ total_users }}</h3>
-                    <span class="text-success small">
-                        <i class="fas fa-arrow-up me-1"></i>{{ new_users }}
-                    </span>
-                </div>
-                <div class="text-muted small mt-1">New users in last 30 days</div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100 bg-gradient" style="background-color: rgba(28, 200, 138, 0.05); border-left: 4px solid var(--bs-success) !important;">
-            <div class="card-body p-3">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div class="text-success fw-bold text-uppercase small">Premium Users</div>
-                    <div class="rounded-circle bg-success bg-opacity-10 p-2">
-                        <i class="fas fa-crown text-success"></i>
-                    </div>
-                </div>
-                <div class="d-flex align-items-end">
-                    <h3 class="mb-0 fw-bold me-2">{{ active_premium }}</h3>
-                    <span class="text-success small">
-                        <i class="fas fa-percentage me-1"></i>{{ premium_percent|round(1) }}%
-                    </span>
-                </div>
-                <div class="text-muted small mt-1">Conversion rate</div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100 bg-gradient" style="background-color: rgba(54, 185, 204, 0.05); border-left: 4px solid var(--bs-info) !important;">
-            <div class="card-body p-3">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div class="text-info fw-bold text-uppercase small">Total Poems</div>
-                    <div class="rounded-circle bg-info bg-opacity-10 p-2">
-                        <i class="fas fa-feather-alt text-info"></i>
-                    </div>
-                </div>
-                <div class="d-flex align-items-end">
-                    <h3 class="mb-0 fw-bold me-2">{{ total_creations }}</h3>
-                    <span class="text-info small">
-                        <i class="fas fa-clock me-1"></i>{{ (total_creations / 2)|round }}h
-                    </span>
-                </div>
-                <div class="text-muted small mt-1">Estimated time saved</div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100 bg-gradient" style="background-color: rgba(246, 194, 62, 0.05); border-left: 4px solid var(--bs-warning) !important;">
-            <div class="card-body p-3">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div class="text-warning fw-bold text-uppercase small">Revenue</div>
-                    <div class="rounded-circle bg-warning bg-opacity-10 p-2">
-                        <i class="fas fa-dollar-sign text-warning"></i>
-                    </div>
-                </div>
-                <div class="d-flex align-items-end">
-                    <h3 class="mb-0 fw-bold me-2">${{ recent_revenue|default(0)|round(2) }}</h3>
-                    <span class="text-success small">
-                        <i class="fas fa-chart-line me-1"></i>30d
-                    </span>
-                </div>
-                <div class="text-muted small mt-1">Avg ${{ (recent_revenue / 30)|default(0)|round(2) }} per day</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Charts Row -->
-<div class="row g-4 mb-4">
-    <!-- User Activity Chart -->
-    <div class="col-lg-8">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
-                <h6 class="m-0 fw-bold text-primary">User Growth Trends</h6>
-                <div class="btn-group btn-group-sm" role="group">
-                    <button type="button" class="btn btn-outline-secondary active">Monthly</button>
-                    <button type="button" class="btn btn-outline-secondary">Weekly</button>
-                    <button type="button" class="btn btn-outline-secondary">Daily</button>
-                </div>
-            </div>
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100">
             <div class="card-body">
-                <canvas id="userGrowthChart" height="300"></canvas>
+                <div class="row align-items-center">
+                    <div class="col">
+                        <div class="small fw-bold text-primary text-uppercase mb-1">
+                            Total Users</div>
+                        <div class="h4 mb-0 fw-bold">{{ total_users }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-primary opacity-50"></i>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    
-    <!-- Revenue Stats -->
-    <div class="col-lg-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
-                <h6 class="m-0 fw-bold text-info">Revenue Breakdown</h6>
-            </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100">
             <div class="card-body">
-                <canvas id="revenueChart" height="220"></canvas>
-                <hr>
-                <div class="row text-center g-3 mt-2">
-                    <div class="col-6">
-                        <div class="border rounded p-2">
-                            <div class="small text-muted">Avg Revenue / User</div>
-                            <div class="h5 mb-0">${{ (recent_revenue / total_users)|default(0)|round(2) }}</div>
-                        </div>
+                <div class="row align-items-center">
+                    <div class="col">
+                        <div class="small fw-bold text-success text-uppercase mb-1">
+                            Premium Users</div>
+                        <div class="h4 mb-0 fw-bold">{{ active_premium }}</div>
                     </div>
-                    <div class="col-6">
-                        <div class="border rounded p-2">
-                            <div class="small text-muted">Conversion Rate</div>
-                            <div class="h5 mb-0">{{ premium_percent|round(1) }}%</div>
-                        </div>
+                    <div class="col-auto">
+                        <i class="fas fa-award fa-2x text-success opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <div class="small fw-bold text-info text-uppercase mb-1">
+                            Total Poems</div>
+                        <div class="h4 mb-0 fw-bold">{{ total_creations }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-feather-alt fa-2x text-info opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <div class="small fw-bold text-warning text-uppercase mb-1">
+                            30-Day Revenue</div>
+                        <div class="h4 mb-0 fw-bold">${{ recent_revenue|default(0)|round(2) }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-dollar-sign fa-2x text-warning opacity-50"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Bottom Row -->
-<div class="row g-4">
-    <!-- Recent Activity -->
-    <div class="col-xl-8">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
-                <h6 class="m-0 fw-bold text-primary">Recent Admin Activity</h6>
-                <a href="{{ url_for('admin.logs') }}" class="btn btn-sm btn-outline-primary">View All</a>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table mb-0 table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="ps-3">Admin</th>
-                                <th>Action</th>
-                                <th>Entity</th>
-                                <th class="pe-3">Time</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% if recent_activity %}
-                                {% for log in recent_activity %}
-                                <tr>
-                                    <td class="ps-3">
-                                        <span class="d-flex align-items-center">
-                                            <span class="avatar-circle bg-primary me-2 d-inline-flex align-items-center justify-content-center">
-                                                <span class="text-white">{{ log.admin.username[0]|upper }}</span>
-                                            </span>
-                                            {{ log.admin.username }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-{{ 'success' if 'create' in log.action else 'info' if 'edit' in log.action else 'danger' if 'delete' in log.action else 'secondary' }}">
-                                            {{ log.action }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        {% if log.entity_type %}
-                                            <span class="text-muted">{{ log.entity_type }}</span>
-                                            {% if log.entity_id %}<span class="badge bg-light text-dark">#{{ log.entity_id }}</span>{% endif %}
-                                        {% else %}
-                                            -
-                                        {% endif %}
-                                    </td>
-                                    <td class="pe-3 text-end text-muted">
-                                        <i class="far fa-clock me-1"></i>{{ log.timestamp.strftime('%b %d, %H:%M') }}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            {% else %}
-                                <tr>
-                                    <td colspan="4" class="text-center py-4">No recent activity</td>
-                                </tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Quick Stats -->
-    <div class="col-xl-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
-                <h6 class="m-0 fw-bold text-success">Poem Stats</h6>
-            </div>
-            <div class="card-body">
-                <div class="mb-4">
-                    <h6 class="mb-2">Popular Poem Types</h6>
-                    <div class="progress mb-1" style="height: 25px;">
-                        <div class="progress-bar bg-primary" style="width: 40%;">Love (40%)</div>
-                        <div class="progress-bar bg-success" style="width: 25%;">Nature (25%)</div>
-                        <div class="progress-bar bg-info" style="width: 20%;">Inspirational (20%)</div>
-                        <div class="progress-bar bg-warning" style="width: 15%;">Other (15%)</div>
-                    </div>
-                </div>
-                
-                <div>
-                    <h6 class="mb-2">User Engagement</h6>
-                    <div class="d-flex justify-content-between mb-2">
-                        <div>Time Saved:</div>
-                        <div class="fw-bold">{{ total_creations * 30 }} minutes</div>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <div>Avg. Poems per User:</div>
-                        <div class="fw-bold">{{ (total_creations / total_users)|round(1) if total_users > 0 else 0 }}</div>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <div>Premium Satisfaction:</div>
-                        <div class="fw-bold text-success">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star-half-alt"></i>
-                            4.5/5
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card bg-success bg-opacity-10 border-0 mt-4">
-                    <div class="card-body">
-                        <h5 class="card-title text-success"><i class="fas fa-bullhorn me-2"></i>Quick Actions</h5>
-                        <div class="d-grid gap-2">
-                            <a href="{{ url_for('admin.users') }}" class="btn btn-sm btn-outline-dark mt-2">
-                                <i class="fas fa-users me-1"></i> Manage Users
-                            </a>
-                            <a href="{{ url_for('admin.memberships') }}" class="btn btn-sm btn-outline-dark">
-                                <i class="fas fa-id-card me-1"></i> Edit Memberships
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-.avatar-circle {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    font-size: 14px;
-}
-</style>
-{% endblock content %}
-
-{% block scripts %}
-<script>
-    // Use safer initialization for charts
-    document.addEventListener('DOMContentLoaded', function() {
-        // Get the current month (0-11)
-        const now = new Date();
-        const currentMonth = now.getMonth();
-        
-        // Generate labels for the past 12 months
-        const userLabels = [];
-        for (let i = 11; i >= 0; i--) {
-            let monthIndex = (currentMonth - i + 12) % 12; // Handle wrapping around
-            let monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            userLabels.push(monthNames[monthIndex]);
-        }
-        
-        // Generate realistic sample data trending up to current new users count
-        let userData = [5, 8, 12, 15, 20, 25, 30, 35, 40, 45, 48, {{ new_users }}];
-        
-        // Safety check if canvas element exists
-        const userGrowthCanvas = document.getElementById('userGrowthChart');
-        if (userGrowthCanvas) {
-            const userGrowthCtx = userGrowthCanvas.getContext('2d');
-            
-            try {
-                new Chart(userGrowthCtx, {
-                    type: 'line',
-                    data: {
-                        labels: userLabels,
-                        datasets: [{
-                            label: 'New Users',
-                            data: userData,
-                            backgroundColor: 'rgba(78, 115, 223, 0.1)',
-                            borderColor: 'rgba(78, 115, 223, 1)',
-                            pointRadius: 3,
-                            pointBackgroundColor: 'rgba(78, 115, 223, 1)',
-                            pointBorderColor: 'rgba(78, 115, 223, 1)',
-                            pointHoverRadius: 5,
-                            pointHoverBackgroundColor: 'rgba(78, 115, 223, 1)',
-                            pointHoverBorderColor: 'rgba(78, 115, 223, 1)',
-                            pointHitRadius: 10,
-                            pointBorderWidth: 2,
-                            tension: 0.3,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                grid: {
-                                    color: 'rgba(255, 255, 255, 0.1)'
-                                }
-                            },
-                            x: {
-                                grid: {
-                                    color: 'rgba(255, 255, 255, 0.1)'
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        }
-                    }
-                });
-            } catch (e) {
-                console.error("Error creating user growth chart:", e);
-            }
-        }
-
-        // Set up doughnut chart for revenue
-        const revenueCanvas = document.getElementById('revenueChart');
-        if (revenueCanvas) {
-            const revenueCtx = revenueCanvas.getContext('2d');
-            
-            try {
-                new Chart(revenueCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Premium Subscriptions', 'One-time Purchases', 'Referral Credits'],
-                        datasets: [{
-                            data: [{{ recent_revenue * 0.75|round(2) }}, {{ recent_revenue * 0.2|round(2) }}, {{ recent_revenue * 0.05|round(2) }}],
-                            backgroundColor: [
-                                'rgba(78, 115, 223, 0.8)',
-                                'rgba(28, 200, 138, 0.8)',
-                                'rgba(246, 194, 62, 0.8)'
-                            ],
-                            borderColor: [
-                                'rgba(78, 115, 223, 1)',
-                                'rgba(28, 200, 138, 1)',
-                                'rgba(246, 194, 62, 1)'
-                            ],
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '65%',
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    padding: 15
-                                }
-                            }
-                        }
-                    }
-                });
-            } catch (e) {
-                console.error("Error creating revenue chart:", e);
-            }
-        }
-        
-        // Handle refresh button
-        const refreshBtn = document.getElementById('refreshData');
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                // Add refresh animation
-                this.classList.add('disabled');
-                this.innerHTML = '<i class="fas fa-sync-alt fa-spin me-1"></i> Refreshing...';
-                
-                // Simulate refresh (would be an actual fetch in production)
-                setTimeout(() => {
-                    this.classList.remove('disabled');
-                    this.innerHTML = '<i class="fas fa-sync-alt me-1"></i> Refresh Data';
-                    
-                    // Show toast notification
-                    const toastContainer = document.createElement('div');
-                    toastContainer.classList.add('position-fixed', 'bottom-0', 'end-0', 'p-3');
-                    toastContainer.style.zIndex = 5;
-                    
-                    const toast = document.createElement('div');
-                    toast.classList.add('toast', 'show', 'bg-success', 'text-white');
-                    toast.innerHTML = `
-                        <div class="toast-header bg-success text-white">
-                            <i class="fas fa-check-circle me-2"></i>
-                            <strong class="me-auto">Success</strong>
-                            <small>Just now</small>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
-                        </div>
-                        <div class="toast-body">
-                            Dashboard data has been refreshed successfully!
-                        </div>
-                    `;
-                    
-                    toastContainer.appendChild(toast);
-                    document.body.appendChild(toastContainer);
-                    
-                    // Auto dismiss after 3 seconds
-                    setTimeout(() => {
-                        toast.classList.remove('show');
-                        setTimeout(() => {
-                            document.body.removeChild(toastContainer);
-                        }, 500);
-                    }, 3000);
-                }, 1000);
-            });
-        }
-    });
-</script>
-{% endblock scripts %}
+{% endblock %}
