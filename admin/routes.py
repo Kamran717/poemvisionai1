@@ -424,9 +424,7 @@ def financial():
         for k, v in sorted(daily_revenue.items())
     ]
     
-    # Add tojson filter for Jinja2
-    from flask import json
-    app.jinja_env.filters['tojson'] = lambda obj: json.dumps(obj)
+    # We don't need to set the tojson filter as it's built into Flask
     
     return render_template(
         'admin/financial.html',

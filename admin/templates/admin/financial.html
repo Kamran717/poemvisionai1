@@ -140,7 +140,7 @@
         // Daily revenue chart
         const ctx = document.getElementById('revenueChart').getContext('2d');
         
-        const revenueData = {{ revenue_data|tojson }};
+        const revenueData = {{ revenue_data|tojson|safe }};
         
         const dates = revenueData.map(item => item.date);
         const amounts = revenueData.map(item => item.amount);
