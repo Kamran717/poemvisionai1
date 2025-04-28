@@ -206,13 +206,9 @@ def create_framed_image(image_bytes, poem_text):
         text_y = image_area_height + (available_text_height -
                                       total_text_height) // 2
         for i, line in enumerate(wrapped_lines):
-            bbox = font.getbbox(line)
-            line_width = bbox[2] - bbox[0]
-            text_x = (target_width - line_width) // 2
-            text_x = max(
-                min_side_margin,
-                min(text_x, target_width - line_width - min_side_margin))
-
+            # Set text_x to min_side_margin for left alignment
+            text_x = min_side_margin
+            
             line_y = text_y + (i * poem_line_height)
 
             # Draw with subtle shadow for readability
