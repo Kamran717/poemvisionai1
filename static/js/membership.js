@@ -281,7 +281,7 @@ function updatePoemTypeDropdown(poemTypes) {
 
     // Define display names for poem types
     const displayNames = {
-        'free verse': 'Free Verse',
+        'general verse': 'General Verse',
         'love': 'Romantic/Love Poem',
         'funny': 'Funny/Humorous',
         'inspirational': 'Inspirational/Motivational',
@@ -374,7 +374,7 @@ function updatePoemTypeDropdown(poemTypes) {
     };
 
     // Free types that are available to all users
-    const freeTypes = ['free verse', 'love', 'funny', 'inspirational'];
+    const freeTypes = ['general verse', 'love', 'funny', 'inspirational'];
 
     // Map of poem type to its appropriate group
     const groupMap = {};
@@ -437,7 +437,7 @@ function updatePoemTypeDropdown(poemTypes) {
     if (currentSelection && poemTypeSelect.querySelector(`option[value="${currentSelection}"]`)) {
         poemTypeSelect.value = currentSelection;
     } else {
-        poemTypeSelect.value = 'free verse';
+        poemTypeSelect.value = 'general verse';
     }
 
     // Add premium indicator if needed
@@ -644,7 +644,7 @@ function setupUpgradePrompts() {
             checkFeatureAccess('poem_type', selectedType).then(hasAccess => {
                 if (!hasAccess) {
                     // Reset selection to default
-                    e.target.value = 'free verse';
+                    e.target.value = 'general verse';
                     
                     // Show upgrade prompt
                     showUpgradePrompt('poem_type');

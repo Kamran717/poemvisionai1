@@ -353,7 +353,7 @@ def generate_poem_route():
         analysis_results = temp_creation.analysis_results
 
         # Get user preferences from the request
-        poem_type = data.get('poemType', 'free verse')
+        poem_type = data.get('poemType', 'general verse')
         poem_length = data.get('poemLength', 'short')
         emphasis = data.get('emphasis', [])
         is_regeneration = data.get('isRegeneration', False)
