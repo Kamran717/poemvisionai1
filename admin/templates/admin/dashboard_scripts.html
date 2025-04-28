@@ -1,0 +1,96 @@
+{% extends 'admin/dashboard.html' %}
+
+{% block scripts %}
+<script>
+// User Activity Chart
+document.addEventListener('DOMContentLoaded', function() {
+    const userActivityCtx = document.getElementById('userActivityChart').getContext('2d');
+    const poemTypesCtx = document.getElementById('poemTypesChart').getContext('2d');
+    
+    // User activity data
+    const activityData = {
+        labels: {{ activity_dates|tojson }},
+        datasets: [
+            {
+                label: 'Active Users',
+                data: {{ active_users_data|tojson }},
+                borderColor: 'rgba(78, 115, 223, 1)',
+                backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                tension: 0.3,
+                fill: true
+            },
+            {
+                label: 'Poems Created',
+                data: {{ poems_created_data|tojson }},
+                borderColor: 'rgba(28, 200, 138, 1)',
+                backgroundColor: 'rgba(28, 200, 138, 0.1)',
+                tension: 0.3,
+                fill: true
+            }
+        ]
+    };
+    
+    // Poem types data
+    const poemTypesData = {
+        labels: {{ poem_types_labels|tojson }},
+        datasets: [{
+            data: {{ poem_types_counts|tojson }},
+            backgroundColor: [
+                'rgba(78, 115, 223, 0.8)',
+                'rgba(28, 200, 138, 0.8)',
+                'rgba(246, 194, 62, 0.8)',
+                'rgba(231, 74, 59, 0.8)',
+                'rgba(54, 185, 204, 0.8)',
+                'rgba(133, 135, 150, 0.8)',
+                'rgba(105, 48, 195, 0.8)',
+                'rgba(244, 123, 32, 0.8)'
+            ],
+            borderWidth: 1
+        }]
+    };
+    
+    // Create user activity chart
+    new Chart(userActivityCtx, {
+        type: 'line',
+        data: activityData,
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: "rgba(0, 0, 0, 0.05)"
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            }
+        }
+    });
+    
+    // Create poem types chart
+    new Chart(poemTypesCtx, {
+        type: 'doughnut',
+        data: poemTypesData,
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            },
+            cutout: '70%'
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -130,13 +130,23 @@ def logout():
 @admin_bp.route('/')
 @admin_required
 def dashboard():
-    # Get metrics for dashboard
+    # Basic metrics for dashboard
     total_users = User.query.count()
     active_premium = User.query.filter_by(is_premium=True).count()
     total_creations = Creation.query.count()
+    verified_users = User.query.filter_by(is_email_verified=True).count()
+    
+    # Date ranges
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    one_day_ago = datetime.utcnow() - timedelta(days=1)
+    
+    # Verification percentage
+    verified_percent = (verified_users / total_users * 100) if total_users > 0 else 0
+    
+    # Premium conversion rate
+    premium_percent = (active_premium / total_users * 100) if total_users > 0 else 0
     
     # Revenue data (last 30 days)
-    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
     recent_transactions = Transaction.query.filter(
         Transaction.created_at >= thirty_days_ago,
         Transaction.status == 'completed'
@@ -144,24 +154,116 @@ def dashboard():
     
     recent_revenue = sum(t.amount for t in recent_transactions)
     
-    # New users in last 30 days
-    new_users = User.query.filter(User.created_at >= thirty_days_ago).count()
+    # Download statistics
+    total_downloads = db.session.query(func.sum(Creation.download_count)).scalar() or 0
+    downloaded_creations = Creation.query.filter(Creation.is_downloaded == True).count()
+    download_rate = (downloaded_creations / total_creations * 100) if total_creations > 0 else 0
     
-    # Premium conversion rate
-    premium_percent = (active_premium / total_users * 100) if total_users > 0 else 0
+    # Session statistics
+    from models import UserSession
     
-    # Recent activity
+    active_sessions = UserSession.query.filter(
+        UserSession.session_start >= one_day_ago,
+        UserSession.session_end.is_(None)
+    ).count()
+    
+    # Avg session duration (for completed sessions)
+    avg_session_duration = db.session.query(
+        func.avg(UserSession.duration_seconds)
+    ).filter(
+        UserSession.duration_seconds.isnot(None)
+    ).scalar() or 0
+    
+    avg_session_minutes = avg_session_duration / 60
+    
+    # Total session time (hours)
+    total_session_seconds = db.session.query(
+        func.sum(UserSession.duration_seconds)
+    ).filter(
+        UserSession.duration_seconds.isnot(None)
+    ).scalar() or 0
+    
+    total_session_hours = total_session_seconds / 3600
+    
+    # Time saved estimate (hours)
+    total_time_saved = db.session.query(
+        func.sum(Creation.time_saved_minutes)
+    ).scalar() or 0
+    
+    total_time_saved_hours = total_time_saved / 60
+    
+    # Chart data - user activity over 30 days
+    activity_dates = []
+    active_users_data = []
+    poems_created_data = []
+    
+    current_date = thirty_days_ago.date()
+    end_date = datetime.utcnow().date()
+    
+    while current_date <= end_date:
+        # Format date for display
+        activity_dates.append(current_date.strftime('%b %d'))
+        
+        # Count users active on this day
+        day_start = datetime.combine(current_date, datetime.min.time())
+        day_end = datetime.combine(current_date, datetime.max.time())
+        
+        active_users = UserSession.query.filter(
+            UserSession.session_start.between(day_start, day_end)
+        ).with_entities(UserSession.user_id).distinct().count()
+        
+        # Count poems created on this day
+        day_poems = Creation.query.filter(
+            Creation.created_at.between(day_start, day_end)
+        ).count()
+        
+        active_users_data.append(active_users)
+        poems_created_data.append(day_poems)
+        
+        current_date += timedelta(days=1)
+    
+    # Poem types distribution
+    poem_types_data = db.session.query(
+        Creation.poem_type,
+        func.count(Creation.id)
+    ).filter(
+        Creation.poem_type.isnot(None)
+    ).group_by(
+        Creation.poem_type
+    ).all()
+    
+    poem_types_labels = [pt[0] for pt in poem_types_data]
+    poem_types_counts = [pt[1] for pt in poem_types_data]
+    
+    # Recent activity for admin logs
     recent_activity = AdminLog.query.order_by(AdminLog.timestamp.desc()).limit(10).all()
     
     return render_template(
         'admin/dashboard.html',
+        # Basic metrics
         total_users=total_users,
         active_premium=active_premium,
         total_creations=total_creations,
-        recent_revenue=recent_revenue,
-        new_users=new_users,
+        verified_users=verified_users,
+        verified_percent=verified_percent,
         premium_percent=premium_percent,
-        recent_activity=recent_activity
+        recent_revenue=recent_revenue,
+        recent_activity=recent_activity,
+        
+        # Enhanced metrics
+        total_downloads=total_downloads,
+        download_rate=download_rate,
+        active_sessions=active_sessions,
+        avg_session_minutes=avg_session_minutes,
+        total_session_hours=total_session_hours,
+        total_time_saved_hours=total_time_saved_hours,
+        
+        # Chart data
+        activity_dates=activity_dates,
+        active_users_data=active_users_data, 
+        poems_created_data=poems_created_data,
+        poem_types_labels=poem_types_labels,
+        poem_types_counts=poem_types_counts
     )
 
 # User Management
