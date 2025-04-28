@@ -1,0 +1,407 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Visitor Statistics - Poem Vision AI Admin{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-chart-line me-2"></i>Visitor Statistics
+        </h1>
+        <p class="text-muted">
+            Track and analyze visitor traffic to the Poem Vision AI website.
+        </p>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <div class="small fw-bold text-primary text-uppercase mb-1">
+                            Today's Visitors</div>
+                        <div class="h4 mb-0 fw-bold">{{ daily_stats.unique_visitors }}</div>
+                        <div class="small text-muted mt-2">{{ daily_stats.total_visits }} page views</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-primary opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <div class="small fw-bold text-success text-uppercase mb-1">
+                            This Month</div>
+                        <div class="h4 mb-0 fw-bold">{{ monthly_stats.unique_visitors }}</div>
+                        <div class="small text-muted mt-2">{{ monthly_stats.new_visitors }} new visitors</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar fa-2x text-success opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <div class="small fw-bold text-info text-uppercase mb-1">
+                            This Year</div>
+                        <div class="h4 mb-0 fw-bold">{{ yearly_stats.unique_visitors }}</div>
+                        <div class="small text-muted mt-2">{{ yearly_stats.total_visits }} total visits</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chart-bar fa-2x text-info opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <div class="small fw-bold text-warning text-uppercase mb-1">
+                            Returning Rate</div>
+                        <div class="h4 mb-0 fw-bold">{{ returning_rate|round(1) }}%</div>
+                        <div class="small text-muted mt-2">{{ monthly_stats.returning_visitors }} returning visitors</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-redo fa-2x text-warning opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <!-- Daily Visitors Chart -->
+    <div class="col-xl-8 col-lg-7 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold">Daily Visitors (Last 30 Days)</h6>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="view-30-days">30 Days</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="view-90-days">90 Days</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="dailyVisitorsChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Visitors Chart -->
+    <div class="col-xl-4 col-lg-5 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold">Monthly Trend</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyVisitorsChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Second Charts Row -->
+<div class="row mb-4">
+    <!-- Yearly Visitors Chart -->
+    <div class="col-xl-6 col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold">Yearly Growth</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="yearlyVisitorsChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- New vs Returning Chart -->
+    <div class="col-xl-6 col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold">New vs. Returning Visitors</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="visitorTypeChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Popular Pages Table -->
+<div class="row mb-4">
+    <div class="col-xl-6 col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold">Most Popular Pages</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Page URL</th>
+                                <th class="text-center">Visits</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for page, visits in popular_pages %}
+                            <tr>
+                                <td>{{ page }}</td>
+                                <td class="text-center">{{ visits }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="2" class="text-center">No data available</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Referrers Table -->
+    <div class="col-xl-6 col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold">Top Referrers</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Referrer</th>
+                                <th class="text-center">Visitors</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for referrer, visitors in referrers %}
+                            <tr>
+                                <td>{{ referrer if referrer else 'Direct / None' }}</td>
+                                <td class="text-center">{{ visitors }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="2" class="text-center">No data available</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Daily Visitors Chart
+    const dailyCtx = document.getElementById('dailyVisitorsChart').getContext('2d');
+    const monthlyCtx = document.getElementById('monthlyVisitorsChart').getContext('2d');
+    const yearlyCtx = document.getElementById('yearlyVisitorsChart').getContext('2d');
+    const typeCtx = document.getElementById('visitorTypeChart').getContext('2d');
+    
+    // Set up the data
+    const dailyData = {
+        labels: {{ daily_dates|tojson }},
+        datasets: [
+            {
+                label: 'Unique Visitors',
+                data: {{ daily_visitors|tojson }},
+                borderColor: 'rgba(78, 115, 223, 1)',
+                backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                tension: 0.3,
+                fill: true
+            },
+            {
+                label: 'Page Views',
+                data: {{ daily_visits|tojson }},
+                borderColor: 'rgba(28, 200, 138, 1)',
+                backgroundColor: 'rgba(28, 200, 138, 0.1)',
+                tension: 0.3,
+                fill: true
+            }
+        ]
+    };
+    
+    // Monthly data
+    const monthlyData = {
+        labels: {{ monthly_dates|tojson }},
+        datasets: [{
+            label: 'Unique Visitors',
+            data: {{ monthly_visitors|tojson }},
+            borderColor: 'rgba(54, 185, 204, 1)',
+            backgroundColor: 'rgba(54, 185, 204, 0.1)',
+            tension: 0.3,
+            fill: true
+        }]
+    };
+    
+    // Yearly data
+    const yearlyData = {
+        labels: {{ yearly_dates|tojson }},
+        datasets: [{
+            label: 'Unique Visitors',
+            data: {{ yearly_visitors|tojson }},
+            backgroundColor: [
+                'rgba(78, 115, 223, 0.8)',
+                'rgba(28, 200, 138, 0.8)',
+                'rgba(246, 194, 62, 0.8)',
+                'rgba(231, 74, 59, 0.8)',
+                'rgba(54, 185, 204, 0.8)'
+            ],
+            borderWidth: 1
+        }]
+    };
+    
+    // New vs Returning data
+    const visitorTypeData = {
+        labels: ['New Visitors', 'Returning Visitors'],
+        datasets: [{
+            data: [{{ monthly_stats.new_visitors }}, {{ monthly_stats.returning_visitors }}],
+            backgroundColor: [
+                'rgba(28, 200, 138, 0.8)',
+                'rgba(54, 185, 204, 0.8)'
+            ],
+            borderWidth: 1
+        }]
+    };
+    
+    // Create daily visitors chart
+    const dailyChart = new Chart(dailyCtx, {
+        type: 'line',
+        data: dailyData,
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: "rgba(0, 0, 0, 0.05)"
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            }
+        }
+    });
+    
+    // Create monthly visitors chart
+    const monthlyChart = new Chart(monthlyCtx, {
+        type: 'line',
+        data: monthlyData,
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: "rgba(0, 0, 0, 0.05)"
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            }
+        }
+    });
+    
+    // Create yearly visitors chart
+    const yearlyChart = new Chart(yearlyCtx, {
+        type: 'bar',
+        data: yearlyData,
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: "rgba(0, 0, 0, 0.05)"
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+    
+    // Create visitor type chart
+    const typeChart = new Chart(typeCtx, {
+        type: 'doughnut',
+        data: visitorTypeData,
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            },
+            cutout: '70%'
+        }
+    });
+    
+    // Time period selector for daily chart
+    document.getElementById('view-30-days').addEventListener('click', function() {
+        dailyChart.data.labels = {{ daily_dates|tojson }};
+        dailyChart.data.datasets[0].data = {{ daily_visitors|tojson }};
+        dailyChart.data.datasets[1].data = {{ daily_visits|tojson }};
+        dailyChart.update();
+    });
+    
+    document.getElementById('view-90-days').addEventListener('click', function() {
+        // This would be handled by an AJAX call to get more data
+        // For now, we'll just show what we have
+        alert('This would fetch 90 days of data from the server.');
+    });
+});
+</script>
+{% endblock %}

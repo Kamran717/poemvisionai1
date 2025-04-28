@@ -654,6 +654,69 @@ def analytics():
         minutes_saved=minutes_saved,
         creation_data=creation_data
     )
+    
+# Visitor Statistics
+@admin_bp.route('/visitors')
+@admin_required
+@permission_required('view_analytics')
+def visitors():
+    """View visitor statistics and analytics."""
+    from utils.visitor_tracking import update_visitor_stats, get_page_popularity, get_referrer_stats
+    
+    # Update the visitor statistics
+    stats = update_visitor_stats()
+    
+    # Get daily, monthly, and yearly stats
+    daily_stats = stats['daily']
+    monthly_stats = stats['monthly']
+    yearly_stats = stats['yearly']
+    
+    # Calculate returning visitor rate
+    if monthly_stats.unique_visitors > 0:
+        returning_rate = (monthly_stats.returning_visitors / monthly_stats.unique_visitors) * 100
+    else:
+        returning_rate = 0
+    
+    # Get popular pages and referrers
+    popular_pages = get_page_popularity(10)
+    referrers = get_referrer_stats(10)
+    
+    # Get data for charts
+    from models import VisitorStats
+    
+    # Daily data (last 30 days)
+    daily_data = VisitorStats.get_daily_stats(30)
+    daily_dates = [stat.date.strftime('%b %d') for stat in daily_data]
+    daily_visitors = [stat.unique_visitors for stat in daily_data]
+    daily_visits = [stat.total_visits for stat in daily_data]
+    
+    # Monthly data (last 12 months)
+    monthly_data = VisitorStats.get_monthly_stats(12)
+    monthly_dates = [stat.date.strftime('%b %Y') for stat in monthly_data]
+    monthly_visitors = [stat.unique_visitors for stat in monthly_data]
+    
+    # Yearly data (last 5 years)
+    yearly_data = VisitorStats.get_yearly_stats(5)
+    yearly_dates = [stat.date.strftime('%Y') for stat in yearly_data]
+    yearly_visitors = [stat.unique_visitors for stat in yearly_data]
+    
+    return render_template(
+        'admin/visitors.html',
+        daily_stats=daily_stats,
+        monthly_stats=monthly_stats,
+        yearly_stats=yearly_stats,
+        returning_rate=returning_rate,
+        popular_pages=popular_pages,
+        referrers=referrers,
+        # Chart data
+        daily_dates=daily_dates,
+        daily_visitors=daily_visitors,
+        daily_visits=daily_visits,
+        monthly_dates=monthly_dates,
+        monthly_visitors=monthly_visitors,
+        yearly_dates=yearly_dates,
+        yearly_visitors=yearly_visitors
+    )
 
 # Admin User Management
 @admin_bp.route('/admins')

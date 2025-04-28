@@ -459,3 +459,176 @@ class AdminLog(db.Model):
     
     def __repr__(self):
         return f'<AdminLog {self.action} by {self.admin_id} at {self.timestamp}>'
+
+
+class SiteVisitor(db.Model):
+    """Model for tracking unique site visitors"""
+    id = db.Column(db.Integer, primary_key=True)
+    ip_address = db.Column(db.String(50), nullable=True)
+    user_agent = db.Column(db.String(255), nullable=True)
+    first_visit = db.Column(db.DateTime, default=datetime.utcnow)
+    last_visit = db.Column(db.DateTime, default=datetime.utcnow)
+    visit_count = db.Column(db.Integer, default=1)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    referrer = db.Column(db.String(255), nullable=True)
+    
+    # Add indexes for efficient querying
+    __table_args__ = (
+        db.Index('ix_site_visitor_ip_user_agent', 'ip_address', 'user_agent'),
+        db.Index('ix_site_visitor_first_visit', 'first_visit'),
+        db.Index('ix_site_visitor_last_visit', 'last_visit'),
+    )
+    
+    def __repr__(self):
+        return f'<SiteVisitor {self.id}>'
+
+
+class VisitorLog(db.Model):
+    """Model for tracking each visit to the site"""
+    id = db.Column(db.Integer, primary_key=True)
+    visitor_id = db.Column(db.Integer, db.ForeignKey('site_visitor.id'), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    page_visited = db.Column(db.String(255), nullable=False)
+    session_id = db.Column(db.String(64), nullable=True)
+    time_spent_seconds = db.Column(db.Integer, nullable=True)
+    
+    # Relationship
+    visitor = db.relationship('SiteVisitor', backref='visits', lazy=True)
+    
+    # Add indexes for efficient querying
+    __table_args__ = (
+        db.Index('ix_visitor_log_timestamp', 'timestamp'),
+        db.Index('ix_visitor_log_visitor_id', 'visitor_id'),
+        db.Index('ix_visitor_log_page_visited', 'page_visited'),
+    )
+    
+    def __repr__(self):
+        return f'<VisitorLog {self.id}>'
+        
+        
+class VisitorStats(db.Model):
+    """Model for aggregated visitor statistics by period"""
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date, nullable=False)
+    period = db.Column(db.String(10), nullable=False)  # 'day', 'month', 'year'
+    unique_visitors = db.Column(db.Integer, default=0)
+    total_visits = db.Column(db.Integer, default=0)
+    new_visitors = db.Column(db.Integer, default=0)
+    returning_visitors = db.Column(db.Integer, default=0)
+    average_duration = db.Column(db.Float, nullable=True)  # in seconds
+    
+    # Add indexes and unique constraint
+    __table_args__ = (
+        db.UniqueConstraint('date', 'period', name='uq_visitor_stats_date_period'),
+        db.Index('ix_visitor_stats_date', 'date'),
+        db.Index('ix_visitor_stats_period', 'period'),
+    )
+    
+    def __repr__(self):
+        return f'<VisitorStats {self.date} {self.period}>'
+    
+    @staticmethod
+    def get_daily_stats(days=30):
+        """Get visitor statistics for the last X days"""
+        cutoff_date = datetime.utcnow().date() - timedelta(days=days)
+        return VisitorStats.query.filter(
+            VisitorStats.period == 'day',
+            VisitorStats.date >= cutoff_date
+        ).order_by(VisitorStats.date.asc()).all()
+    
+    @staticmethod
+    def get_monthly_stats(months=12):
+        """Get visitor statistics for the last X months"""
+        today = datetime.utcnow().date()
+        cutoff_date = datetime(today.year, today.month, 1).date() - timedelta(days=30*months)
+        return VisitorStats.query.filter(
+            VisitorStats.period == 'month',
+            VisitorStats.date >= cutoff_date
+        ).order_by(VisitorStats.date.asc()).all()
+    
+    @staticmethod
+    def get_yearly_stats(years=5):
+        """Get visitor statistics for the last X years"""
+        today = datetime.utcnow().date()
+        cutoff_year = today.year - years
+        cutoff_date = datetime(cutoff_year, 1, 1).date()
+        return VisitorStats.query.filter(
+            VisitorStats.period == 'year',
+            VisitorStats.date >= cutoff_date
+        ).order_by(VisitorStats.date.asc()).all()
+        
+    @staticmethod
+    def generate_summary():
+        """Generate a summary of visitor statistics"""
+        daily = VisitorStats.get_daily_stats(30)
+        monthly = VisitorStats.get_monthly_stats(12)
+        yearly = VisitorStats.get_yearly_stats(5)
+        
+        # Process the data for charts
+        daily_dates = [stat.date.strftime('%Y-%m-%d') for stat in daily]
+        daily_visitors = [stat.unique_visitors for stat in daily]
+        daily_visits = [stat.total_visits for stat in daily]
+        
+        monthly_dates = [stat.date.strftime('%Y-%m') for stat in monthly]
+        monthly_visitors = [stat.unique_visitors for stat in monthly]
+        monthly_visits = [stat.total_visits for stat in monthly]
+        
+        yearly_dates = [stat.date.strftime('%Y') for stat in yearly]
+        yearly_visitors = [stat.unique_visitors for stat in yearly]
+        yearly_visits = [stat.total_visits for stat in yearly]
+        
+        # Calculate totals and averages
+        total_unique = sum(stat.unique_visitors for stat in daily[-7:]) if daily else 0  # Last 7 days
+        total_visits = sum(stat.total_visits for stat in daily[-7:]) if daily else 0  # Last 7 days
+        new_visitors = sum(stat.new_visitors for stat in daily[-7:]) if daily else 0  # Last 7 days
+        
+        # Monthly totals
+        if monthly:
+            last_month = monthly[-1]
+            last_month_unique = last_month.unique_visitors
+            last_month_visits = last_month.total_visits
+            last_month_new = last_month.new_visitors
+        else:
+            last_month_unique = last_month_visits = last_month_new = 0
+            
+        # Yearly totals
+        if yearly:
+            last_year = yearly[-1]
+            last_year_unique = last_year.unique_visitors
+            last_year_visits = last_year.total_visits
+            last_year_new = last_year.new_visitors
+        else:
+            last_year_unique = last_year_visits = last_year_new = 0
+        
+        return {
+            'daily': {
+                'dates': daily_dates,
+                'visitors': daily_visitors,
+                'visits': daily_visits,
+                'last_7_days': {
+                    'unique': total_unique,
+                    'visits': total_visits,
+                    'new': new_visitors
+                }
+            },
+            'monthly': {
+                'dates': monthly_dates,
+                'visitors': monthly_visitors,
+                'visits': monthly_visits,
+                'last_month': {
+                    'unique': last_month_unique,
+                    'visits': last_month_visits,
+                    'new': last_month_new
+                }
+            },
+            'yearly': {
+                'dates': yearly_dates,
+                'visitors': yearly_visitors,
+                'visits': yearly_visits,
+                'last_year': {
+                    'unique': last_year_unique,
+                    'visits': last_year_visits,
+                    'new': last_year_new
+                }
+            }
+        }
