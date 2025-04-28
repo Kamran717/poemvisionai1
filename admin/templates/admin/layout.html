@@ -55,10 +55,22 @@
                     </li>
                     {% endif %}
                     {% if current_admin and current_admin.has_permission('view_analytics') %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'admin.analytics' %}active{% endif %}" href="{{ url_for('admin.analytics') }}">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="analyticsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-chart-bar me-1"></i> Analytics
                         </a>
+                        <ul class="dropdown-menu" aria-labelledby="analyticsDropdown">
+                            <li>
+                                <a class="dropdown-item {% if request.endpoint == 'admin.analytics' %}active{% endif %}" href="{{ url_for('admin.analytics') }}">
+                                    <i class="fas fa-chart-pie me-1"></i> Poem Analytics
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {% if request.endpoint == 'admin.visitors' %}active{% endif %}" href="{{ url_for('admin.visitors') }}">
+                                    <i class="fas fa-chart-line me-1"></i> Visitor Stats
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                     {% endif %}
                     

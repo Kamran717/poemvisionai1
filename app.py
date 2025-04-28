@@ -5,7 +5,7 @@ import secrets
 from datetime import datetime, timedelta
 import jwt
 import time
-from flask import Flask, render_template, request, jsonify, session, make_response, redirect, url_for, flash, current_app
+from flask import Flask, render_template, request, jsonify, session, make_response, redirect, url_for, flash, current_app, g
 from flask_mail import Mail, Message
 import base64
 import uuid
@@ -23,12 +23,14 @@ from utils.image_analyzer import analyze_image
 from utils.poem_generator import generate_poem
 from utils.image_manipulator import create_framed_image
 from models import db, Creation, User, Membership, Transaction, ContactMessage, AdminUser, AdminRole, AdminLog
+from models import SiteVisitor, VisitorLog, VisitorStats
 from utils.membership import (create_default_plans, get_user_plan,
                               check_poem_type_access, check_frame_access,
                               process_payment, get_user_creations,
                               get_available_poem_types, get_available_frames,
                               check_poem_length_access,
                               get_available_poem_lengths)
+from utils.visitor_tracking import track_visitor, update_visitor_stats
 
 # Set up logging first so we can use it everywhere
 logging.basicConfig(level=logging.DEBUG)
@@ -125,6 +127,76 @@ try:
         logger.info("Database tables created successfully")
 except Exception as e:
     logger.error(f"Error creating database tables: {str(e)}", exc_info=True)
+
+# Set up visitor tracking
+@app.before_request
+def before_request():
+    # Skip static files, admin routes, and API routes
+    if not request.path.startswith('/static') and not request.path.startswith('/admin') and not request.path.startswith('/api'):
+        # Store request start time for calculating duration
+        g.start_time = time.time()
+        
+        # Track the visitor
+        user_id = session.get('user_id')
+        try:
+            visitor_id, is_new_visitor = track_visitor(user_id)
+            g.visitor_id = visitor_id
+            g.is_new_visitor = is_new_visitor
+        except Exception as e:
+            logger.error(f"Error tracking visitor: {str(e)}", exc_info=True)
+            # Continue processing the request even if tracking fails
+            g.visitor_id = None
+            g.is_new_visitor = False
+
+@app.after_request
+def after_request(response):
+    # Skip static files, admin routes, and API routes
+    if hasattr(g, 'start_time') and hasattr(g, 'visitor_id') and g.visitor_id:
+        try:
+            # Calculate time spent on the page
+            time_spent = int((time.time() - g.start_time) * 1000)  # in milliseconds
+            
+            # Update the visitor log with time spent
+            visitor_log = VisitorLog.query.filter_by(
+                visitor_id=g.visitor_id,
+                page_visited=request.path
+            ).order_by(VisitorLog.timestamp.desc()).first()
+            
+            if visitor_log:
+                visitor_log.time_spent_seconds = time_spent / 1000  # convert to seconds
+                db.session.commit()
+        except Exception as e:
+            logger.error(f"Error updating visitor time spent: {str(e)}", exc_info=True)
+    
+    return response
+
+# Schedule daily visitor stats update
+def update_daily_visitor_stats():
+    """Update visitor statistics daily at midnight"""
+    with app.app_context():
+        try:
+            logger.info("Updating daily visitor statistics")
+            stats = update_visitor_stats()
+            logger.info(f"Updated visitor stats: {stats}")
+        except Exception as e:
+            logger.error(f"Error updating visitor stats: {str(e)}", exc_info=True)
+
+# For development purposes, initialize with some data if tables are empty
+@app.cli.command("init-visitor-data")
+def init_visitor_data():
+    """Initialize visitor tracking data for development purposes"""
+    from utils.visitor_tracking import populate_demo_data
+    with app.app_context():
+        try:
+            # Check if we have any visitor stats
+            if VisitorStats.query.count() == 0:
+                logger.info("Initializing visitor tracking data")
+                populate_demo_data()
+                logger.info("Visitor tracking data initialized")
+            else:
+                logger.info("Visitor tracking data already exists, skipping initialization")
+        except Exception as e:
+            logger.error(f"Error initializing visitor data: {str(e)}", exc_info=True)
 
 
 # Routes
