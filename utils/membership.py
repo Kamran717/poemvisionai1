@@ -195,8 +195,8 @@ def get_available_poem_types(user_id):
     ALL_POEM_TYPES = [
         # Standard poems
         {
-            "id": "free verse",
-            "name": "Free Verse",
+            "id": "general verse",
+            "name": "General Verse",
             "free": True
         },
         {
