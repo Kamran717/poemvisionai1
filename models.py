@@ -65,6 +65,103 @@ class User(db.Model):
             'poem_counts': poem_counts,
             'formatted': f"{hours} hours and {minutes} minutes" if hours > 0 else f"{minutes} minutes"
         }
+        
+    def get_poem_preferences(self):
+        """Analyze user's poem type preferences and most downloaded poems."""
+        poem_types = {}
+        downloads = {
+            'total': 0,
+            'most_downloaded': None,
+            'most_viewed': None,
+            'recent': []
+        }
+        
+        if not self.creations:
+            return {'poem_types': {}, 'downloads': downloads}
+            
+        # Collect poem type stats and download information
+        for creation in self.creations:
+            # Track poem types
+            if creation.poem_type:
+                poem_types[creation.poem_type] = poem_types.get(creation.poem_type, 0) + 1
+                
+            # Track downloads
+            if creation.is_downloaded:
+                downloads['total'] += creation.download_count
+                
+            # Track the 5 most recent creations
+            if len(downloads['recent']) < 5:
+                downloads['recent'].append({
+                    'id': creation.id,
+                    'poem_type': creation.poem_type,
+                    'created_at': creation.created_at,
+                    'downloaded': creation.is_downloaded,
+                    'download_count': creation.download_count,
+                    'view_count': creation.view_count
+                })
+                
+        # Find most downloaded poem
+        most_downloaded = None
+        most_downloaded_count = 0
+        most_viewed = None
+        most_viewed_count = 0
+        
+        for creation in self.creations:
+            if creation.download_count > most_downloaded_count:
+                most_downloaded = creation
+                most_downloaded_count = creation.download_count
+                
+            if creation.view_count > most_viewed_count:
+                most_viewed = creation
+                most_viewed_count = creation.view_count
+                
+        if most_downloaded:
+            downloads['most_downloaded'] = {
+                'id': most_downloaded.id,
+                'poem_type': most_downloaded.poem_type,
+                'download_count': most_downloaded.download_count,
+                'created_at': most_downloaded.created_at
+            }
+            
+        if most_viewed:
+            downloads['most_viewed'] = {
+                'id': most_viewed.id,
+                'poem_type': most_viewed.poem_type,
+                'view_count': most_viewed.view_count,
+                'created_at': most_viewed.created_at
+            }
+            
+        # Sort poem types by popularity
+        sorted_poem_types = sorted(poem_types.items(), key=lambda x: x[1], reverse=True)
+        poem_types = {k: v for k, v in sorted_poem_types}
+        
+        return {
+            'poem_types': poem_types,
+            'downloads': downloads
+        }
+        
+    def get_session_stats(self):
+        """Get user's session statistics."""
+        if not hasattr(self, 'sessions') or not self.sessions:
+            return {
+                'total_sessions': 0,
+                'avg_duration_minutes': 0,
+                'total_duration_hours': 0,
+                'last_session': None
+            }
+            
+        total_sessions = len(self.sessions)
+        total_duration = sum(s.duration_seconds or 0 for s in self.sessions)
+        avg_duration = total_duration / total_sessions if total_sessions > 0 else 0
+        
+        last_session = max(self.sessions, key=lambda s: s.session_start) if self.sessions else None
+        
+        return {
+            'total_sessions': total_sessions,
+            'avg_duration_minutes': round(avg_duration / 60, 1),
+            'total_duration_hours': round(total_duration / 3600, 1),
+            'last_session': last_session
+        }
 
     def generate_password_reset_token(self, expires_in=3600):
         """Generate password reset token that expires in 1 hour by default"""
@@ -137,6 +234,30 @@ class Membership(db.Model):
         return f'<Membership {self.name}>'
 
 
+class UserSession(db.Model):
+    """Model for tracking user session information."""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    session_start = db.Column(db.DateTime, default=datetime.utcnow)
+    session_end = db.Column(db.DateTime, nullable=True)
+    duration_seconds = db.Column(db.Integer, nullable=True)
+    ip_address = db.Column(db.String(50), nullable=True)
+    user_agent = db.Column(db.String(255), nullable=True)
+    pages_viewed = db.Column(db.Integer, default=0)
+    
+    # Relationship with user
+    user = db.relationship('User', backref='sessions', lazy=True)
+    
+    def __repr__(self):
+        return f'<UserSession {self.id}>'
+    
+    def end_session(self):
+        """End the session and calculate duration."""
+        self.session_end = datetime.utcnow()
+        self.duration_seconds = int((self.session_end - self.session_start).total_seconds())
+        return self.duration_seconds
+
+
 class Creation(db.Model):
     """Model for storing user poem creations."""
     id = db.Column(db.Integer, primary_key=True)
@@ -172,11 +293,20 @@ class Creation(db.Model):
 
     # Store a unique share code for public sharing
     share_code = db.Column(db.String(50), unique=True, nullable=True)
+    
+    # Metrics tracking
+    is_downloaded = db.Column(db.Boolean, default=False)
+    download_count = db.Column(db.Integer, default=0)
+    view_count = db.Column(db.Integer, default=0)
+    last_viewed_at = db.Column(db.DateTime, nullable=True)
+    last_downloaded_at = db.Column(db.DateTime, nullable=True)
 
     __table_args__ = (
         db.Index('ix_creation_user_id', 'user_id'),
         db.Index('ix_creation_created_at', 'created_at'),
         db.Index('ix_creation_user_created', 'user_id', 'created_at'),
+        db.Index('ix_creation_poem_type', 'poem_type'),
+        db.Index('ix_creation_downloaded', 'is_downloaded'),
     )
 
     def __repr__(self):
@@ -191,6 +321,19 @@ class Creation(db.Model):
             self.share_code = code
             return code
         return self.share_code
+        
+    def increment_download_count(self):
+        """Increment the download count for this creation."""
+        self.download_count += 1
+        self.is_downloaded = True
+        self.last_downloaded_at = datetime.utcnow()
+        return self.download_count
+        
+    def increment_view_count(self):
+        """Increment the view count for this creation."""
+        self.view_count += 1
+        self.last_viewed_at = datetime.utcnow()
+        return self.view_count
 
 
 class ContactMessage(db.Model):
