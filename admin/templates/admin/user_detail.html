@@ -69,12 +69,27 @@
                     <div class="col-sm-8">{{ user.email }}</div>
                 </div>
                 <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Password Hash:</div>
+                    <div class="col-sm-8">
+                        <div class="input-group">
+                            <input type="password" class="form-control form-control-sm" value="{{ user.password_hash }}" id="passwordHash" readonly>
+                            <button class="btn btn-sm btn-outline-secondary toggle-password" type="button" data-target="passwordHash">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted">Hashed for security</small>
+                    </div>
+                </div>
+                <div class="row mb-3">
                     <div class="col-sm-4 font-weight-bold">Verified:</div>
                     <div class="col-sm-8">
                         {% if user.is_email_verified %}
                             <span class="badge bg-success">Yes</span>
                         {% else %}
                             <span class="badge bg-danger">No</span>
+                            <button class="btn btn-sm btn-outline-success ms-2" data-bs-toggle="modal" data-bs-target="#verifyEmailModal">
+                                Verify Email
+                            </button>
                         {% endif %}
                     </div>
                 </div>
@@ -119,6 +134,52 @@
                 <div class="row mb-3">
                     <div class="col-sm-4 font-weight-bold">Sub ID:</div>
                     <div class="col-sm-8">{{ user.subscription_id or 'None' }}</div>
+                </div>
+                <hr>
+                <h6 class="mb-3">Activity Statistics</h6>
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Last Activity:</div>
+                    <div class="col-sm-8">
+                        {% if session_stats.last_session %}
+                            {{ session_stats.last_session.session_start.strftime('%Y-%m-%d %H:%M') }}
+                        {% else %}
+                            No recorded sessions
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Total Sessions:</div>
+                    <div class="col-sm-8">{{ session_stats.total_sessions }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Avg. Duration:</div>
+                    <div class="col-sm-8">{{ session_stats.avg_duration_minutes }} minutes</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Total Time:</div>
+                    <div class="col-sm-8">{{ session_stats.total_duration_hours }} hours</div>
+                </div>
+            </div>
+            
+            <!-- Verify Email Modal -->
+            <div class="modal fade" id="verifyEmailModal" tabindex="-1" aria-labelledby="verifyEmailModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="verifyEmailModalLabel">Verify User Email</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to manually verify the email for user <strong>{{ user.username }}</strong>?</p>
+                            <p>This is typically done automatically when users click their verification link.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <form method="post" action="{{ url_for('admin.verify_user_email', user_id=user.id) }}">
+                                <button type="submit" class="btn btn-success">Verify Email</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -171,6 +232,64 @@
                     </div>
                 </div>
                 
+                <!-- Download Stats & Poem Preferences -->
+                <div class="row mb-4">
+                    <!-- Download Statistics -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card bg-light">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Download Statistics</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <h6>Total Downloads</h6>
+                                    <div class="display-6">{{ poem_preferences.downloads.total }}</div>
+                                </div>
+                                
+                                {% if poem_preferences.downloads.most_downloaded %}
+                                <div class="mb-3">
+                                    <h6>Most Downloaded Poem</h6>
+                                    <div class="small">
+                                        <strong>ID:</strong> {{ poem_preferences.downloads.most_downloaded.id }}<br>
+                                        <strong>Type:</strong> {{ poem_preferences.downloads.most_downloaded.poem_type }}<br>
+                                        <strong>Downloads:</strong> {{ poem_preferences.downloads.most_downloaded.download_count }}<br>
+                                        <strong>Created:</strong> {{ poem_preferences.downloads.most_downloaded.created_at.strftime('%Y-%m-%d') }}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if poem_preferences.downloads.most_viewed %}
+                                <div>
+                                    <h6>Most Viewed Poem</h6>
+                                    <div class="small">
+                                        <strong>ID:</strong> {{ poem_preferences.downloads.most_viewed.id }}<br>
+                                        <strong>Type:</strong> {{ poem_preferences.downloads.most_viewed.poem_type }}<br>
+                                        <strong>Views:</strong> {{ poem_preferences.downloads.most_viewed.view_count }}<br>
+                                        <strong>Created:</strong> {{ poem_preferences.downloads.most_viewed.created_at.strftime('%Y-%m-%d') }}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Poem Type Preferences -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card bg-light">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Poem Type Preferences</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if poem_preferences.poem_types %}
+                                    <canvas id="poemTypesChart" height="200"></canvas>
+                                {% else %}
+                                    <div class="alert alert-info">No poem type data available</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Activity Chart -->
                 <div class="mb-4">
                     <h5>User Activity</h5>
@@ -205,6 +324,8 @@
                                     <th>ID</th>
                                     <th>Type</th>
                                     <th>Length</th>
+                                    <th>Downloads</th>
+                                    <th>Views</th>
                                     <th>Time Saved</th>
                                     <th>Created</th>
                                     <th>Actions</th>
@@ -216,6 +337,22 @@
                                     <td>{{ creation.id }}</td>
                                     <td>{{ creation.poem_type }}</td>
                                     <td>{{ creation.poem_length }}</td>
+                                    <td>
+                                        {% if creation.is_downloaded %}
+                                            <span class="badge bg-success">{{ creation.download_count }}</span>
+                                            {% if creation.last_downloaded_at %}
+                                                <small class="d-block text-muted">{{ creation.last_downloaded_at.strftime('%Y-%m-%d') }}</small>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-secondary">0</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ creation.view_count }}</span>
+                                        {% if creation.last_viewed_at %}
+                                            <small class="d-block text-muted">{{ creation.last_viewed_at.strftime('%Y-%m-%d') }}</small>
+                                        {% endif %}
+                                    </td>
                                     <td>{{ creation.time_saved_minutes }} min</td>
                                     <td>{{ creation.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                                     <td>
@@ -289,6 +426,20 @@
 
 {% block scripts %}
 <script>
+    // Toggle password visibility
+    document.querySelectorAll('.toggle-password').forEach(button => {
+        button.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const input = document.getElementById(targetId);
+            const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+            input.setAttribute('type', type);
+            
+            const icon = this.querySelector('i');
+            icon.classList.toggle('fa-eye');
+            icon.classList.toggle('fa-eye-slash');
+        });
+    });
+
     // Activity Chart
     const activityCtx = document.getElementById('userActivityChart').getContext('2d');
     
@@ -328,5 +479,66 @@
             }
         }
     });
+    
+    // Poem Types Chart
+    const poemTypesChartEl = document.getElementById('poemTypesChart');
+    if (poemTypesChartEl) {
+        const poemTypesCtx = poemTypesChartEl.getContext('2d');
+        
+        // Get poem type data from template
+        const poemTypesData = {
+            labels: [
+                {% for poem_type, count in poem_preferences.poem_types.items() %}
+                    '{{ poem_type }}',
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Poems Created',
+                data: [
+                    {% for poem_type, count in poem_preferences.poem_types.items() %}
+                        {{ count }},
+                    {% endfor %}
+                ],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)',
+                    'rgba(255, 159, 64, 0.7)',
+                    'rgba(199, 199, 199, 0.7)',
+                    'rgba(83, 102, 255, 0.7)',
+                    'rgba(40, 159, 64, 0.7)',
+                    'rgba(210, 199, 199, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(159, 159, 159, 1)',
+                    'rgba(83, 102, 255, 1)',
+                    'rgba(40, 159, 64, 1)',
+                    'rgba(210, 199, 199, 1)'
+                ],
+                borderWidth: 1
+            }]
+        };
+        
+        new Chart(poemTypesCtx, {
+            type: 'pie',
+            data: poemTypesData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
+                }
+            }
+        });
+    }
 </script>
 {% endblock %}

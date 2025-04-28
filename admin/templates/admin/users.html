@@ -72,7 +72,9 @@
                         <th>Username</th>
                         <th>Email</th>
                         <th>Membership</th>
+                        <th>Verified</th>
                         <th>Poems</th>
+                        <th>Downloads</th>
                         <th>Registered</th>
                         <th>Actions</th>
                     </tr>
@@ -86,11 +88,30 @@
                         <td>
                             {% if user.is_premium %}
                             <span class="badge bg-success">Premium</span>
+                            {% if user.is_cancelled %}
+                            <span class="badge bg-warning ms-1">Cancelling</span>
+                            {% endif %}
                             {% else %}
                             <span class="badge bg-secondary">Free</span>
                             {% endif %}
                         </td>
+                        <td>
+                            {% if user.is_email_verified %}
+                            <span class="badge bg-success">Yes</span>
+                            {% else %}
+                            <span class="badge bg-danger">No</span>
+                            {% endif %}
+                        </td>
                         <td>{{ user.creations|length }}</td>
+                        <td>
+                            {% set download_count = namespace(total=0) %}
+                            {% for creation in user.creations %}
+                                {% if creation.is_downloaded %}
+                                    {% set download_count.total = download_count.total + creation.download_count %}
+                                {% endif %}
+                            {% endfor %}
+                            {{ download_count.total }}
+                        </td>
                         <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
                         <td>
                             <div class="btn-group">

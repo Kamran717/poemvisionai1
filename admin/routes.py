@@ -233,12 +233,20 @@ def user_detail(user_id):
     # Get time saved stats
     time_saved = user.get_time_saved_stats()
     
+    # Get poem preferences and download stats
+    poem_preferences = user.get_poem_preferences()
+    
+    # Get session statistics
+    session_stats = user.get_session_stats()
+    
     return render_template(
         'admin/user_detail.html',
         user=user,
         creations=creations,
         transactions=transactions,
-        time_saved=time_saved
+        time_saved=time_saved,
+        poem_preferences=poem_preferences,
+        session_stats=session_stats
     )
 
 @admin_bp.route('/users/<int:user_id>/toggle-premium', methods=['POST'])
@@ -270,6 +278,28 @@ def toggle_premium(user_id):
     )
     
     flash(f"Premium status for {user.username} has been {'activated' if user.is_premium else 'deactivated'}.", 'success')
+    return redirect(url_for('admin.user_detail', user_id=user.id))
+
+@admin_bp.route('/users/<int:user_id>/verify-email', methods=['POST'])
+@admin_required
+@permission_required('edit_users')
+def verify_user_email(user_id):
+    user = User.query.get_or_404(user_id)
+    
+    if user.is_email_verified:
+        flash(f"User {user.username}'s email is already verified.", 'info')
+    else:
+        user.verify_email()
+        db.session.commit()
+        
+        # Log the action
+        log_admin_action('verify_email', 'user', user.id, {
+            'email': user.email,
+            'username': user.username
+        })
+        
+        flash(f"User {user.username}'s email has been manually verified.", 'success')
+    
     return redirect(url_for('admin.user_detail', user_id=user.id))
 
 @admin_bp.route('/users/<int:user_id>/delete', methods=['POST'])
