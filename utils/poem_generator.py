@@ -958,6 +958,25 @@ def _apply_poem_template(key_elements, poem_type, custom_terms='', poem_length="
 
                 # Newborn poem ending
                 "newborn": f"\nWelcoming {', '.join(new_terms)} with joy and love,\nOn this special blessed day.",
+                
+                # Birthday poem ending
+                "birthday": f"\nHappy Birthday, {', '.join(new_terms) if new_terms else 'dear friend'}!",
+                
+                # Anniversary poem ending
+                "anniversary": f"\nHappy Anniversary, {', '.join(new_terms) if new_terms else 'dear ones'}!",
+                
+                # Holiday poem endings
+                "holiday": f"\nHappy Holidays to {', '.join(new_terms) if new_terms else 'you and yours'}!",
+                "christmas": f"\nMerry Christmas to {', '.join(new_terms) if new_terms else 'you and yours'}!",
+                "new year": f"\nHappy New Year to {', '.join(new_terms) if new_terms else 'you and yours'}!", 
+                "valentine": f"\nHappy Valentine's Day to {', '.join(new_terms) if new_terms else 'my love'}!",
+                "thanksgiving": f"\nHappy Thanksgiving to {', '.join(new_terms) if new_terms else 'you and yours'}!",
+                "halloween": f"\nHappy Halloween to {', '.join(new_terms) if new_terms else 'you'}!",
+                
+                # Congratulatory poem endings
+                "graduation": f"\nCongratulations on your graduation, {', '.join(new_terms) if new_terms else 'graduate'}!",
+                "retirement": f"\nHappy Retirement, {', '.join(new_terms) if new_terms else 'dear friend'}!",
+                "congratulations": f"\nCongratulations, {', '.join(new_terms) if new_terms else 'well done'}!",
 
                 # Fun format endings
                 "twinkle": f"\nTwinkle twinkle {new_terms[0] if new_terms else 'star'},\nHow I wonder what you are.",
@@ -1166,9 +1185,12 @@ Think deeply about the essential qualities that make {poem_type} poetry powerful
         "inspirational": "Compose an uplifting masterpiece in the tradition of Maya Angelou, Rumi, and Walt Whitman that stirs the soul and ignites inner strength. Weave powerful metaphors of resilience, transformation, and the triumph of the human spirit that will truly motivate and inspire.",
         "angry": "Forge an intense, passionate work reminiscent of Sylvia Plath and Dylan Thomas that expresses powerful emotions with raw honesty. Create controlled chaos with deliberate rhythms, scorching metaphors, and precisely chosen words that convey genuine rage, frustration, and defiance.",
         "extreme": "Craft a revolutionary poem that shatters conventions like the works of Allen Ginsberg and Vladimir Mayakovsky. Use ALL CAPS for emphasis, experimental typography, violent imagery, and shocking juxtapositions. Break traditional forms, syntax, and expectations with explosive language that provokes and challenges.",
-        "holiday": "Create an enchanting seasonal masterpiece that captures the festive spirit, traditions, and emotional resonance of holidays. Blend nostalgia, celebration, and the unique atmosphere of special occasions with rich, sensory details.",
-        "birthday": "Compose a memorable celebration of life's journey with themes of growth, reflection, and joyful milestones. Balance the personal significance of aging with universal insights about the passage of time and the gifts each year brings.",
-        "anniversary": "Craft an exquisite tribute to enduring love and commitment in the tradition of Elizabeth Barrett Browning and Pablo Neruda. Explore the depth of shared experiences, the beauty of lasting connection, and the precious nature of time spent together.",
+        "holiday": "Create an enchanting seasonal masterpiece that captures the festive spirit, traditions, and emotional resonance of holidays. Blend nostalgia, celebration, and the unique atmosphere of special occasions with rich, sensory details. End the poem with 'Happy Holidays!' to create an authentic holiday message.",
+        "birthday": "Compose a memorable celebration of life's journey with themes of growth, reflection, and joyful milestones. Balance the personal significance of aging with universal insights about the passage of time and the gifts each year brings. The poem should end with 'Happy Birthday!' to create an authentic birthday message.",
+        "anniversary": "Craft an exquisite tribute to enduring love and commitment in the tradition of Elizabeth Barrett Browning and Pablo Neruda. Explore the depth of shared experiences, the beauty of lasting connection, and the precious nature of time spent together. The poem should end with 'Happy Anniversary!' to create an authentic anniversary message.",
+        "graduation": "Create a celebratory poem that honors academic achievement, growth, and the exciting journey ahead. Begin with 'Congratulations' to acknowledge this important milestone and balance reflections on past accomplishments with hopeful visions of future possibilities.",
+        "retirement": "Craft a thoughtful poem that honors a career of dedication and service while celebrating the beginning of a new chapter in life. Begin with 'Congratulations' or 'Happy Retirement' to acknowledge this significant transition.",
+        "congratulations": "Compose an enthusiastic celebratory poem that acknowledges accomplishment, perseverance, and success. Begin with 'Congratulations' and maintain a joyful, affirming tone throughout, celebrating both the achievement and the person who achieved it.",
         "nature": "Create a sensory-rich nature poem in the tradition of Mary Oliver, William Wordsworth, and Robert Frost that reveals the profound beauty, wisdom, and tranquility found in the natural world. Use precise observations and reverent language to elevate the ordinary to the sublime.",
         "friendship": "Compose a heartfelt celebration of profound human connection that explores the depth, loyalty, and transformative power of true friendship. Weave together moments of joy, support through darkness, and the unique understanding that exists between kindred spirits.",
         "general verse": "Craft an organic, flowing masterpiece in the tradition of Walt Whitman, T.S. Eliot, and Pablo Neruda that breaks free from conventional rhyme schemes and meters. Allow rhythm to emerge naturally from emotional intensity and the inherent music of carefully chosen words.",
