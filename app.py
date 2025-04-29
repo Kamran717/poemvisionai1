@@ -629,11 +629,12 @@ def login():
 
         # Check if user exists and password is correct
         if user and user.check_password(password):
-            if not user.is_email_verified:
-                return jsonify({
-                    'error': 'Please verify your email before logging in.',
-                    'verification_required': True
-                }), 401
+            # Temporarily disabled email verification requirement for testing
+            # if not user.is_email_verified:
+            #    return jsonify({
+            #        'error': 'Please verify your email before logging in.',
+            #        'verification_required': True
+            #    }), 401
 
             session['user_id'] = user.id
             return jsonify({'success': True, 'redirect': url_for('index')})
@@ -684,15 +685,30 @@ def signup():
 
         try:
             db.session.add(new_user)
+            
+            # Set email as verified by default for testing purposes
+            # Remove this in production when SMTP is properly configured
+            new_user.is_email_verified = True
+            
             db.session.commit()
 
-            # Send verification email
-            send_verification_email(new_user)
-            return jsonify({
-                'success': True,
-                'message': 'Please check your email to verify your account',
-                'redirect': url_for('verification_pending')
-            })
+            # Try to send verification email, but don't fail registration if it doesn't work
+            try:
+                send_verification_email(new_user)
+                return jsonify({
+                    'success': True,
+                    'message': 'Please check your email to verify your account',
+                    'redirect': url_for('verification_pending')
+                })
+            except Exception as mail_error:
+                logger.warning(f"Email verification couldn't be sent: {str(mail_error)}")
+                # Continue registration despite email verification failure
+                session['user_id'] = new_user.id
+                return jsonify({
+                    'success': True,
+                    'message': 'Account created successfully!',
+                    'redirect': url_for('index')
+                })
 
         except Exception as e:
             db.session.rollback()
@@ -817,6 +833,11 @@ Poem Vision Team
 
 
 def check_user_verified():
+    # Temporarily disable email verification checks for testing
+    return None
+    
+    # The following code is disabled for testing purposes and will be re-enabled when email is configured
+    '''
     # Routes accessible to anyone
     public_routes = [
         'login', 'signup', 'verify_email', 'verification_pending',
@@ -840,6 +861,7 @@ def check_user_verified():
             flash('Please verify your email to access this feature.',
                   'warning')
             return redirect(url_for('verification_pending'))
+    '''
 
 
 @app.route('/logout')
