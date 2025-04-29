@@ -960,35 +960,39 @@ def _apply_poem_template(key_elements, poem_type, custom_terms='', poem_length="
                 "newborn": f"\nWelcoming {', '.join(new_terms)} with joy and love,\nOn this special blessed day.",
                 
                 # Birthday poem ending
-                "birthday": f"\nHappy Birthday, {', '.join(new_terms) if new_terms else 'dear friend'}!",
+                "birthday": f"\n\nHappy Birthday, {', '.join(new_terms) if new_terms else 'dear friend'}!",
                 
                 # Anniversary poem ending
-                "anniversary": f"\nHappy Anniversary, {', '.join(new_terms) if new_terms else 'dear ones'}!",
+                "anniversary": f"\n\nHappy Anniversary, {', '.join(new_terms) if new_terms else 'dear ones'}!",
                 
                 # Holiday poem endings
-                "holiday": f"\nHappy Holidays to {', '.join(new_terms) if new_terms else 'you and yours'}!",
-                "christmas": f"\nMerry Christmas to {', '.join(new_terms) if new_terms else 'you and yours'}!",
-                "new year": f"\nHappy New Year to {', '.join(new_terms) if new_terms else 'you and yours'}!", 
-                "valentine": f"\nHappy Valentine's Day to {', '.join(new_terms) if new_terms else 'my love'}!",
-                "thanksgiving": f"\nHappy Thanksgiving to {', '.join(new_terms) if new_terms else 'you and yours'}!",
-                "halloween": f"\nHappy Halloween to {', '.join(new_terms) if new_terms else 'you'}!",
+                "holiday": f"\n\nHappy Holidays to {', '.join(new_terms) if new_terms else 'you and yours'}!",
+                "christmas": f"\n\nMerry Christmas to {', '.join(new_terms) if new_terms else 'you and yours'}!",
+                "new year": f"\n\nHappy New Year to {', '.join(new_terms) if new_terms else 'you and yours'}!", 
+                "valentine": f"\n\nHappy Valentine's Day to {', '.join(new_terms) if new_terms else 'my love'}!",
+                "thanksgiving": f"\n\nHappy Thanksgiving to {', '.join(new_terms) if new_terms else 'you and yours'}!",
+                "halloween": f"\n\nHappy Halloween to {', '.join(new_terms) if new_terms else 'you'}!",
                 
                 # Congratulatory poem endings
-                "graduation": f"\nCongratulations on your graduation, {', '.join(new_terms) if new_terms else 'graduate'}!",
-                "retirement": f"\nHappy Retirement, {', '.join(new_terms) if new_terms else 'dear friend'}!",
-                "congratulations": f"\nCongratulations, {', '.join(new_terms) if new_terms else 'well done'}!",
+                "graduation": f"\n\nCongratulations on your graduation, {', '.join(new_terms) if new_terms else 'graduate'}!",
+                "retirement": f"\n\nHappy Retirement, {', '.join(new_terms) if new_terms else 'dear friend'}!",
+                "congratulations": f"\n\nCongratulations, {', '.join(new_terms) if new_terms else 'well done'}!",
 
                 # Fun format endings
-                "twinkle": f"\nTwinkle twinkle {new_terms[0] if new_terms else 'star'},\nHow I wonder what you are.",
-                "roses": f"\nRoses are red, violets are blue,\n{new_terms[0] if new_terms else 'You'} are special through and through.",
+                "twinkle": f"\n\nTwinkle twinkle {new_terms[0] if new_terms else 'star'},\nHow I wonder what you are.",
+                "roses": f"\n\nRoses are red, violets are blue,\n{new_terms[0] if new_terms else 'You'} are special through and through.",
                 "haiku": "",  
-                "limerick": f"\nWith {new_terms[0] if new_terms else 'you'} it's nothing but fun!",
-                "sonnet": f"\nMy thoughts turn to {new_terms[0] if new_terms else 'thee'},\nForever in my heart to be.",
-                "nursery": f"\nAnd {new_terms[0] if new_terms else 'you'} will always play,\nIn our hearts every day."
+                "limerick": f"\n\nWith {new_terms[0] if new_terms else 'you'} it's nothing but fun!",
+                "sonnet": f"\n\nMy thoughts turn to {new_terms[0] if new_terms else 'thee'},\nForever in my heart to be.",
+                "nursery": f"\n\nAnd {new_terms[0] if new_terms else 'you'} will always play,\nIn our hearts every day."
             }
 
             # Use the appropriate ending or a default one
             ending = endings.get(poem_type.lower(), f"\n\nDedicated to {', '.join(new_terms)}")
+            
+            # Ensure the newborn ending also has an extra line break
+            if poem_type.lower() == "newborn":
+                ending = f"\n\nWelcoming {', '.join(new_terms) if new_terms else 'little one'} with joy and love,\nOn this special blessed day."
 
             # Don't add ending to haiku or other specific formats that would break their structure
             if poem_type.lower() not in ["haiku", "knock-knock"]:
