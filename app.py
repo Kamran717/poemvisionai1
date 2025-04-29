@@ -13,7 +13,8 @@ import json
 import string
 import random
 import re
-import stripe
+import stripe, stripe.error
+from typing import Union, Tuple
 from stripe.error import StripeError
 import smtplib
 from email.mime.multipart import MIMEMultipart
