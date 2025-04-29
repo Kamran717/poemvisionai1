@@ -1121,12 +1121,18 @@ def upgrade_membership():
             if not payment_method_id:
                 return jsonify({'error': 'Payment method not provided'}), 400
 
+            # Get billing details from request
+            billing_details = data.get('billing_details', {})
+            billing_name = billing_details.get('name', user.username)
+            billing_address = billing_details.get('address', {})
+            
             # Create a Stripe customer if not exists
             if not user.stripe_customer_id:
                 customer = stripe.Customer.create(
                     email=user.email,
-                    name=user.username,
+                    name=billing_name,
                     payment_method=payment_method_id,
+                    address=billing_address,
                     invoice_settings={
                         'default_payment_method': payment_method_id
                     })
@@ -1138,12 +1144,14 @@ def upgrade_membership():
                     payment_method_id,
                     customer=user.stripe_customer_id,
                 )
-                # Set as default payment method
-                stripe.Customer.modify(user.stripe_customer_id,
-                                       invoice_settings={
-                                           'default_payment_method':
-                                           payment_method_id
-                                       })
+                # Update customer details with new billing information
+                stripe.Customer.modify(
+                    user.stripe_customer_id,
+                    name=billing_name,
+                    address=billing_address,
+                    invoice_settings={
+                        'default_payment_method': payment_method_id
+                    })
 
             # Create a subscription with expanded invoice and payment intent
             subscription = stripe.Subscription.create(

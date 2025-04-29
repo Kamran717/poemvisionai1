@@ -35,7 +35,66 @@
                                     <span id="payment-message-text"></span>
                                 </div>
 
-                                <div id="card-element" class="form-control mb-3 p-2" style="height: 40px;"></div>
+                                <!-- Billing Information Section -->
+                                <div class="mb-3">
+                                    <h5>Billing Information</h5>
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <label for="full-name" class="form-label">Full Name (as it appears on card)</label>
+                                            <input type="text" class="form-control" id="full-name" required>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <label for="address-line1" class="form-label">Address Line 1</label>
+                                            <input type="text" class="form-control" id="address-line1" required>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <label for="address-line2" class="form-label">Address Line 2 (optional)</label>
+                                            <input type="text" class="form-control" id="address-line2">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="city" class="form-label">City</label>
+                                            <input type="text" class="form-control" id="city" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="state" class="form-label">State/Province</label>
+                                            <input type="text" class="form-control" id="state" required>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="postal-code" class="form-label">Postal Code</label>
+                                            <input type="text" class="form-control" id="postal-code" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="country" class="form-label">Country</label>
+                                            <select class="form-select" id="country" required>
+                                                <option value="">Select Country</option>
+                                                <option value="US" selected>United States</option>
+                                                <option value="CA">Canada</option>
+                                                <option value="GB">United Kingdom</option>
+                                                <option value="AU">Australia</option>
+                                                <option value="FR">France</option>
+                                                <option value="DE">Germany</option>
+                                                <option value="JP">Japan</option>
+                                                <!-- Add more countries as needed -->
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Card Element Section -->
+                                <div class="mb-3">
+                                    <h5>Payment Information</h5>
+                                    <label for="card-element" class="form-label">Credit or Debit Card</label>
+                                    <div id="card-element" class="form-control mb-2 p-2" style="height: 40px;"></div>
+                                    <div id="card-errors" class="invalid-feedback"></div>
+                                </div>
                                 
                                 <div class="alert alert-info mb-3">
                                     <i class="fas fa-info-circle me-2"></i>
@@ -159,13 +218,38 @@ document.addEventListener('DOMContentLoaded', function() {
         // Reset message
         paymentMessage.classList.add('d-none');
 
-        // Create payment method
+        // Get billing information
+        const fullName = document.getElementById('full-name').value;
+        const addressLine1 = document.getElementById('address-line1').value;
+        const addressLine2 = document.getElementById('address-line2').value;
+        const city = document.getElementById('city').value;
+        const state = document.getElementById('state').value;
+        const postalCode = document.getElementById('postal-code').value;
+        const country = document.getElementById('country').value;
+
+        // Validate required billing fields
+        if (!fullName || !addressLine1 || !city || !state || !postalCode || !country) {
+            showMessage('Please fill out all required billing information fields.');
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-lock me-2"></i>Subscribe Now';
+            return;
+        }
+
+        // Create payment method with complete billing details
         const { paymentMethod, error } = await stripe.createPaymentMethod({
             type: 'card',
             card: cardElement,
             billing_details: {
-                name: '{{ user.username }}',
-                email: '{{ user.email }}'
+                name: fullName,
+                email: '{{ user.email }}',
+                address: {
+                    line1: addressLine1,
+                    line2: addressLine2 || undefined,
+                    city: city,
+                    state: state,
+                    postal_code: postalCode,
+                    country: country
+                }
             }
         });
 
@@ -176,7 +260,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Send the payment method to your server
+        // Send the payment method and billing information to your server
         const response = await fetch('/upgrade', {
             method: 'POST',
             headers: {
@@ -184,7 +268,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({
-                payment_method_id: paymentMethod.id
+                payment_method_id: paymentMethod.id,
+                billing_details: {
+                    name: fullName,
+                    address: {
+                        line1: addressLine1,
+                        line2: addressLine2 || '',
+                        city: city,
+                        state: state,
+                        postal_code: postalCode,
+                        country: country
+                    }
+                }
             })
         });
 
