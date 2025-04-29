@@ -1,0 +1,192 @@
+@app.route('/analyze-image', methods=['POST'])
+def analyze_image_route() -> Union[Response, Tuple[Response, int]]:
+    """Analyze the uploaded image using Google Cloud Vision AI."""
+    try:
+        # Log request content type to help debug
+        logger.info(f"Request content type: {request.content_type}")
+
+        # Image can be in form data or direct JSON post with base64
+        image_file = None
+        image_data = None
+        file_size = 0
+
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            # Handle form uploads
+            if 'image' not in request.files:
+                logger.error("No image file in multipart request")
+                return jsonify(
+                    {'error': 'No image uploaded. Please try again.'}), 400
+
+            image_file = request.files['image']
+
+            if image_file.filename == '':
+                logger.error("Empty filename in uploaded file")
+                return jsonify(
+                    {'error': 'No image selected. Please try again.'}), 400
+
+            # Log received file type
+            logger.info(f"Received image type: {image_file.content_type}")
+
+            # Check file size - limit to 5MB
+            image_file.seek(0, os.SEEK_END)
+            file_size = image_file.tell()
+            logger.info(f"Upload file size: {file_size/1024/1024:.2f}MB")
+
+            # Reset file pointer for processing
+            image_file.seek(0)
+
+            # Read image data
+            image_data = base64.b64encode(image_file.read()).decode('utf-8')
+
+        elif request.content_type and 'application/json' in request.content_type:
+            # Handle direct JSON posts with base64 data
+            try:
+                json_data = request.get_json()
+
+                if not json_data or 'image' not in json_data:
+                    logger.error("No image data in JSON request")
+                    return jsonify(
+                        {'error':
+                         'No image data provided. Please try again.'}), 400
+
+                # Get the base64 image string, removing data URL prefix if present
+                base64_image = json_data['image']
+                if ',' in base64_image:
+                    base64_image = base64_image.split(',')[1]
+
+                # Check size of base64 data
+                estimated_size = len(base64_image) * 3 / 4  # Rough estimation
+                file_size = estimated_size
+                logger.info(
+                    f"Estimated upload size from base64: {estimated_size/1024/1024:.2f}MB"
+                )
+
+                if estimated_size > 5 * 1024 * 1024:  # 5MB limit
+                    return jsonify({
+                        'error':
+                        'Image size exceeds the 5MB limit. Please choose a smaller image.'
+                    }), 400
+
+                # Store the base64 data
+                image_data = base64_image
+
+                # Create a file-like object for analysis
+                import io
+                image_bytes = base64.b64decode(base64_image)
+                image_file = io.BytesIO(image_bytes)
+                # Add a placeholder filename attribute for logging
+                image_file.filename = "mobile_upload.jpg"
+
+            except Exception as e:
+                logger.error(f"Error processing JSON image data: {str(e)}",
+                             exc_info=True)
+                return jsonify(
+                    {'error': 'Invalid image data. Please try again.'}), 400
+        else:
+            logger.error(f"Unsupported content type: {request.content_type}")
+            return jsonify(
+                {'error': 'Unsupported upload method. Please try again.'}), 400
+
+        # Check file size - limit to 5MB (final check)
+        if file_size > 5 * 1024 * 1024:  # 5MB limit
+            return jsonify({
+                'error':
+                'Image size exceeds the 5MB limit. Please choose a smaller image.'
+            }), 400
+
+        # Generate a shorter unique ID for this analysis
+        analysis_id = str(uuid.uuid4()).split('-')[0]
+
+        # Reset file pointer and read image data
+        image_file.seek(0)
+
+        # Some mobile browsers may send strange content types
+        # Store original data regardless
+        image_data = base64.b64encode(image_file.read()).decode('utf-8')
+
+        # Analyze the image using Google Cloud Vision AI
+        image_file.seek(0)
+        logger.info(
+            f"Analyzing image: {image_file.filename} ({file_size/1024:.1f} KB)"
+        )
+
+        try:
+            # Get raw analysis results from Google Vision API
+            analysis_results = analyze_image(image_file)
+
+            # Check if we got valid analysis results
+            if not analysis_results or '_error' in analysis_results:
+                error_msg = analysis_results.get(
+                    '_error', 'Unknown error during image analysis')
+                logger.error(f"Image analysis failed: {error_msg}")
+                return jsonify(
+                    {'error': f'Error analyzing image: {error_msg}'}), 500
+
+            # Clean up and deduplicate the analysis results to avoid redundant terms
+            analysis_results = deduplicate_elements(analysis_results)
+
+        except Exception as analysis_error:
+            logger.error(
+                f"Exception during image analysis: {str(analysis_error)}",
+                exc_info=True)
+            return jsonify({
+                'error':
+                'Error analyzing image. Please try again with a different image.'
+            }), 500
+
+        # Create a temporary creation in the database with retry mechanism
+        max_retries = 3
+        retry_count = 0
+
+        while retry_count < max_retries:
+            try:
+                # Create a new session for each attempt to avoid stale connections
+                db.session.close()
+
+                # Check if user is logged in to assign creation to their account
+                user_id = session.get('user_id')
+
+                temp_creation = Creation()
+                temp_creation.image_data = image_data
+                temp_creation.analysis_results = analysis_results
+                temp_creation.share_code = f"temp{analysis_id}"
+                temp_creation.user_id = user_id
+                db.session.add(temp_creation)
+                db.session.commit()
+
+                # Store just the ID in the session
+                session[f'temp_creation_id_{analysis_id}'] = temp_creation.id
+
+                return jsonify({
+                    'success': True,
+                    'analysisId': analysis_id,
+                    'results': analysis_results
+                })
+
+            except Exception as db_error:
+                retry_count += 1
+                logger.warning(
+                    f"Database error (attempt {retry_count}/{max_retries}): {str(db_error)}"
+                )
+
+                # Roll back the failed transaction
+                db.session.rollback()
+
+                if retry_count >= max_retries:
+                    logger.error(
+                        f"Database error after {max_retries} attempts: {str(db_error)}",
+                        exc_info=True)
+                    return jsonify({
+                        'error':
+                        'Error saving analysis results. Please try again with a smaller image.'
+                    }), 500
+
+                # Wait briefly before retrying (exponential backoff)
+                import time
+                time.sleep(0.5 * retry_count)
+
+    except Exception as e:
+        logger.error(f"Unexpected error analyzing image: {str(e)}",
+                     exc_info=True)
+        return jsonify(
+            {'error': 'An unexpected error occurred. Please try again.'}), 500

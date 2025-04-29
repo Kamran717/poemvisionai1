@@ -5,7 +5,7 @@ import secrets
 from datetime import datetime, timedelta
 import jwt
 import time
-from flask import Flask, render_template, request, jsonify, session, make_response, redirect, url_for, flash, current_app, g
+from flask import Flask, render_template, request, jsonify, session, make_response, redirect, url_for, flash, current_app, g, Response
 from flask_mail import Mail, Message
 import base64
 import uuid
@@ -13,7 +13,7 @@ import json
 import string
 import random
 import re
-import stripe, stripe.error
+import stripe
 from typing import Union, Tuple
 from stripe.error import StripeError
 import smtplib
@@ -212,7 +212,7 @@ def index():
 
 
 @app.route('/analyze-image', methods=['POST'])
-def analyze_image_route():
+def analyze_image_route() -> Union[Response, Tuple[Response, int]]:
     """Analyze the uploaded image using Google Cloud Vision AI."""
     try:
         # Log request content type to help debug
