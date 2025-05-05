@@ -23,6 +23,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from utils.image_analyzer import analyze_image
 from utils.poem_generator import generate_poem
 from utils.image_manipulator import create_framed_image
+from utils.sendgrid_mail import send_email
 from models import db, Creation, User, Membership, Transaction, ContactMessage, AdminUser, AdminRole, AdminLog
 from models import SiteVisitor, VisitorLog, VisitorStats
 from utils.membership import (create_default_plans, get_user_plan,
@@ -98,12 +99,7 @@ app.register_blueprint(admin_bp)
 # Add global current_admin for templates
 app.jinja_env.globals['current_admin'] = None
 
-# Set up email configuration
-app.config['MAIL_SERVER'] = 'smtp-relay.brevo.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = os.environ.get('BREVO_SMTP_USERNAME')
-app.config['MAIL_PASSWORD'] = os.environ.get('BREVO_SMTP_PASSWORD')
+# Set up email configuration (SendGrid)
 app.config['MAIL_DEFAULT_SENDER'] = 'poem vision <josephmurage267@gmail.com>'
 
 # Set up database with connection pooling and retry settings
@@ -769,16 +765,10 @@ def resend_verification():
 
 
 def send_verification_email(user):
-    """Send email verification link to the user using Brevo SMTP"""
+    """Send email verification link to the user using SendGrid"""
     token = user.generate_verification_token()
     db.session.commit()
     verification_url = url_for('verify_email', token=token, _external=True)
-
-    # Create message container
-    msg = MIMEMultipart('alternative')
-    msg['Subject'] = "Verify Your Email"
-    msg['From'] = app.config['MAIL_DEFAULT_SENDER']
-    msg['To'] = user.email
 
     # Create the body of the message (plain-text and HTML versions)
     text = f"""Hello {user.username},
@@ -810,24 +800,22 @@ Poem Vision Team
     </html>
     """
 
-    # Record the MIME types of both parts - text/plain and text/html
-    part1 = MIMEText(text, 'plain')
-    part2 = MIMEText(html, 'html')
-
-    # Attach parts into message container
-    msg.attach(part1)
-    msg.attach(part2)
-
     try:
-        # Send the message via Brevo's SMTP server
-        with smtplib.SMTP(app.config['MAIL_SERVER'],
-                          app.config['MAIL_PORT']) as server:
-            server.starttls()
-            server.login(app.config['MAIL_USERNAME'],
-                         app.config['MAIL_PASSWORD'])
-            server.send_message(msg)
-
-        logger.info(f"Verification email sent to {user.email}")
+        # Send the email using SendGrid
+        result = send_email(
+            to_email=user.email,
+            subject="Verify Your Email",
+            text_content=text,
+            html_content=html,
+            from_email=app.config['MAIL_DEFAULT_SENDER']
+        )
+        
+        if result:
+            logger.info(f"Verification email sent to {user.email} via SendGrid")
+        else:
+            logger.error(f"Failed to send verification email to {user.email} via SendGrid")
+            raise Exception("Failed to send verification email via SendGrid")
+            
     except Exception as e:
         logger.error(f"Failed to send verification email: {str(e)}")
         raise
@@ -897,12 +885,6 @@ def forgot_password():
         token = user.generate_password_reset_token()
         reset_url = url_for('reset_password', token=token, _external=True)
 
-        # Create message container
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = 'Password Reset Request'
-        msg['From'] = app.config['MAIL_DEFAULT_SENDER']
-        msg['To'] = user.email
-
         # Create email content
         text = f"""Password Reset Request
 
@@ -933,33 +915,29 @@ Poem Vision Team
         </html>
         """
 
-        # Attach both text and HTML versions
-        part1 = MIMEText(text, 'plain')
-        part2 = MIMEText(html, 'html')
-        msg.attach(part1)
-        msg.attach(part2)
-
         try:
-            # Send the message via Brevo's SMTP server
-            with smtplib.SMTP(app.config['MAIL_SERVER'],
-                              app.config['MAIL_PORT']) as server:
-                server.starttls()
-                server.login(app.config['MAIL_USERNAME'],
-                             app.config['MAIL_PASSWORD'])
-                server.send_message(msg)
-
-            logger.info(f"Password reset email sent to {user.email}")
-            return jsonify({
-                'success':
-                True,
-                'message':
-                'If an account exists with this email, a password reset link has been sent.'
-            })
+            # Send the email using SendGrid
+            result = send_email(
+                to_email=user.email,
+                subject="Password Reset Request",
+                text_content=text,
+                html_content=html,
+                from_email=app.config['MAIL_DEFAULT_SENDER']
+            )
+            
+            if result:
+                logger.info(f"Password reset email sent to {user.email} via SendGrid")
+                return jsonify({
+                    'success': True,
+                    'message': 'If an account exists with this email, a password reset link has been sent.'
+                })
+            else:
+                logger.error(f"Failed to send password reset email to {user.email} via SendGrid")
+                return jsonify({'error': 'Failed to send password reset email'}), 500
 
         except Exception as e:
             logger.error(f"Failed to send password reset email: {str(e)}")
-            return jsonify({'error':
-                            'Failed to send password reset email'}), 500
+            return jsonify({'error': 'Failed to send password reset email'}), 500
 
     except Exception as e:
         logger.error(f"Error in forgot password: {str(e)}", exc_info=True)
