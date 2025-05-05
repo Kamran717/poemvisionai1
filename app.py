@@ -100,7 +100,7 @@ app.register_blueprint(admin_bp)
 app.jinja_env.globals['current_admin'] = None
 
 # Set up email configuration (SendGrid)
-app.config['MAIL_DEFAULT_SENDER'] = 'poem vision <josephmurage267@gmail.com>'
+app.config['MAIL_DEFAULT_SENDER'] = 'poem vision <Kamran717@gmail.com>'
 
 # Set up database with connection pooling and retry settings
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
