@@ -13,61 +13,76 @@ from models import db, SiteVisitor, VisitorLog, VisitorStats, User
 def track_visitor(user_id=None):
     """
     Track a visitor to the site.
-    
+
     Args:
         user_id (int): The ID of the logged-in user, if any
-        
+
     Returns:
         tuple: A tuple containing (visitor_id, is_new_visitor)
     """
     ip_address = request.remote_addr
     user_agent = request.user_agent.string
     referrer = request.referrer
-    
+
+    # Validate the user_id to avoid FK violations
+    if user_id is not None:
+        user = db.session.get(User, user_id)
+        if not user:
+            user_id = None  # Reset to avoid FK violation
+
     # Create or get a visitor session ID
     if 'visitor_session_id' not in session:
         session['visitor_session_id'] = str(uuid.uuid4())
     session_id = session['visitor_session_id']
-    
+
     # Check if this is a returning visitor
     visitor = SiteVisitor.query.filter_by(
         ip_address=ip_address,
         user_agent=user_agent
     ).first()
-    
+
     is_new_visitor = False
-    
-    if visitor:
-        # Update existing visitor
-        visitor.last_visit = datetime.utcnow()
-        visitor.visit_count += 1
-        if user_id and not visitor.user_id:
-            visitor.user_id = user_id
-    else:
-        # Create new visitor
-        is_new_visitor = True
-        visitor = SiteVisitor(
-            ip_address=ip_address,
-            user_agent=user_agent,
-            user_id=user_id,
-            referrer=referrer
+
+    try:
+        if visitor:
+            # Update existing visitor
+            visitor.last_visit = datetime.utcnow()
+            visitor.visit_count += 1
+            if user_id and not visitor.user_id:
+                visitor.user_id = user_id
+        else:
+            # Create new visitor
+            is_new_visitor = True
+            visitor = SiteVisitor(
+                ip_address=ip_address,
+                user_agent=user_agent,
+                first_visit=datetime.utcnow(),
+                last_visit=datetime.utcnow(),
+                visit_count=1,
+                user_id=user_id,
+                referrer=referrer
+            )
+            db.session.add(visitor)
+
+        db.session.commit()
+
+        # Create a visitor log entry
+        visitor_log = VisitorLog(
+            visitor_id=visitor.id,
+            page_visited=request.path,
+            session_id=session_id
         )
-        db.session.add(visitor)
-    
-    # Commit changes
-    db.session.commit()
-    
-    # Create a visitor log entry
-    visitor_log = VisitorLog(
-        visitor_id=visitor.id,
-        page_visited=request.path,
-        session_id=session_id
-    )
-    db.session.add(visitor_log)
-    db.session.commit()
-    
-    # Return visitor info
+        db.session.add(visitor_log)
+        db.session.commit()
+
+    except Exception as e:
+        db.session.rollback()
+        # Optional: log the error
+        print(f"[Visitor Tracking Error] {e}")
+        raise
+
     return visitor.id, is_new_visitor
+
 
 
 def update_visitor_stats():

@@ -477,39 +477,71 @@ class SiteVisitor(db.Model):
     visit_count = db.Column(db.Integer, default=1)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     referrer = db.Column(db.String(255), nullable=True)
-    
-    # Add indexes for efficient querying
+
     __table_args__ = (
         db.Index('ix_site_visitor_ip_user_agent', 'ip_address', 'user_agent'),
         db.Index('ix_site_visitor_first_visit', 'first_visit'),
         db.Index('ix_site_visitor_last_visit', 'last_visit'),
     )
-    
+
+    def __init__(
+        self,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+        first_visit: datetime | None = None,
+        last_visit: datetime | None = None,
+        visit_count: int = 1,
+        user_id: int | None = None,
+        referrer: str | None = None
+    ):
+        self.ip_address = ip_address
+        self.user_agent = user_agent
+        self.first_visit = first_visit or datetime.utcnow()
+        self.last_visit = last_visit or datetime.utcnow()
+        self.visit_count = visit_count
+        self.user_id = user_id
+        self.referrer = referrer
+
     def __repr__(self):
         return f'<SiteVisitor {self.id}>'
+
 
 
 class VisitorLog(db.Model):
     """Model for tracking each visit to the site"""
     id = db.Column(db.Integer, primary_key=True)
-    visitor_id = db.Column(db.Integer, db.ForeignKey('site_visitor.id'), nullable=False)
+    visitor_id = db.Column(db.Integer, db.ForeignKey('site_visitor.id', ondelete="CASCADE"), nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     page_visited = db.Column(db.String(255), nullable=False)
     session_id = db.Column(db.String(64), nullable=True)
     time_spent_seconds = db.Column(db.Integer, nullable=True)
-    
-    # Relationship
+
     visitor = db.relationship('SiteVisitor', backref='visits', lazy=True)
-    
-    # Add indexes for efficient querying
+
     __table_args__ = (
         db.Index('ix_visitor_log_timestamp', 'timestamp'),
         db.Index('ix_visitor_log_visitor_id', 'visitor_id'),
         db.Index('ix_visitor_log_page_visited', 'page_visited'),
     )
-    
+
+    def __init__(
+        self,
+        visitor_id: int,
+        page_visited: str,
+        session_id: str | None = None,
+        time_spent_seconds: int | None = None,
+        timestamp: datetime | None = None
+    ):
+        self.visitor_id = visitor_id
+        self.page_visited = page_visited
+        self.session_id = session_id
+        self.time_spent_seconds = time_spent_seconds
+        self.timestamp = timestamp or datetime.utcnow()
+
     def __repr__(self):
         return f'<VisitorLog {self.id}>'
+
+
         
         
 class VisitorStats(db.Model):
