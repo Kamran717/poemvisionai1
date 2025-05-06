@@ -33,39 +33,31 @@ def send_email(
             current_app.logger.error("SENDGRID_API_KEY environment variable not set")
             return False
         
-        # Get verified sender email from environment or config
+        # Get verified sender email from environment - this must be used as the from email
         verified_sender = os.environ.get('SENDGRID_VERIFIED_SENDER')
+        if not verified_sender:
+            current_app.logger.error("SENDGRID_VERIFIED_SENDER environment variable not set")
+            return False
         
-        # If from_email not specified or no verified sender in environment, use default
-        if from_email is None:
-            # Use verified sender from environment if available
-            if verified_sender:
-                from_email = verified_sender
-            else:
-                from_email = current_app.config.get('MAIL_DEFAULT_SENDER', 'noreply@poemvision.com')
-                current_app.logger.warning(
-                    "SENDGRID_VERIFIED_SENDER environment variable not set. "
-                    "Using default sender, which may fail if not verified in SendGrid."
-                )
-            
-        # Extract display name and email address if in format "Name <email@example.com>"
-        if '<' in from_email and '>' in from_email:
+        # Get display name from the from_email or config
+        display_name = "Poem Vision"
+        sender_email = verified_sender  # Always use the verified sender email
+        
+        # Try to extract display name from from_email if provided
+        if from_email and '<' in from_email and '>' in from_email:
             display_name = from_email.split('<')[0].strip()
-            email_address = from_email.split('<')[1].split('>')[0].strip()
-            
-            # If verified sender is set, use that email with original display name
-            if verified_sender and '<' in verified_sender and '>' in verified_sender:
-                verified_email = verified_sender.split('<')[1].split('>')[0].strip()
-                from_email_obj = Email(verified_email, display_name)
-            else:
-                from_email_obj = Email(email_address, display_name)
-        else:
-            # No display name in the from_email
-            if verified_sender and '<' not in verified_sender:
-                # Just use the verified sender directly
-                from_email_obj = Email(verified_sender)
-            else:
-                from_email_obj = Email(from_email)
+        elif from_email and '@' not in from_email:
+            # If from_email looks like just a name without email
+            display_name = from_email
+        elif from_email is None and current_app.config.get('MAIL_DEFAULT_SENDER'):
+            # Try to get display name from default sender config
+            default_sender = current_app.config.get('MAIL_DEFAULT_SENDER')
+            if '<' in default_sender and '>' in default_sender:
+                display_name = default_sender.split('<')[0].strip()
+        
+        # Create a sender object with the verified email and display name
+        current_app.logger.debug(f"Using verified sender email: {sender_email} with display name: {display_name}")
+        from_email_obj = Email(sender_email, display_name) 
             
         # Create message
         message = Mail(
