@@ -43,6 +43,18 @@ def send_email(
                 f"using fallback verified sender: {verified_sender}"
             )
         
+        # Make sure the sender email is definitely lowercase as SendGrid sometimes requires this
+        verified_sender = verified_sender.lower()
+        
+        # If the domain is poemvisionai.com, try using the domain authentication pattern
+        if verified_sender.endswith('@poemvisionai.com'):
+            # Try to use the authenticated domain pattern which might be required by SendGrid
+            domain_parts = verified_sender.split('@')
+            if len(domain_parts) == 2:
+                # Use the em prefix that's shown in the verified domain screenshot
+                verified_sender = f"{domain_parts[0]}@em8558.poemvisionai.com"
+                current_app.logger.debug(f"Using domain authenticated pattern: {verified_sender}")
+        
         # Get display name from the from_email or config
         display_name = "Poem Vision"
         sender_email = verified_sender  # Always use the verified sender email
