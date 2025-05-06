@@ -861,12 +861,19 @@ def logout():
     return redirect(url_for('index'))
 
 
-@app.route('/forgot-password', methods=['POST'])
+@app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     """Handle forgot password request using SMTP"""
+    if request.method == 'GET':
+        return render_template('forgot_password.html')
+        
     try:
-        data = request.json
-        email = data.get('email', '').strip().lower()
+        # Handle both JSON and form data
+        if request.is_json:
+            data = request.json
+            email = data.get('email', '').strip().lower()
+        else:
+            email = request.form.get('email', '').strip().lower()
 
         if not email:
             return jsonify({'error': 'Email is required'}), 400
@@ -1024,11 +1031,21 @@ def profile():
 def contact_form():
     """Handle contact form submissions"""
     try:
-        data = request.json
+        # Handle both JSON and form data
+        if request.is_json:
+            data = request.json
+        else:
+            data = {
+                'name': request.form.get('name', ''),
+                'email': request.form.get('email', ''),
+                'subject': request.form.get('subject', ''),
+                'message': request.form.get('message', '')
+            }
+        
         logger.debug(f"Received contact form data: {data}")
 
         # Validate required fields
-        if not all(key in data
+        if not all(key in data and data[key].strip()
                    for key in ['name', 'email', 'subject', 'message']):
             return jsonify({'error': 'All fields are required'}), 400
 
