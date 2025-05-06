@@ -940,11 +940,38 @@ Poem Vision Team
                 })
             else:
                 logger.error(f"Failed to send password reset email to {user.email} via SendGrid")
-                return jsonify({'error': 'Failed to send password reset email'}), 500
+                
+                # Check if we're in development mode where the app should still work
+                if os.environ.get('FLASK_ENV') == 'development':
+                    logger.warning("Running in development mode, simulating email delivery success")
+                    return jsonify({
+                        'success': True,
+                        'message': 'If an account exists with this email, a password reset link has been sent.',
+                        'dev_note': f'Email delivery simulated in development mode. Reset URL: {reset_url}'
+                    })
+                else:
+                    # In production, return a more helpful error message
+                    return jsonify({
+                        'error': 'Failed to send password reset email. Email system is currently unavailable.',
+                        'details': 'Please try again later or contact support.'
+                    }), 500
 
         except Exception as e:
-            logger.error(f"Failed to send password reset email: {str(e)}")
-            return jsonify({'error': 'Failed to send password reset email'}), 500
+            error_msg = str(e)
+            logger.error(f"Failed to send password reset email: {error_msg}")
+            
+            # Check if this is a SendGrid verification error
+            if "verified Sender Identity" in error_msg:
+                logger.error("SendGrid sender verification issue detected")
+                return jsonify({
+                    'error': 'Email service configuration issue detected.',
+                    'details': 'The system administrator needs to verify the sender email in SendGrid.'
+                }), 500
+            else:
+                return jsonify({
+                    'error': 'Failed to send password reset email',
+                    'details': 'Please try again later or contact support.'
+                }), 500
 
     except Exception as e:
         logger.error(f"Error in forgot password: {str(e)}", exc_info=True)
