@@ -2,9 +2,9 @@
 SendGrid email utility functions for Poem Vision.
 """
 import os
+import json
+import requests
 from flask import current_app
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Email, To, Content
 
 def send_email(
     to_email,
@@ -46,15 +46,6 @@ def send_email(
         # Make sure the sender email is definitely lowercase as SendGrid sometimes requires this
         verified_sender = verified_sender.lower()
         
-        # If the domain is poemvisionai.com, try using the domain authentication pattern
-        if verified_sender.endswith('@poemvisionai.com'):
-            # Try to use the authenticated domain pattern which might be required by SendGrid
-            domain_parts = verified_sender.split('@')
-            if len(domain_parts) == 2:
-                # Use the em prefix that's shown in the verified domain screenshot
-                verified_sender = f"{domain_parts[0]}@em8558.poemvisionai.com"
-                current_app.logger.debug(f"Using domain authenticated pattern: {verified_sender}")
-        
         # Get display name from the from_email or config
         display_name = "Poem Vision"
         sender_email = verified_sender  # Always use the verified sender email
@@ -71,32 +62,44 @@ def send_email(
             if '<' in default_sender and '>' in default_sender:
                 display_name = default_sender.split('<')[0].strip()
         
-        # Create a sender object with the verified email and display name
-        current_app.logger.debug(f"Using verified sender email: {sender_email} with display name: {display_name}")
-        from_email_obj = Email(sender_email, display_name) 
-            
-        # Create message
-        message = Mail(
-            from_email=from_email_obj,
-            to_emails=To(to_email),
-            subject=subject
-        )
-
+        # Create a message using the direct API approach instead of the helpers
+        message = {
+            "personalizations": [
+                {
+                    "to": [{"email": to_email}]
+                }
+            ],
+            "from": {
+                "email": sender_email,
+                "name": display_name
+            },
+            "subject": subject
+        }
+        
         # Add content (HTML preferred, fallback to text)
         if html_content:
-            message.content = Content("text/html", html_content)
+            message["content"] = [{"type": "text/html", "value": html_content}]
         elif text_content:
-            message.content = Content("text/plain", text_content)
+            message["content"] = [{"type": "text/plain", "value": text_content}]
         else:
             current_app.logger.error("No content provided for email")
             return False
-
-        # Send message
-        sg = SendGridAPIClient(sendgrid_api_key)
-        response = sg.send(message)
+        
+        current_app.logger.debug(f"Sending email via SendGrid API with from: {sender_email}")
+        
+        # Send message using direct requests
+        response = requests.post(
+            "https://api.sendgrid.com/v3/mail/send",
+            headers={
+                "Authorization": f"Bearer {sendgrid_api_key}",
+                "Content-Type": "application/json"
+            },
+            json=message
+        )
         
         # Log response for debugging
         current_app.logger.info(f"SendGrid API response status code: {response.status_code}")
+        current_app.logger.debug(f"SendGrid API response: {response.text}")
         
         if response.status_code not in [200, 201, 202]:
             current_app.logger.error(f"SendGrid returned error code: {response.status_code}")
