@@ -36,8 +36,12 @@ def send_email(
         # Get verified sender email from environment - this must be used as the from email
         verified_sender = os.environ.get('SENDGRID_VERIFIED_SENDER')
         if not verified_sender:
-            current_app.logger.error("SENDGRID_VERIFIED_SENDER environment variable not set")
-            return False
+            # Fallback to the known verified sender if environment variable is not set
+            verified_sender = "info@poemvisionai.com"
+            current_app.logger.warning(
+                "SENDGRID_VERIFIED_SENDER environment variable not set, "
+                f"using fallback verified sender: {verified_sender}"
+            )
         
         # Get display name from the from_email or config
         display_name = "Poem Vision"
