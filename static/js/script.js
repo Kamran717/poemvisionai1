@@ -1121,6 +1121,22 @@ document.addEventListener('DOMContentLoaded', function() {
         // Clear emphasis options
         emphasisOptions.innerHTML = '';
         
+// ****  TO CLEAR CUSTOM INPUT FIELDS ****
+    const customNameInput = document.getElementById('customName');
+    if (customNameInput) customNameInput.value = '';
+
+    const customPlaceInput = document.getElementById('customPlace');
+    if (customPlaceInput) customPlaceInput.value = '';
+
+    const customEmotionSelect = document.getElementById('customEmotion');
+    if (customEmotionSelect) customEmotionSelect.value = ''; // Resets to the first option (e.g., "Select emotion")
+
+    const customActionInput = document.getElementById('customAction');
+    if (customActionInput) customActionInput.value = '';
+
+    const customPromptTextarea = document.getElementById('customPromptInput');
+    if (customPromptTextarea) customPromptTextarea.value = '';
+
         // Go back to the first step
         goToStep(1);
     });

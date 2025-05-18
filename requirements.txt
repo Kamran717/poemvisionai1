@@ -1,0 +1,10 @@
+flask
+flask-sqlalchemy
+flask-mail
+stripe
+python-dotenv
+gunicorn
+google-cloud-vision
+pillow
+sendgrid
+pyjwt>=2.10.1

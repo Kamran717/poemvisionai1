@@ -879,6 +879,12 @@ def forgot_password():
             return jsonify({'error': 'Email is required'}), 400
 
         user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(email=email).first()
+        print("User object:", user)
+        if user:
+            print("Username:", user.username)
+            logger.info(f"Username: {user.username}")
+
         if not user:
             # For security, don't reveal if email doesn't exist
             return jsonify({
@@ -911,17 +917,18 @@ Poem Vision Team
         <html>
         <body>
             <h2>Password Reset</h2>
-            <p>You requested to reset your password. Click the button below to proceed:</p>
+            <p>Hi {user.username}</p>
+            <p>We received a request to reset your password. If this was you, you can securely update your password by clicking the button below:</p>
             <p><a href="{reset_url}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Password</a></p>
             <p>Or copy this link into your browser:<br>{reset_url}</p>
             <p>This link will expire in 1 hour.</p>
-            <p>If you didn't request this, please ignore this email.</p>
+            <p>If you didn’t request a password reset, no action is needed. Your account remains secure.</p>
             <br>
-            <p>Best regards,<br>Poem Vision Team</p>
+            <p>Warm regards,<br>The Poem Vision AI Team <br>www.poemvision.ai</p>
         </body>
         </html>
         """
-
+        print("HTML to be sent:\n", html)
         try:
             # Send the email using SendGrid
             result = send_email(
