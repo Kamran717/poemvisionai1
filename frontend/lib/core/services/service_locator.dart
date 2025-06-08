@@ -12,6 +12,8 @@ import 'package:frontend/features/poem_generation/domain/services/poem_service.d
 import 'package:frontend/features/poem_generation/presentation/providers/poem_generation_provider.dart';
 import 'package:frontend/features/gallery/domain/services/gallery_service.dart';
 import 'package:frontend/features/gallery/presentation/providers/gallery_provider.dart';
+import 'package:frontend/features/profile/domain/services/profile_service.dart';
+import 'package:frontend/features/profile/presentation/providers/profile_provider.dart';
 
 /// Global ServiceLocator instance
 final GetIt serviceLocator = GetIt.instance;
@@ -72,6 +74,11 @@ Future<void> setupServiceLocator() async {
     GalleryService(serviceLocator<ApiClient>()),
   );
   
+  // Profile Services
+  serviceLocator.registerSingleton<ProfileService>(
+    ProfileService(serviceLocator<ApiClient>()),
+  );
+  
   // Providers
   serviceLocator.registerSingleton<AuthProvider>(
     AuthProvider(serviceLocator<AuthService>()),
@@ -83,6 +90,10 @@ Future<void> setupServiceLocator() async {
   
   serviceLocator.registerSingleton<GalleryProvider>(
     GalleryProvider(serviceLocator<GalleryService>()),
+  );
+  
+  serviceLocator.registerSingleton<ProfileProvider>(
+    ProfileProvider(serviceLocator<ProfileService>()),
   );
   
   // Add more services as needed
