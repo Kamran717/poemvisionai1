@@ -36,7 +36,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     // Navigate to intro screen after delay
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
-        context.go(RoutePaths.intro);
+        context.goNamed('intro');
       }
     });
   }

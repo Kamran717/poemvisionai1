@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend/core/routes/route_paths.dart';
 import 'package:frontend/features/auth/domain/services/auth_service.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
@@ -17,7 +18,7 @@ class AuthGuard {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       
       // Check if the user is authenticated
-      final isAuthenticated = await authProvider.isAuthenticated();
+      final isAuthenticated = await authProvider.isAuthenticated;
       
       // If not authenticated, redirect to login
       if (!isAuthenticated) {
@@ -43,7 +44,7 @@ class AuthGuard {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       
       // Check if the user is already authenticated
-      final isAuthenticated = await authProvider.isAuthenticated();
+      final isAuthenticated = await authProvider.isAuthenticated;
       
       // If already authenticated, redirect to home
       if (isAuthenticated) {
@@ -78,7 +79,7 @@ class AuthGuard {
       
       // Intro has been shown, proceed with auth check
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final isAuthenticated = await authProvider.isAuthenticated();
+      final isAuthenticated = await authProvider.isAuthenticated;
       
       // If not authenticated, redirect to login
       if (!isAuthenticated) {

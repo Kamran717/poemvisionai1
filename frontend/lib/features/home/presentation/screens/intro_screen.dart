@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:frontend/core/routes/route_paths.dart';
 import 'package:frontend/core/theme/app_theme.dart';
+import 'package:frontend/core/routes/route_paths.dart';
 
 /// Introduction screen shown after splash
 class IntroScreen extends StatefulWidget {
@@ -27,19 +27,19 @@ class _IntroScreenState extends State<IntroScreen> {
       title: 'Upload Your Images',
       description: 'Select or capture images that inspire you',
       image: Icons.image,
-      color: AppTheme.secondaryColor,
+      color: Colors.indigo,
     ),
     IntroPage(
       title: 'Generate Custom Poems',
       description: 'Our AI analyzes your images and creates personalized poems',
       image: Icons.text_fields,
-      color: AppTheme.accentColor,
+      color: Colors.deepPurple,
     ),
     IntroPage(
       title: 'Share Your Creations',
       description: 'Save, customize, and share your poems with friends and family',
       image: Icons.share,
-      color: AppTheme.successColor,
+      color: Colors.teal,
     ),
   ];
   
@@ -67,7 +67,7 @@ class _IntroScreenState extends State<IntroScreen> {
   }
   
   void _goToLogin() {
-    context.go(RoutePaths.login);
+    context.goNamed('login');
   }
 
   @override

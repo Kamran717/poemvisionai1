@@ -156,6 +156,187 @@ class ShimmerGridItemPlaceholder extends StatelessWidget {
   }
 }
 
+/// Shimmer loading placeholder for a list or grid of items
+class ShimmerListPlaceholder extends StatelessWidget {
+  /// Whether to show as grid or list
+  final bool isGrid;
+  
+  /// Number of cross axis items for grid
+  final int gridCrossAxisCount;
+  
+  /// Aspect ratio for grid items
+  final double itemAspectRatio;
+  
+  /// Number of items to show
+  final int itemCount;
+  
+  /// Constructor
+  const ShimmerListPlaceholder({
+    super.key,
+    this.isGrid = false,
+    this.gridCrossAxisCount = 2,
+    this.itemAspectRatio = 0.75,
+    this.itemCount = 6,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (isGrid) {
+      return GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: gridCrossAxisCount,
+          childAspectRatio: itemAspectRatio,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+        ),
+        itemCount: itemCount,
+        itemBuilder: (context, index) {
+          return Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Shimmer.fromColors(
+              baseColor: Colors.grey[300]!,
+              highlightColor: Colors.grey[100]!,
+              child: Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Image placeholder
+                    Container(
+                      height: 120,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(height: 8),
+                    // Title placeholder
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Container(
+                        width: 150,
+                        height: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Content placeholder
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Container(
+                        width: double.infinity,
+                        height: 12,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    // Content placeholder
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Container(
+                        width: 200,
+                        height: 12,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    } else {
+      return ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: itemCount,
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Shimmer.fromColors(
+              baseColor: Colors.grey[300]!,
+              highlightColor: Colors.grey[100]!,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Image placeholder
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Title placeholder
+                        Container(
+                          width: 180,
+                          height: 16,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(height: 8),
+                        // Content placeholder
+                        Container(
+                          width: double.infinity,
+                          height: 12,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(height: 4),
+                        // Content placeholder
+                        Container(
+                          width: 150,
+                          height: 12,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(height: 8),
+                        // Info placeholder
+                        Row(
+                          children: [
+                            Container(
+                              width: 70,
+                              height: 10,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              width: 90,
+                              height: 10,
+                              color: Colors.white,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Action placeholder
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    }
+  }
+}
+
 /// Shimmer loading placeholder for a profile
 class ShimmerProfilePlaceholder extends StatelessWidget {
   /// Constructor

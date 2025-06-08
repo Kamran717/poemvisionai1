@@ -41,18 +41,22 @@ class AppRouter {
         // Auth routes
         GoRoute(
           path: RoutePaths.login,
+          name: 'login',
           builder: (context, state) => const LoginScreen(),
         ),
         GoRoute(
           path: RoutePaths.signup,
+          name: 'signup',
           builder: (context, state) => const SignupScreen(),
         ),
         GoRoute(
           path: RoutePaths.forgotPassword,
+          name: 'forgot_password',
           builder: (context, state) => const ForgotPasswordScreen(),
         ),
         GoRoute(
           path: RoutePaths.resetPassword,
+          name: 'reset_password',
           builder: (context, state) {
             final params = GoRouterState.of(context).uri.queryParameters;
             final token = params['token'] ?? '';
@@ -63,30 +67,36 @@ class AppRouter {
         // Main routes
         GoRoute(
           path: RoutePaths.splash,
+          name: 'splash',
           builder: (context, state) => const SplashScreen(),
         ),
         GoRoute(
           path: RoutePaths.intro,
+          name: 'intro',
           builder: (context, state) => const IntroScreen(),
         ),
         GoRoute(
           path: RoutePaths.home,
+          name: 'home',
           builder: (context, state) => const HomeScreen(),
         ),
         
         // Gallery routes
         GoRoute(
           path: RoutePaths.gallery,
+          name: 'gallery',
           builder: (context, state) => const GalleryScreen(),
         ),
         
         // Poem creation routes
         GoRoute(
           path: RoutePaths.imageUpload,
+          name: 'image_upload',
           builder: (context, state) => const ImageUploadScreen(),
         ),
         GoRoute(
           path: RoutePaths.poemCustomization,
+          name: 'poem_customization',
           builder: (context, state) {
             final params = GoRouterState.of(context).uri.queryParameters;
             final imageId = params['image_id'] ?? '';
@@ -99,6 +109,7 @@ class AppRouter {
         ),
         GoRoute(
           path: RoutePaths.finalCreation,
+          name: 'final_creation',
           builder: (context, state) {
             final params = GoRouterState.of(context).uri.queryParameters;
             final poemId = params['poem_id'] ?? '';
@@ -109,20 +120,24 @@ class AppRouter {
         // Profile routes
         GoRoute(
           path: RoutePaths.profile,
+          name: 'profile',
           builder: (context, state) => const ProfileScreen(),
         ),
         GoRoute(
           path: RoutePaths.editProfile,
+          name: 'edit_profile',
           builder: (context, state) => const EditProfileScreen(),
         ),
         GoRoute(
           path: RoutePaths.membership,
+          name: 'membership',
           builder: (context, state) => const MembershipScreen(),
         ),
         
         // Shared creation
         GoRoute(
           path: RoutePaths.sharedCreation,
+          name: 'shared_creation',
           builder: (context, state) {
             final params = GoRouterState.of(context).uri.queryParameters;
             final shareId = params['id'] ?? '';

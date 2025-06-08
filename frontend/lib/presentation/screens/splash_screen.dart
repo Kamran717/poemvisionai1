@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:animated_introduction/animated_introduction.dart';
-import 'package:frontend/core/theme/app_theme.dart';
+import 'package:go_router/go_router.dart';
 import 'package:frontend/core/routes/route_paths.dart';
-import 'package:frontend/core/routes/app_router.dart';
-import 'package:frontend/core/utils/app_logger.dart';
+import 'package:frontend/core/theme/app_theme.dart';
 
+/// Splash screen shown when the app starts
 class SplashScreen extends StatefulWidget {
+  /// Constructor
   const SplashScreen({super.key});
 
   @override
@@ -13,97 +13,92 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
   
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 4),
+      duration: const Duration(milliseconds: 1500),
     );
     
-    // Start the animation as soon as the widget is built
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _controller.forward();
-    });
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeIn,
+      ),
+    );
     
-    // Navigate to intro screen after animation completes
-    _controller.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        navigateToIntro();
+    _animationController.forward();
+    
+    // Navigate to intro screen after delay
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        context.goNamed('intro');
       }
     });
   }
   
   @override
   void dispose() {
-    _controller.dispose();
+    _animationController.dispose();
     super.dispose();
   }
-  
-  void navigateToIntro() {
-    AppLogger.d('Navigating to intro screen');
-    AppRouter.navigateWithFade(context, RoutePaths.intro);
-  }
-  
+
   @override
   Widget build(BuildContext context) {
-    // Define pages for the animated introduction
-    final pages = [
-      AnimatedIntroductionPage(
-        title: 'PoemVision AI',
-        description: 'Transform your images into beautiful poems',
-        backgroundColor: AppTheme.primaryColor,
-        titleTextStyle: const TextStyle(
-          color: Colors.white,
-          fontSize: 32,
-          fontWeight: FontWeight.bold,
-        ),
-        descriptionTextStyle: const TextStyle(
-          color: Colors.white,
-          fontSize: 18,
-        ),
-        decorationImage: const AnimatedIntroductionDecorationImage(
-          alignment: Alignment.center,
-          image: AssetImage('assets/images/logo.png'),
-          height: 200,
-          width: 200,
-        ),
-        decoration: [
-          AnimatedIntroductionDecoration(
-            alignment: Alignment.topRight,
-            child: AnimatedIntroductionLiquidCircle(
-              color: Colors.white.withOpacity(0.2),
-              delay: const Duration(milliseconds: 500),
-              duration: const Duration(seconds: 2),
-              size: 100,
-            ),
-          ),
-          AnimatedIntroductionDecoration(
-            alignment: Alignment.bottomLeft,
-            child: AnimatedIntroductionLiquidCircle(
-              color: Colors.white.withOpacity(0.2),
-              delay: const Duration(milliseconds: 750),
-              duration: const Duration(seconds: 2),
-              size: 150,
-            ),
-          ),
-        ],
-      ),
-    ];
-    
     return Scaffold(
-      backgroundColor: AppTheme.primaryColor,
-      body: AnimatedIntroduction(
-        pages: pages,
-        animateSkipButton: false,
-        hideBottomBar: true,
-        autoStartAnimation: true,
-        animateScrollIndicator: false,
-        onTapSkipButton: navigateToIntro,
-        onTapDoneButton: navigateToIntro,
-        automaticallyImplySkipAndDoneButtons: false,
+      backgroundColor: Colors.white,
+      body: Center(
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // App logo
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Icon(
+                  Icons.auto_awesome,
+                  size: 64,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              // App name
+              Text(
+                'PoemVision AI',
+                style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                  color: AppTheme.primaryColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              
+              // Tagline
+              Text(
+                'Transform images into beautiful poems',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: AppTheme.textLightColor,
+                ),
+              ),
+              const SizedBox(height: 48),
+              
+              // Loading indicator
+              const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

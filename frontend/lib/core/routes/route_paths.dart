@@ -3,6 +3,11 @@ class RoutePaths {
   /// Private constructor to prevent instantiation
   RoutePaths._();
   
+  /// Helper method to get poem customization path with analysis ID
+  static String getPoemCustomizationPath(String analysisId) {
+    return '$poemCustomization?analysis_id=$analysisId';
+  }
+  
   /// Login screen
   static const String login = '/login';
   

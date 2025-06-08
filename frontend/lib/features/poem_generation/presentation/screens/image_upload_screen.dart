@@ -177,8 +177,12 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
         });
         
         // Navigate to customization with mock IDs
-        context.go(
-          '${RoutePaths.poemCustomization}?image_id=mock123&analysis_id=mock456'
+        context.goNamed(
+          'poem_customization',
+          queryParameters: {
+            'image_id': 'mock123',
+            'analysis_id': 'mock456',
+          },
         );
       }
     });

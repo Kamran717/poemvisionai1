@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:frontend/core/theme/app_theme.dart';
 import 'package:frontend/core/utils/app_logger.dart';
 import 'package:frontend/features/profile/domain/models/membership_plan.dart';
+import 'package:frontend/features/profile/domain/models/membership_plans.dart';
 import 'package:frontend/features/profile/presentation/providers/profile_provider.dart';
 
 class MembershipScreen extends StatefulWidget {

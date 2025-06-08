@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:animated_introduction/animated_introduction.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/core/theme/app_theme.dart';
 import 'package:frontend/core/routes/route_paths.dart';
-import 'package:frontend/core/utils/app_logger.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:frontend/core/services/service_locator.dart';
-import 'package:frontend/core/storage/local_storage.dart';
 
+/// Introduction screen shown after splash
 class IntroScreen extends StatefulWidget {
+  /// Constructor
   const IntroScreen({super.key});
 
   @override
@@ -16,135 +13,210 @@ class IntroScreen extends StatefulWidget {
 }
 
 class _IntroScreenState extends State<IntroScreen> {
-  final LocalStorage _localStorage = serviceLocator.get<LocalStorage>();
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+  
+  final List<IntroPage> _pages = [
+    IntroPage(
+      title: 'Welcome to PoemVision AI',
+      description: 'Transform your images into beautiful poems with the power of AI',
+      image: Icons.auto_awesome,
+      color: AppTheme.primaryColor,
+    ),
+    IntroPage(
+      title: 'Upload Your Images',
+      description: 'Select or capture images that inspire you',
+      image: Icons.image,
+      color: Colors.indigo,
+    ),
+    IntroPage(
+      title: 'Generate Custom Poems',
+      description: 'Our AI analyzes your images and creates personalized poems',
+      image: Icons.text_fields,
+      color: Colors.deepPurple,
+    ),
+    IntroPage(
+      title: 'Share Your Creations',
+      description: 'Save, customize, and share your poems with friends and family',
+      image: Icons.share,
+      color: Colors.teal,
+    ),
+  ];
   
   @override
-  void initState() {
-    super.initState();
-    // Set intro as shown when this screen is displayed
-    _markIntroAsShown();
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
   
-  Future<void> _markIntroAsShown() async {
-    await _localStorage.setBool('intro_shown', true);
+  void _onPageChanged(int index) {
+    setState(() {
+      _currentPage = index;
+    });
   }
   
-  void _navigateToHome() {
-    AppLogger.d('Navigating to home screen');
-    context.go(RoutePaths.home);
+  void _nextPage() {
+    if (_currentPage < _pages.length - 1) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      _goToLogin();
+    }
   }
   
+  void _goToLogin() {
+    context.goNamed('login');
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Define pages for the animated introduction
-    final pages = [
-      // First intro page
-      AnimatedIntroductionPage(
-        title: 'Image to Poem',
-        description: 'Upload any image and let AI transform it into a beautiful poem',
-        backgroundColor: AppTheme.primaryColor,
-        titleTextStyle: const TextStyle(
-          color: Colors.white,
-          fontSize: 28,
-          fontWeight: FontWeight.bold,
-        ),
-        descriptionTextStyle: const TextStyle(
-          color: Colors.white,
-          fontSize: 16,
-        ),
-        decoration: [
-          AnimatedIntroductionDecoration(
-            alignment: Alignment.center,
-            child: AnimatedIntroductionImage(
-              image: const AssetImage('assets/images/intro_image_upload.png'),
-              width: 250,
-              height: 250,
-              duration: const Duration(milliseconds: 600),
-              delay: const Duration(milliseconds: 300),
-            ),
-          ),
-        ],
-      ),
-      
-      // Second intro page
-      AnimatedIntroductionPage(
-        title: 'Customize Your Poem',
-        description: 'Choose from different poem styles, lengths, and themes to match your vision',
-        backgroundColor: Colors.indigo,
-        titleTextStyle: const TextStyle(
-          color: Colors.white,
-          fontSize: 28,
-          fontWeight: FontWeight.bold,
-        ),
-        descriptionTextStyle: const TextStyle(
-          color: Colors.white,
-          fontSize: 16,
-        ),
-        decoration: [
-          AnimatedIntroductionDecoration(
-            alignment: Alignment.center,
-            child: AnimatedIntroductionImage(
-              image: const AssetImage('assets/images/intro_customize.png'),
-              width: 250,
-              height: 250,
-              duration: const Duration(milliseconds: 600),
-              delay: const Duration(milliseconds: 300),
-            ),
-          ),
-        ],
-      ),
-      
-      // Third intro page
-      AnimatedIntroductionPage(
-        title: 'Share Your Creations',
-        description: 'Share your beautiful poem-images with friends and family, or save them to your gallery',
-        backgroundColor: Colors.deepPurple,
-        titleTextStyle: const TextStyle(
-          color: Colors.white,
-          fontSize: 28,
-          fontWeight: FontWeight.bold,
-        ),
-        descriptionTextStyle: const TextStyle(
-          color: Colors.white,
-          fontSize: 16,
-        ),
-        decoration: [
-          AnimatedIntroductionDecoration(
-            alignment: Alignment.center,
-            child: AnimatedIntroductionImage(
-              image: const AssetImage('assets/images/intro_share.png'),
-              width: 250,
-              height: 250,
-              duration: const Duration(milliseconds: 600),
-              delay: const Duration(milliseconds: 300),
-            ),
-          ),
-        ],
-      ),
-    ];
-    
     return Scaffold(
-      body: AnimatedIntroduction(
-        pages: pages,
-        animateSkipButton: true,
-        skipButtonText: 'Skip',
-        skipButtonTextStyle: const TextStyle(
-          color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Skip button
+            Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: TextButton(
+                  onPressed: _goToLogin,
+                  child: const Text('Skip'),
+                ),
+              ),
+            ),
+            
+            // Page view
+            Expanded(
+              child: PageView.builder(
+                controller: _pageController,
+                onPageChanged: _onPageChanged,
+                itemCount: _pages.length,
+                itemBuilder: (context, index) {
+                  final page = _pages[index];
+                  return _buildIntroPage(page);
+                },
+              ),
+            ),
+            
+            // Indicators and button
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Page indicators
+                  Row(
+                    children: List.generate(
+                      _pages.length,
+                      (index) => _buildIndicator(index == _currentPage),
+                    ),
+                  ),
+                  
+                  // Next button
+                  ElevatedButton(
+                    onPressed: _nextPage,
+                    style: ElevatedButton.styleFrom(
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(16),
+                      backgroundColor: _pages[_currentPage].color,
+                    ),
+                    child: Icon(
+                      _currentPage < _pages.length - 1
+                          ? Icons.arrow_forward
+                          : Icons.check,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        doneButtonText: 'Get Started',
-        doneButtonTextStyle: const TextStyle(
-          color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
-        indicatorType: IndicatorType.circle,
-        indicatorColor: Colors.white,
-        onTapSkipButton: _navigateToHome,
-        onTapDoneButton: _navigateToHome,
-        scrollIndicatorEffect: WormEffect(),
       ),
     );
   }
+  
+  Widget _buildIntroPage(IntroPage page) {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Icon
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: page.color.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              page.image,
+              size: 60,
+              color: page.color,
+            ),
+          ),
+          const SizedBox(height: 48),
+          
+          // Title
+          Text(
+            page.title,
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textDarkColor,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          
+          // Description
+          Text(
+            page.description,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: AppTheme.textLightColor,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildIndicator(bool isActive) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      width: isActive ? 16 : 8,
+      height: 8,
+      decoration: BoxDecoration(
+        color: isActive ? _pages[_currentPage].color : Colors.grey[300],
+        borderRadius: BorderRadius.circular(4),
+      ),
+    );
+  }
+}
+
+/// Data class for intro page content
+class IntroPage {
+  /// Title of the intro page
+  final String title;
+  
+  /// Description text
+  final String description;
+  
+  /// Icon to display
+  final IconData image;
+  
+  /// Theme color
+  final Color color;
+  
+  /// Constructor
+  IntroPage({
+    required this.title,
+    required this.description,
+    required this.image,
+    required this.color,
+  });
 }

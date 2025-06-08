@@ -44,11 +44,15 @@ class _SharedCreationScreenState extends State<SharedCreationScreen> {
       // For now, create a mock creation
       await Future.delayed(const Duration(seconds: 1));
       
+      final mockPoem = _createMockPoem();
       final mockCreation = Creation(
         id: 'shared_creation',
-        poem: _createMockPoem(),
+        title: mockPoem['title'],
+        content: mockPoem['content'],
+        poemType: mockPoem['poem_type'],
         createdAt: DateTime.now().subtract(const Duration(days: 3)),
-        frameType: 'elegant',
+        imageUrl: 'https://picsum.photos/id/237/800/600',
+        frameStyle: 'elegant',
         isPublic: true,
         shareUrl: 'https://poemvision.ai/share/${widget.shareCode}',
       );
@@ -66,8 +70,8 @@ class _SharedCreationScreenState extends State<SharedCreationScreen> {
     }
   }
   
-  // Helper method to create a mock poem for demonstration
-  dynamic _createMockPoem() {
+  // Helper method to create a mock poem data for demonstration
+  Map<String, dynamic> _createMockPoem() {
     return {
       'id': 'shared_poem',
       'title': 'Shared Sunset Beauty',
@@ -94,10 +98,10 @@ class _SharedCreationScreenState extends State<SharedCreationScreen> {
     
     try {
       // In a real app, we'd use the share_plus package to share the URL
-      final shareText = '${_creation!.poem.title}\n\n${_creation!.poem.content}\n\n'
+      final shareText = '${_creation!.title}\n\n${_creation!.content}\n\n'
           'Check out this poem I found on PoemVision AI: ${_creation!.shareUrl}';
       
-      await Share.share(shareText, subject: _creation!.poem.title);
+      await Share.share(shareText, subject: _creation!.title);
     } catch (e) {
       AppLogger.e('Error sharing creation', e);
       if (mounted) {
@@ -115,7 +119,7 @@ class _SharedCreationScreenState extends State<SharedCreationScreen> {
     if (_creation == null) return;
     
     try {
-      final text = '${_creation!.poem.title}\n\n${_creation!.poem.content}';
+      final text = '${_creation!.title}\n\n${_creation!.content}';
       await Clipboard.setData(ClipboardData(text: text));
       
       if (mounted) {
@@ -268,7 +272,7 @@ class _SharedCreationScreenState extends State<SharedCreationScreen> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 image: DecorationImage(
-                  image: AssetImage('assets/frames/${_creation!.frameType}.jpg'),
+                  image: AssetImage('assets/frames/${_creation!.frameStyle}.jpg'),
                   fit: BoxFit.cover,
                   colorFilter: ColorFilter.mode(
                     Colors.black.withOpacity(0.05),
@@ -282,7 +286,7 @@ class _SharedCreationScreenState extends State<SharedCreationScreen> {
                 children: [
                   // Title
                   Text(
-                    _creation!.poem.title,
+                    _creation!.title,
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -294,7 +298,7 @@ class _SharedCreationScreenState extends State<SharedCreationScreen> {
                   
                   // Poem text
                   Text(
-                    _creation!.poem.content,
+                    _creation!.content,
                     style: const TextStyle(
                       fontSize: 16,
                       height: 1.5,
@@ -323,7 +327,7 @@ class _SharedCreationScreenState extends State<SharedCreationScreen> {
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.auto_stories),
             title: const Text('Poem Type'),
-            subtitle: Text(_creation!.poem.poemType.split('_').map((word) => '${word[0].toUpperCase()}${word.substring(1)}').join(' ')),
+            subtitle: Text(_creation!.poemType.split('_').map((word) => '${word[0].toUpperCase()}${word.substring(1)}').join(' ')),
           ),
           
           ListTile(
