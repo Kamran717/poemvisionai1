@@ -1,51 +1,38 @@
-/// Constants for API endpoints and related values
+/// Constants for API endpoints
 class ApiConstants {
-  // Private constructor to prevent instantiation
-  ApiConstants._();
+  /// Base URL
+  static const String baseUrl = 'https://api.poemvision.ai';
   
-  // Base URL for API requests
-  static const String baseUrl = 'http://localhost:5000';
+  /// Auth endpoints
+  static const String login = '/auth/login';
+  static const String signup = '/auth/signup';
+  static const String forgotPassword = '/auth/forgot-password';
+  static const String resetPassword = '/auth/reset-password';
+  static const String refreshToken = '/auth/refresh-token';
+  static const String logout = '/auth/logout';
   
-  // Authentication endpoints
-  static const String login = '/login';
-  static const String signup = '/signup';
-  static const String forgotPassword = '/forgot-password';
-  static const String resetPassword = '/reset-password';
-  static const String logout = '/logout';
-  static const String verifyEmail = '/verify-email';
+  /// User profile endpoints
+  static const String profile = '/users/profile';
+  static const String updateProfile = '/users/profile';
+  static const String changePassword = '/users/change-password';
   
-  // User related endpoints
-  static const String profile = '/profile';
+  /// Creation endpoints
+  static const String creations = '/creations';
+  static const String sharedCreation = '/creations/shared';
   
-  // Image processing endpoints
-  static const String analyzeImage = '/analyze-image';
-  static const String generatePoem = '/generate-poem';
-  static const String createFinalImage = '/create-final-image';
+  /// Image processing endpoints
+  static const String uploadImage = '/images/upload';
+  static const String analyzeImage = '/images/analyze';
   
-  // Gallery and creations
-  static const String gallery = '/gallery';
-  static const String shared = '/shared';
-  static const String deleteCreation = '/delete_creation';
+  /// Poem generation endpoints
+  static const String generatePoem = '/poems/generate';
+  static const String poems = '/poems';
+  static const String finalCreation = '/creations/finalize';
   
-  // Features and membership
-  static const String availablePoemTypes = '/api/available-poem-types';
-  static const String availablePoemLengths = '/api/available-poem-lengths';
-  static const String availableFrames = '/api/available-frames';
-  static const String membership = '/membership';
-  static const String upgrade = '/upgrade';
-  static const String checkAccess = '/api/check-access';
+  /// Membership endpoints
+  static const String membershipPlans = '/memberships/plans';
+  static const String cancelSubscription = '/memberships/cancel';
   
-  // HTTP status codes
-  static const int statusOk = 200;
-  static const int statusCreated = 201;
-  static const int statusBadRequest = 400;
-  static const int statusUnauthorized = 401;
-  static const int statusForbidden = 403;
-  static const int statusNotFound = 404;
-  static const int statusInternalServerError = 500;
-  
-  // Request timeouts in seconds
-  static const int connectTimeout = 30;
-  static const int receiveTimeout = 30;
-  static const int sendTimeout = 30;
+  /// Analytics endpoints
+  static const String userAnalytics = '/analytics/user';
 }

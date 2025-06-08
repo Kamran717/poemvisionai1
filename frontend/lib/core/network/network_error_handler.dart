@@ -1,50 +1,54 @@
 import 'dart:io';
-
 import 'package:dio/dio.dart';
-import 'package:frontend/core/network/api_exception.dart';
 import 'package:frontend/core/utils/app_logger.dart';
+import 'package:frontend/core/network/api_exception.dart';
 
-/// Handles network errors and provides standardized error messages
+/// Handler for network errors
 class NetworkErrorHandler {
-  /// Convert various error types to ApiException
-  static ApiException handleError(dynamic error) {
-    AppLogger.e('Network error occurred', error);
+  /// Constructor
+  const NetworkErrorHandler();
+  
+  /// Handle error and convert it to ApiException
+  ApiException handleError(dynamic error) {
+    if (error is ApiException) {
+      return error;
+    }
     
     if (error is DioException) {
       return _handleDioError(error);
-    } else if (error is SocketException) {
+    }
+    
+    if (error is SocketException) {
       return ApiException(
         message: 'No internet connection',
         code: ApiExceptionType.noInternet,
       );
-    } else if (error is ApiException) {
-      return error;
-    } else {
-      return ApiException(
-        message: 'Unexpected error occurred',
-        code: ApiExceptionType.unknown,
-      );
     }
+    
+    // Handle any other errors
+    AppLogger.e('Unhandled error', error);
+    return ApiException(
+      message: 'An unexpected error occurred',
+      code: ApiExceptionType.unknown,
+      data: error.toString(),
+    );
   }
   
-  /// Handle Dio specific errors
-  static ApiException _handleDioError(DioException error) {
+  /// Handle Dio errors
+  ApiException _handleDioError(DioException error) {
     switch (error.type) {
+      case DioExceptionType.cancel:
+        return ApiException(
+          message: 'Request was cancelled',
+          code: ApiExceptionType.cancelled,
+        );
+        
       case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
+      case DioExceptionType.sendTimeout:
         return ApiException(
           message: 'Connection timeout',
           code: ApiExceptionType.timeout,
-        );
-        
-      case DioExceptionType.badResponse:
-        return _handleResponseError(error.response);
-        
-      case DioExceptionType.cancel:
-        return ApiException(
-          message: 'Request cancelled',
-          code: ApiExceptionType.cancelled,
         );
         
       case DioExceptionType.connectionError:
@@ -53,172 +57,210 @@ class NetworkErrorHandler {
           code: ApiExceptionType.noInternet,
         );
         
+      case DioExceptionType.badResponse:
+        return _handleResponseError(
+          error.response?.statusCode ?? 0,
+          error.response?.data,
+        );
+        
+      case DioExceptionType.unknown:
       default:
+        if (error.error is SocketException) {
+          return ApiException(
+            message: 'No internet connection',
+            code: ApiExceptionType.noInternet,
+          );
+        }
+        
         return ApiException(
-          message: error.message ?? 'Unexpected error occurred',
+          message: 'An unexpected error occurred',
           code: ApiExceptionType.unknown,
+          data: error.message,
         );
     }
   }
   
   /// Handle response errors based on status code
-  static ApiException _handleResponseError(Response? response) {
-    if (response == null) {
-      return ApiException(
-        message: 'No response received',
-        code: ApiExceptionType.noResponse,
-      );
-    }
-    
-    switch (response.statusCode) {
+  ApiException _handleResponseError(int statusCode, dynamic data) {
+    switch (statusCode) {
       case 400:
-        return _handleBadRequestError(response);
+        // Bad request
+        final String message = _extractErrorMessage(data) ?? 'Bad request';
+        final Map<String, dynamic>? validationErrors = _extractValidationErrors(data);
+        
+        return ApiException(
+          message: message,
+          code: ApiExceptionType.badRequest,
+          data: data,
+          validationErrors: validationErrors,
+        );
         
       case 401:
+        // Unauthorized
         return ApiException(
-          message: 'Unauthorized. Please login again',
+          message: _extractErrorMessage(data) ?? 'Unauthorized',
           code: ApiExceptionType.unauthorized,
-          data: response.data,
+          data: data,
         );
         
       case 403:
+        // Forbidden
         return ApiException(
-          message: 'You don\'t have permission to access this resource',
+          message: _extractErrorMessage(data) ?? 'Forbidden',
           code: ApiExceptionType.forbidden,
-          data: response.data,
+          data: data,
         );
         
       case 404:
+        // Not found
         return ApiException(
-          message: 'Resource not found',
+          message: _extractErrorMessage(data) ?? 'Not found',
           code: ApiExceptionType.notFound,
-          data: response.data,
+          data: data,
         );
         
       case 409:
+        // Conflict
         return ApiException(
-          message: 'Conflict occurred',
+          message: _extractErrorMessage(data) ?? 'Conflict',
           code: ApiExceptionType.conflict,
-          data: response.data,
+          data: data,
         );
         
       case 422:
-        return _handleValidationError(response);
+        // Validation error
+        final String message = _extractErrorMessage(data) ?? 'Validation error';
+        final Map<String, dynamic>? validationErrors = _extractValidationErrors(data);
+        
+        return ApiException(
+          message: message,
+          code: ApiExceptionType.validation,
+          data: data,
+          validationErrors: validationErrors,
+        );
         
       case 429:
+        // Too many requests
         return ApiException(
-          message: 'Too many requests. Please try again later',
+          message: _extractErrorMessage(data) ?? 'Too many requests',
           code: ApiExceptionType.tooManyRequests,
-          data: response.data,
+          data: data,
         );
         
       case 500:
       case 501:
       case 502:
       case 503:
+        // Server error
         return ApiException(
-          message: 'Server error. Please try again later',
+          message: _extractErrorMessage(data) ?? 'Server error',
           code: ApiExceptionType.serverError,
-          data: response.data,
+          data: data,
         );
         
       default:
+        // Unknown error
         return ApiException(
-          message: 'Unexpected error occurred',
+          message: _extractErrorMessage(data) ?? 'Unknown error',
           code: ApiExceptionType.unknown,
-          data: response.data,
+          data: data,
         );
     }
   }
   
-  /// Handle 400 Bad Request errors
-  static ApiException _handleBadRequestError(Response response) {
-    String message = 'Invalid request';
-    
-    if (response.data is Map && response.data['message'] != null) {
-      message = response.data['message'] as String;
+  /// Extract error message from response data
+  String? _extractErrorMessage(dynamic data) {
+    if (data == null) {
+      return null;
     }
     
-    return ApiException(
-      message: message,
-      code: ApiExceptionType.badRequest,
-      data: response.data,
-    );
-  }
-  
-  /// Handle 422 Validation errors
-  static ApiException _handleValidationError(Response response) {
-    String message = 'Validation error';
-    Map<String, dynamic> errors = {};
-    
-    if (response.data is Map) {
-      if (response.data['message'] != null) {
-        message = response.data['message'] as String;
+    if (data is Map<String, dynamic>) {
+      // Check common error message fields
+      if (data['message'] != null) {
+        return data['message'] as String;
       }
       
-      if (response.data['errors'] is Map) {
-        errors = response.data['errors'] as Map<String, dynamic>;
+      if (data['error'] != null) {
+        if (data['error'] is String) {
+          return data['error'] as String;
+        } else if (data['error'] is Map && data['error']['message'] != null) {
+          return data['error']['message'] as String;
+        }
+      }
+      
+      if (data['errors'] != null && data['errors'] is List && (data['errors'] as List).isNotEmpty) {
+        final firstError = (data['errors'] as List).first;
+        if (firstError is String) {
+          return firstError;
+        } else if (firstError is Map && firstError['message'] != null) {
+          return firstError['message'] as String;
+        }
       }
     }
     
-    return ApiException(
-      message: message,
-      code: ApiExceptionType.validation,
-      data: response.data,
-      validationErrors: errors,
-    );
+    return null;
   }
   
-  /// Get user friendly error message
-  static String getUserFriendlyErrorMessage(dynamic error) {
-    final exception = handleError(error);
+  /// Extract validation errors from response data
+  Map<String, dynamic>? _extractValidationErrors(dynamic data) {
+    if (data == null || data is! Map<String, dynamic>) {
+      return null;
+    }
     
+    // Check common validation error fields
+    if (data['errors'] != null && data['errors'] is Map<String, dynamic>) {
+      return data['errors'] as Map<String, dynamic>;
+    }
+    
+    if (data['validationErrors'] != null && data['validationErrors'] is Map<String, dynamic>) {
+      return data['validationErrors'] as Map<String, dynamic>;
+    }
+    
+    return null;
+  }
+  
+  /// Get user-friendly error message
+  String getUserFriendlyErrorMessage(ApiException exception) {
     switch (exception.code) {
       case ApiExceptionType.noInternet:
-        return 'Please check your internet connection and try again';
+        return 'Please check your internet connection and try again.';
         
       case ApiExceptionType.timeout:
-        return 'Connection timeout. Please try again';
+        return 'The request timed out. Please try again later.';
         
       case ApiExceptionType.unauthorized:
-        return 'Your session has expired. Please login again';
+        return 'You are not authorized to perform this action. Please log in again.';
         
       case ApiExceptionType.forbidden:
-        return 'You don\'t have permission to access this feature';
+        return 'You do not have permission to perform this action.';
         
       case ApiExceptionType.notFound:
-        return 'The requested resource could not be found';
-        
-      case ApiExceptionType.serverError:
-        return 'Our servers are experiencing issues. Please try again later';
-        
-      case ApiExceptionType.tooManyRequests:
-        return 'You\'ve made too many requests. Please wait and try again later';
+        return 'The requested resource was not found.';
         
       case ApiExceptionType.validation:
-        return exception.message;
+        return 'Please check your input and try again.';
         
+      case ApiExceptionType.serverError:
+        return 'There was a problem with the server. Please try again later.';
+        
+      case ApiExceptionType.tooManyRequests:
+        return 'You\'ve made too many requests. Please try again later.';
+        
+      case ApiExceptionType.cancelled:
+        return 'The request was cancelled.';
+        
+      case ApiExceptionType.noResponse:
+        return 'No response received from the server. Please try again.';
+        
+      case ApiExceptionType.badRequest:
+      case ApiExceptionType.conflict:
+      case ApiExceptionType.unknown:
       default:
-        return exception.message;
+        // Use the original message if it's user-friendly enough
+        if (exception.message.isNotEmpty) {
+          return exception.message;
+        }
+        return 'An unexpected error occurred. Please try again later.';
     }
-  }
-  
-  /// Check if error should trigger auto-logout
-  static bool shouldLogoutUser(dynamic error) {
-    final exception = handleError(error);
-    return exception.code == ApiExceptionType.unauthorized;
-  }
-  
-  /// Check if error is related to network connectivity
-  static bool isNetworkError(dynamic error) {
-    final exception = handleError(error);
-    return exception.code == ApiExceptionType.noInternet || 
-           exception.code == ApiExceptionType.timeout;
-  }
-  
-  /// Check if error is server-related
-  static bool isServerError(dynamic error) {
-    final exception = handleError(error);
-    return exception.code == ApiExceptionType.serverError;
   }
 }

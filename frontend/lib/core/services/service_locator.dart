@@ -1,132 +1,97 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get_it/get_it.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:frontend/core/network/api_client.dart';
-import 'package:frontend/core/storage/local_storage.dart';
-import 'package:frontend/core/storage/secure_storage.dart';
 import 'package:frontend/core/constants/api_constants.dart';
-import 'package:frontend/features/auth/domain/services/auth_service.dart';
+import 'package:frontend/core/network/api_client.dart';
+import 'package:frontend/core/network/network_error_handler.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
-import 'package:frontend/features/poem_generation/domain/services/poem_service.dart';
-import 'package:frontend/features/poem_generation/presentation/providers/poem_generation_provider.dart';
-import 'package:frontend/features/gallery/domain/services/gallery_service.dart';
+import 'package:frontend/features/auth/domain/services/auth_service.dart';
 import 'package:frontend/features/gallery/presentation/providers/gallery_provider.dart';
-import 'package:frontend/features/profile/domain/services/profile_service.dart';
+import 'package:frontend/features/gallery/domain/services/gallery_service.dart';
+import 'package:frontend/features/poem_generation/presentation/providers/poem_generation_provider.dart';
+import 'package:frontend/features/poem_generation/domain/services/poem_service.dart';
 import 'package:frontend/features/profile/presentation/providers/profile_provider.dart';
+import 'package:frontend/features/profile/domain/services/profile_service.dart';
 
-/// Global ServiceLocator instance
+/// Get the service locator instance
 final GetIt serviceLocator = GetIt.instance;
 
-/// Initialize all service dependencies
+/// Setup service locator
 Future<void> setupServiceLocator() async {
-  // External services
-  final sharedPreferences = await SharedPreferences.getInstance();
-  serviceLocator.registerSingleton<SharedPreferences>(sharedPreferences);
+  // Register core services
+  _registerNetworkServices();
   
-  serviceLocator.registerSingleton<FlutterSecureStorage>(
-    const FlutterSecureStorage(),
-  );
+  // Register domain services
+  _registerDomainServices();
   
-  // Network
-  serviceLocator.registerSingleton<Dio>(
-    Dio(
-      BaseOptions(
-        baseUrl: ApiConstants.baseUrl,
-        connectTimeout: Duration(seconds: ApiConstants.connectTimeout),
-        receiveTimeout: Duration(seconds: ApiConstants.receiveTimeout),
-        sendTimeout: Duration(seconds: ApiConstants.sendTimeout),
-        contentType: 'application/json',
-        responseType: ResponseType.json,
-      ),
-    ),
-  );
-  
-  // Storage
-  serviceLocator.registerSingleton<LocalStorage>(
-    LocalStorage(serviceLocator<SharedPreferences>()),
-  );
-  
-  serviceLocator.registerSingleton<SecureStorage>(
-    SecureStorage(serviceLocator<FlutterSecureStorage>()),
-  );
-  
-  // API Clients
-  serviceLocator.registerSingleton<ApiClient>(
-    ApiClient(serviceLocator<Dio>()),
-  );
-  
-  // Auth Services
-  serviceLocator.registerSingleton<AuthService>(
-    AuthService(
-      serviceLocator<ApiClient>(),
-      serviceLocator<SecureStorage>(),
-    ),
-  );
-  
-  // Poem Services
-  serviceLocator.registerSingleton<PoemService>(
-    PoemService(serviceLocator<ApiClient>()),
-  );
-  
-  // Gallery Services
-  serviceLocator.registerSingleton<GalleryService>(
-    GalleryService(serviceLocator<ApiClient>()),
-  );
-  
-  // Profile Services
-  serviceLocator.registerSingleton<ProfileService>(
-    ProfileService(serviceLocator<ApiClient>()),
-  );
-  
-  // Providers
-  serviceLocator.registerSingleton<AuthProvider>(
-    AuthProvider(serviceLocator<AuthService>()),
-  );
-  
-  serviceLocator.registerSingleton<PoemGenerationProvider>(
-    PoemGenerationProvider(serviceLocator<PoemService>()),
-  );
-  
-  serviceLocator.registerSingleton<GalleryProvider>(
-    GalleryProvider(serviceLocator<GalleryService>()),
-  );
-  
-  serviceLocator.registerSingleton<ProfileProvider>(
-    ProfileProvider(serviceLocator<ProfileService>()),
-  );
-  
-  // Add more services as needed
-  // Repository layer
-  _setupRepositories();
-  
-  // Application business logic / Use cases
-  _setupUseCases();
-  
-  // ViewModels/BLoCs/Cubits
-  _setupViewModels();
+  // Register providers
+  _registerProviders();
 }
 
-/// Setup repositories
-void _setupRepositories() {
-  // Example:
-  // serviceLocator.registerSingleton<UserRepository>(
-  //   UserRepositoryImpl(serviceLocator<ApiClient>()),
-  // );
+/// Register network services
+void _registerNetworkServices() {
+  // Register Dio
+  serviceLocator.registerLazySingleton<Dio>(() => Dio());
+  
+  // Register Connectivity
+  serviceLocator.registerLazySingleton<Connectivity>(() => Connectivity());
+  
+  // Register NetworkErrorHandler
+  serviceLocator.registerLazySingleton<NetworkErrorHandler>(
+    () => const NetworkErrorHandler(),
+  );
+  
+  // Register ApiClient
+  serviceLocator.registerLazySingleton<ApiClient>(() => ApiClient(
+    baseUrl: ApiConstants.baseUrl,
+    dio: serviceLocator<Dio>(),
+    connectivity: serviceLocator<Connectivity>(),
+    errorHandler: serviceLocator<NetworkErrorHandler>(),
+  ));
 }
 
-/// Setup use cases
-void _setupUseCases() {
-  // Example:
-  // serviceLocator.registerSingleton<GetUserProfileUseCase>(
-  //   GetUserProfileUseCase(serviceLocator<UserRepository>()),
-  // );
+/// Register domain services
+void _registerDomainServices() {
+  // Register AuthService
+  serviceLocator.registerLazySingleton<AuthService>(() => AuthService(
+    apiClient: serviceLocator<ApiClient>(),
+  ));
+  
+  // Register GalleryService
+  serviceLocator.registerLazySingleton<GalleryService>(() => GalleryService(
+    apiClient: serviceLocator<ApiClient>(),
+  ));
+  
+  // Register PoemService
+  serviceLocator.registerLazySingleton<PoemService>(() => PoemService(
+    apiClient: serviceLocator<ApiClient>(),
+  ));
+  
+  // Register ProfileService
+  serviceLocator.registerLazySingleton<ProfileService>(() => ProfileService(
+    apiClient: serviceLocator<ApiClient>(),
+  ));
 }
 
-/// Setup ViewModels/BLoCs/Cubits
-void _setupViewModels() {
-  // Example:
-  // serviceLocator.registerFactory<UserProfileBloc>(
-  //   () => UserProfileBloc(serviceLocator<GetUserProfileUseCase>()),
-  // );
+/// Register providers
+void _registerProviders() {
+  // Register AuthProvider
+  serviceLocator.registerLazySingleton<AuthProvider>(() => AuthProvider(
+    authService: serviceLocator<AuthService>(),
+  ));
+  
+  // Register GalleryProvider
+  serviceLocator.registerLazySingleton<GalleryProvider>(() => GalleryProvider(
+    galleryService: serviceLocator<GalleryService>(),
+  ));
+  
+  // Register PoemGenerationProvider
+  serviceLocator.registerLazySingleton<PoemGenerationProvider>(() => PoemGenerationProvider(
+    poemService: serviceLocator<PoemService>(),
+  ));
+  
+  // Register ProfileProvider
+  serviceLocator.registerLazySingleton<ProfileProvider>(() => ProfileProvider(
+    profileService: serviceLocator<ProfileService>(),
+  ));
 }

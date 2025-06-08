@@ -6,6 +6,7 @@ import 'package:frontend/core/theme/app_theme.dart';
 import 'package:frontend/core/utils/app_logger.dart';
 import 'package:frontend/core/routes/route_paths.dart';
 import 'package:frontend/core/widgets/shimmer_loading.dart';
+import 'package:frontend/core/extensions/string_extensions.dart';
 import 'package:frontend/features/gallery/domain/models/creation.dart';
 import 'package:frontend/features/gallery/presentation/providers/gallery_provider.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
@@ -722,7 +723,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
             image: DecorationImage(
               image: CachedNetworkImageProvider(
                 'https://api.poemvision.ai/frames/${creation.frameType}.jpg',
-                errorListener: () => AppLogger.e('Error loading frame image', null),
+                errorListener: (error) {
+                  AppLogger.e('Error loading frame image', error);
+                },
               ),
               fit: BoxFit.cover,
               colorFilter: ColorFilter.mode(
@@ -855,7 +858,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
           image: DecorationImage(
             image: CachedNetworkImageProvider(
               'https://api.poemvision.ai/frames/${creation.frameType}.jpg',
-              errorListener: () => AppLogger.e('Error loading frame image', null),
+              errorListener: (error) {
+                AppLogger.e('Error loading frame image', error);
+              },
             ),
             fit: BoxFit.cover,
           ),
@@ -958,4 +963,26 @@ class _GalleryScreenState extends State<GalleryScreen> {
                         leading: const Icon(Icons.download),
                         title: const Text('Export as Image'),
                         onTap: () {
-                          Navigator
+                          Navigator.pop(context);
+                          _exportCreation(creation);
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.delete, color: Colors.red),
+                        title: const Text('Delete', style: TextStyle(color: Colors.red)),
+                        onTap: () {
+                          Navigator.pop(context);
+                          _showDeleteConfirmation(creation);
+                        },
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}

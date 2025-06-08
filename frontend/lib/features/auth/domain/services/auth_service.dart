@@ -1,237 +1,187 @@
-import 'dart:async';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend/core/network/api_client.dart';
-import 'package:frontend/core/storage/secure_storage.dart';
-import 'package:frontend/core/utils/app_logger.dart';
 
-/// Service responsible for authentication operations
+/// Authentication response model
+class AuthResponse {
+  /// Auth token
+  final String token;
+  
+  /// User ID
+  final String userId;
+  
+  /// Constructor
+  AuthResponse({
+    required this.token,
+    required this.userId,
+  });
+}
+
+/// Authentication service
 class AuthService {
+  /// API client
   final ApiClient _apiClient;
-  final SecureStorage _secureStorage;
   
-  // Auth state stream
-  final _authStateController = StreamController<AuthState>.broadcast();
-  Stream<AuthState> get authStateStream => _authStateController.stream;
+  /// Secure storage for tokens
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   
-  // Current auth state
-  AuthState _currentAuthState = AuthState.unknown;
-  AuthState get currentAuthState => _currentAuthState;
+  /// Token storage key
+  static const String _tokenKey = 'auth_token';
   
-  AuthService(this._apiClient, this._secureStorage);
+  /// User ID storage key
+  static const String _userIdKey = 'user_id';
   
-  /// Initialize the auth service
-  Future<void> init() async {
+  /// Constructor
+  AuthService({
+    required ApiClient apiClient,
+  }) : _apiClient = apiClient;
+  
+  /// Set auth token in API client
+  void setToken(String token) {
+    _apiClient.setToken(token);
+  }
+  
+  /// Clear auth token in API client
+  void clearToken() {
+    _apiClient.clearToken();
+  }
+  
+  /// Store auth token securely
+  Future<void> storeToken(String token) async {
+    await _secureStorage.write(key: _tokenKey, value: token);
+  }
+  
+  /// Get stored auth token
+  Future<String?> getStoredToken() async {
+    return await _secureStorage.read(key: _tokenKey);
+  }
+  
+  /// Clear stored auth token
+  Future<void> clearStoredToken() async {
+    await _secureStorage.delete(key: _tokenKey);
+    
+    // Also clear user ID
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_userIdKey);
+  }
+  
+  /// Store user ID
+  Future<void> storeUserId(String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_userIdKey, userId);
+  }
+  
+  /// Get stored user ID
+  Future<String?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_userIdKey);
+  }
+  
+  /// Validate auth token
+  Future<bool> validateToken(String token) async {
     try {
-      // Check if user is logged in
-      final token = await _secureStorage.getAuthToken();
-      
-      if (token != null && token.isNotEmpty) {
-        // Token exists, user is authenticated
-        final userInfo = await _secureStorage.getUserInfo();
-        
-        if (userInfo != null) {
-          _updateAuthState(AuthState.authenticated);
-        } else {
-          // Token exists but no user info, something is wrong
-          await _secureStorage.clearAuthData();
-          _updateAuthState(AuthState.unauthenticated);
-        }
-      } else {
-        // No token, user is not authenticated
-        _updateAuthState(AuthState.unauthenticated);
-      }
+      // In a real app, we would validate the token with the server
+      // For now, just return true if token exists
+      return token.isNotEmpty;
     } catch (e) {
-      AppLogger.e('Error initializing auth service', e);
-      _updateAuthState(AuthState.unauthenticated);
+      return false;
     }
   }
   
-  /// Login user
-  Future<bool> login({required String email, required String password}) async {
+  /// Login with email and password
+  Future<AuthResponse> login({
+    required String email,
+    required String password,
+  }) async {
     try {
-      // Call API to login
-      final response = await _apiClient.login(
-        email: email,
-        password: password,
+      final response = await _apiClient.post(
+        '/auth/login',
+        data: {
+          'email': email,
+          'password': password,
+        },
       );
       
-      if (response.isSuccess && response.data != null) {
-        // Extract token and user info from response
-        final responseData = response.data!;
-        final token = responseData['token'] as String;
-        final userInfo = responseData['user'] as Map<String, dynamic>;
-        
-        // Store token and user info
-        await _secureStorage.setAuthToken(token);
-        await _secureStorage.setUserInfo(userInfo);
-        
-        // Update auth state
-        _updateAuthState(AuthState.authenticated);
-        
-        return true;
-      } else {
-        throw Exception(response.error?.message ?? 'Failed to login');
-      }
+      final token = response['token'] as String;
+      final userId = response['user_id'] as String;
+      
+      // Store user ID
+      await storeUserId(userId);
+      
+      return AuthResponse(
+        token: token,
+        userId: userId,
+      );
     } catch (e) {
-      AppLogger.e('Error logging in', e);
-      _updateAuthState(AuthState.unauthenticated);
       rethrow;
     }
   }
   
-  /// Register new user
-  Future<bool> signup({
-    required String username,
+  /// Register a new user
+  Future<AuthResponse> signup({
+    required String name,
     required String email,
     required String password,
-    required String confirmPassword,
   }) async {
     try {
-      // Call API to register
-      final response = await _apiClient.signup(
-        username: username,
-        email: email,
-        password: password,
-        confirmPassword: confirmPassword,
+      final response = await _apiClient.post(
+        '/auth/signup',
+        data: {
+          'name': name,
+          'email': email,
+          'password': password,
+        },
       );
       
-      if (response.isSuccess && response.data != null) {
-        // Extract token and user info from response
-        final responseData = response.data!;
-        final token = responseData['token'] as String;
-        final userInfo = responseData['user'] as Map<String, dynamic>;
-        
-        // Store token and user info
-        await _secureStorage.setAuthToken(token);
-        await _secureStorage.setUserInfo(userInfo);
-        
-        // Update auth state
-        _updateAuthState(AuthState.authenticated);
-        
-        return true;
-      } else {
-        throw Exception(response.error?.message ?? 'Failed to signup');
-      }
+      final token = response['token'] as String;
+      final userId = response['user_id'] as String;
+      
+      // Store user ID
+      await storeUserId(userId);
+      
+      return AuthResponse(
+        token: token,
+        userId: userId,
+      );
     } catch (e) {
-      AppLogger.e('Error signing up', e);
-      _updateAuthState(AuthState.unauthenticated);
       rethrow;
     }
   }
   
   /// Logout user
-  Future<bool> logout() async {
+  Future<void> logout() async {
     try {
-      // Call API to logout
-      // final response = await _apiClient.logout();
-      
-      // Clear stored data
-      await _secureStorage.clearAuthData();
-      
-      // Update auth state
-      _updateAuthState(AuthState.unauthenticated);
-      
-      return true;
+      await _apiClient.post('/auth/logout');
     } catch (e) {
-      AppLogger.e('Error logging out', e);
-      // Still clear local data even if API call fails
-      await _secureStorage.clearAuthData();
-      _updateAuthState(AuthState.unauthenticated);
-      return false;
+      // Ignore errors on logout
     }
   }
   
   /// Request password reset
-  Future<bool> forgotPassword({required String email}) async {
-    try {
-      // Call API to request password reset
-      final response = await _apiClient.post(
-        '/forgot-password',
-        data: {'email': email},
-      );
-      
-      return response.isSuccess;
-    } catch (e) {
-      AppLogger.e('Error requesting password reset', e);
-      rethrow;
-    }
+  Future<void> forgotPassword({
+    required String email,
+  }) async {
+    await _apiClient.post(
+      '/auth/forgot-password',
+      data: {
+        'email': email,
+      },
+    );
   }
   
-  /// Reset password
-  Future<bool> resetPassword({
+  /// Reset password with token
+  Future<void> resetPassword({
     required String token,
     required String password,
     required String confirmPassword,
   }) async {
-    try {
-      // Call API to reset password
-      final response = await _apiClient.post(
-        '/reset-password',
-        data: {
-          'token': token,
-          'password': password,
-          'confirm_password': confirmPassword,
-        },
-      );
-      
-      return response.isSuccess;
-    } catch (e) {
-      AppLogger.e('Error resetting password', e);
-      rethrow;
-    }
+    await _apiClient.post(
+      '/auth/reset-password',
+      data: {
+        'token': token,
+        'password': password,
+        'confirm_password': confirmPassword,
+      },
+    );
   }
-  
-  /// Get current user information
-  Future<Map<String, dynamic>?> getCurrentUser() async {
-    try {
-      if (_currentAuthState != AuthState.authenticated) {
-        return null;
-      }
-      
-      return await _secureStorage.getUserInfo();
-    } catch (e) {
-      AppLogger.e('Error getting current user', e);
-      return null;
-    }
-  }
-  
-  /// Check if user is authenticated
-  Future<bool> isAuthenticated() async {
-    try {
-      final token = await _secureStorage.getAuthToken();
-      return token != null && token.isNotEmpty;
-    } catch (e) {
-      AppLogger.e('Error checking authentication status', e);
-      return false;
-    }
-  }
-  
-  /// Refresh token if needed
-  Future<bool> refreshTokenIfNeeded() async {
-    // TODO: Implement token refresh logic
-    return true;
-  }
-  
-  /// Update auth state and notify listeners
-  void _updateAuthState(AuthState newState) {
-    _currentAuthState = newState;
-    _authStateController.add(newState);
-    AppLogger.d('Auth state updated: $newState');
-  }
-  
-  /// Dispose resources
-  void dispose() {
-    _authStateController.close();
-  }
-}
-
-/// Authentication states
-enum AuthState {
-  /// Initial state, auth status not determined yet
-  unknown,
-  
-  /// User is authenticated
-  authenticated,
-  
-  /// User is not authenticated
-  unauthenticated,
 }

@@ -1,120 +1,162 @@
-/// Model representing a user's profile
-class UserProfile {
-  final String id;
-  final String email;
-  final String? displayName;
-  final String? photoUrl;
-  final DateTime createdAt;
-  final DateTime? lastLoginAt;
-  final String membershipPlan;
-  final DateTime? membershipExpiresAt;
-  final Map<String, dynamic>? preferences;
-  final Map<String, dynamic>? stats;
-  final bool emailVerified;
+import 'package:equatable/equatable.dart';
+import 'package:frontend/features/profile/domain/models/membership_plan.dart';
 
+/// User profile model
+class UserProfile extends Equatable {
+  /// User ID
+  final String id;
+  
+  /// User name
+  final String name;
+  
+  /// User email
+  final String email;
+  
+  /// User bio
+  final String? bio;
+  
+  /// User avatar URL
+  final String? avatarUrl;
+  
+  /// Account creation date
+  final DateTime createdAt;
+  
+  /// Total number of creations
+  final int totalCreations;
+  
+  /// Number of favorite creations
+  final int favoriteCreations;
+  
+  /// Number of shared creations
+  final int sharedCreations;
+  
+  /// Current membership
+  final MembershipPlan? currentMembership;
+  
+  /// Membership expiration date
+  final DateTime? membershipExpiresAt;
+  
+  /// Monthly generation quota
+  final int generationQuota;
+  
+  /// Remaining monthly generations
+  final int remainingGenerations;
+  
+  /// Constructor
   const UserProfile({
     required this.id,
+    required this.name,
     required this.email,
-    this.displayName,
-    this.photoUrl,
+    this.bio,
+    this.avatarUrl,
     required this.createdAt,
-    this.lastLoginAt,
-    required this.membershipPlan,
+    this.totalCreations = 0,
+    this.favoriteCreations = 0,
+    this.sharedCreations = 0,
+    this.currentMembership,
     this.membershipExpiresAt,
-    this.preferences,
-    this.stats,
-    this.emailVerified = false,
+    this.generationQuota = 5,
+    this.remainingGenerations = 5,
   });
-
-  /// Factory constructor to create a UserProfile from JSON
+  
+  /// Create from JSON
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     return UserProfile(
       id: json['id'] as String,
+      name: json['name'] as String,
       email: json['email'] as String,
-      displayName: json['display_name'] as String?,
-      photoUrl: json['photo_url'] as String?,
+      bio: json['bio'] as String?,
+      avatarUrl: json['avatar_url'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
-      lastLoginAt: json['last_login_at'] != null
-          ? DateTime.parse(json['last_login_at'] as String)
+      totalCreations: json['total_creations'] as int? ?? 0,
+      favoriteCreations: json['favorite_creations'] as int? ?? 0,
+      sharedCreations: json['shared_creations'] as int? ?? 0,
+      currentMembership: json['current_membership'] != null
+          ? MembershipPlan.fromJson(
+              json['current_membership'] as Map<String, dynamic>,
+            )
           : null,
-      membershipPlan: json['membership_plan'] as String,
       membershipExpiresAt: json['membership_expires_at'] != null
           ? DateTime.parse(json['membership_expires_at'] as String)
           : null,
-      preferences: json['preferences'] as Map<String, dynamic>?,
-      stats: json['stats'] as Map<String, dynamic>?,
-      emailVerified: json['email_verified'] as bool? ?? false,
+      generationQuota: json['generation_quota'] as int? ?? 5,
+      remainingGenerations: json['remaining_generations'] as int? ?? 5,
     );
   }
-
-  /// Convert UserProfile to JSON
+  
+  /// Convert to JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'name': name,
       'email': email,
-      'display_name': displayName,
-      'photo_url': photoUrl,
+      'bio': bio,
+      'avatar_url': avatarUrl,
       'created_at': createdAt.toIso8601String(),
-      'last_login_at': lastLoginAt?.toIso8601String(),
-      'membership_plan': membershipPlan,
+      'total_creations': totalCreations,
+      'favorite_creations': favoriteCreations,
+      'shared_creations': sharedCreations,
+      'current_membership': currentMembership?.toJson(),
       'membership_expires_at': membershipExpiresAt?.toIso8601String(),
-      'preferences': preferences,
-      'stats': stats,
-      'email_verified': emailVerified,
+      'generation_quota': generationQuota,
+      'remaining_generations': remainingGenerations,
     };
   }
-
-  /// Get a copy of this UserProfile with updated fields
+  
+  /// Create a copy with some fields changed
   UserProfile copyWith({
     String? id,
+    String? name,
     String? email,
-    String? displayName,
-    String? photoUrl,
+    String? bio,
+    String? avatarUrl,
     DateTime? createdAt,
-    DateTime? lastLoginAt,
-    String? membershipPlan,
+    int? totalCreations,
+    int? favoriteCreations,
+    int? sharedCreations,
+    MembershipPlan? currentMembership,
     DateTime? membershipExpiresAt,
-    Map<String, dynamic>? preferences,
-    Map<String, dynamic>? stats,
-    bool? emailVerified,
+    int? generationQuota,
+    int? remainingGenerations,
   }) {
     return UserProfile(
       id: id ?? this.id,
+      name: name ?? this.name,
       email: email ?? this.email,
-      displayName: displayName ?? this.displayName,
-      photoUrl: photoUrl ?? this.photoUrl,
+      bio: bio ?? this.bio,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
       createdAt: createdAt ?? this.createdAt,
-      lastLoginAt: lastLoginAt ?? this.lastLoginAt,
-      membershipPlan: membershipPlan ?? this.membershipPlan,
+      totalCreations: totalCreations ?? this.totalCreations,
+      favoriteCreations: favoriteCreations ?? this.favoriteCreations,
+      sharedCreations: sharedCreations ?? this.sharedCreations,
+      currentMembership: currentMembership ?? this.currentMembership,
       membershipExpiresAt: membershipExpiresAt ?? this.membershipExpiresAt,
-      preferences: preferences ?? this.preferences,
-      stats: stats ?? this.stats,
-      emailVerified: emailVerified ?? this.emailVerified,
+      generationQuota: generationQuota ?? this.generationQuota,
+      remainingGenerations: remainingGenerations ?? this.remainingGenerations,
     );
   }
-
-  /// Check if the user has a premium membership
-  bool get isPremium => membershipPlan != 'free';
-
-  /// Check if the membership is active
-  bool get isMembershipActive {
-    if (membershipPlan == 'free') return true;
-    if (membershipExpiresAt == null) return false;
-    return membershipExpiresAt!.isAfter(DateTime.now());
-  }
-
-  /// Get the user's display name, falling back to email if not set
-  String get name => displayName ?? email.split('@').first;
-
-  /// Get the user's initials for avatar display
-  String get initials {
-    if (displayName != null && displayName!.isNotEmpty) {
-      final nameParts = displayName!.split(' ');
-      if (nameParts.length > 1) {
-        return '${nameParts.first[0]}${nameParts.last[0]}';
-      }
-      return displayName![0];
-    }
-    return email[0].toUpperCase();
-  }
+  
+  /// Check if user has premium features
+  bool get hasPremium => currentMembership != null && 
+      (membershipExpiresAt == null || membershipExpiresAt!.isAfter(DateTime.now()));
+  
+  /// Check if user can generate more poems
+  bool get canGenerateMore => remainingGenerations > 0 || hasPremium;
+  
+  @override
+  List<Object?> get props => [
+    id,
+    name,
+    email,
+    bio,
+    avatarUrl,
+    createdAt,
+    totalCreations,
+    favoriteCreations,
+    sharedCreations,
+    currentMembership,
+    membershipExpiresAt,
+    generationQuota,
+    remainingGenerations,
+  ];
 }

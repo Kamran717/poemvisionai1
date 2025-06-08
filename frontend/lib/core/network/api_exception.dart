@@ -1,75 +1,67 @@
-/// Exception class for API related errors
-class ApiException implements Exception {
-  final String message;
-  final ApiExceptionType code;
-  final int? statusCode;
-  final dynamic rawData;
-
-  ApiException({
-    required this.message,
-    required this.code,
-    this.statusCode,
-    this.rawData,
-  });
-
-  @override
-  String toString() => message;
-
-  /// Returns true if the error is due to network issues
-  bool get isNetworkError => code == ApiExceptionType.network;
-
-  /// Returns true if the error is due to timeout
-  bool get isTimeoutError => code == ApiExceptionType.timeout;
-
-  /// Returns true if the error is due to server issues
-  bool get isServerError => code == ApiExceptionType.server;
-
-  /// Returns true if the error is due to unauthorized access
-  bool get isUnauthorizedError => code == ApiExceptionType.unauthorized;
-
-  /// Returns true if the error is due to not found resource
-  bool get isNotFoundError => code == ApiExceptionType.notFound;
-  
-  /// Returns true if the error is due to forbidden access
-  bool get isForbiddenError => code == ApiExceptionType.forbidden;
-  
-  /// Returns true if the error is a validation error
-  bool get isValidationError => code == ApiExceptionType.validation;
-  
-  /// Returns true if the error is due to connection issues
-  bool get isConnectionError => 
-      code == ApiExceptionType.network || 
-      code == ApiExceptionType.timeout;
-  
-  /// Returns true if the error requires authentication
-  bool get requiresAuthentication => 
-      code == ApiExceptionType.unauthorized || 
-      code == ApiExceptionType.forbidden;
-}
-
-/// Types of API exceptions
+/// API exception types
 enum ApiExceptionType {
-  /// Network error (no internet connection)
-  network,
+  /// Bad request (400)
+  badRequest,
   
-  /// Timeout error
-  timeout,
-  
-  /// Server error (500)
-  server,
-  
-  /// Unauthorized error (401)
+  /// Unauthorized (401)
   unauthorized,
   
-  /// Forbidden error (403)
+  /// Forbidden (403)
   forbidden,
   
-  /// Not found error (404)
+  /// Not found (404)
   notFound,
   
-  /// Validation error
+  /// Conflict (409)
+  conflict,
+  
+  /// Validation error (422)
   validation,
+  
+  /// Too many requests (429)
+  tooManyRequests,
+  
+  /// Server error (500, 501, 502, 503)
+  serverError,
+  
+  /// No internet connection
+  noInternet,
+  
+  /// Connection timeout
+  timeout,
+  
+  /// Request cancelled
+  cancelled,
+  
+  /// No response received
+  noResponse,
   
   /// Unknown error
   unknown,
+}
+
+/// API exception class
+class ApiException implements Exception {
+  /// Exception message
+  final String message;
+  
+  /// Exception type
+  final ApiExceptionType code;
+  
+  /// Additional data
+  final dynamic data;
+  
+  /// Validation errors
+  final Map<String, dynamic>? validationErrors;
+  
+  /// Constructor
+  ApiException({
+    required this.message,
+    required this.code,
+    this.data,
+    this.validationErrors,
+  });
+  
+  @override
+  String toString() => message;
 }

@@ -1,129 +1,104 @@
+import 'package:equatable/equatable.dart';
 import 'package:frontend/features/poem_generation/domain/models/poem.dart';
-import 'package:frontend/features/poem_generation/domain/models/analysis_result.dart';
 
-/// Model representing a user's creation (a poem with its associated image analysis)
-class Creation {
+/// Represents a complete poem creation with frame
+class Creation extends Equatable {
+  /// Unique identifier
   final String id;
+  
+  /// Poem data
   final Poem poem;
-  final AnalysisResult? analysis;
-  final DateTime createdAt;
-  final DateTime? updatedAt;
+  
+  /// Type of frame
   final String frameType;
+  
+  /// Creation timestamp
+  final DateTime createdAt;
+  
+  /// Whether the creation is marked as favorite
   final bool isFavorite;
-  final bool isPublic;
-  final int viewCount;
-  final int likeCount;
-  final String? shareUrl;
-  final Map<String, dynamic>? metadata;
-
+  
+  /// Public share link (if shared)
+  final String? shareLink;
+  
+  /// Number of views (if shared)
+  final int views;
+  
+  /// User notes
+  final String? notes;
+  
+  /// Constructor
   const Creation({
     required this.id,
     required this.poem,
-    this.analysis,
-    required this.createdAt,
-    this.updatedAt,
     required this.frameType,
+    required this.createdAt,
     this.isFavorite = false,
-    this.isPublic = false,
-    this.viewCount = 0,
-    this.likeCount = 0,
-    this.shareUrl,
-    this.metadata,
+    this.shareLink,
+    this.views = 0,
+    this.notes,
   });
-
-  /// Factory constructor to create a Creation from JSON
+  
+  /// Create from JSON
   factory Creation.fromJson(Map<String, dynamic> json) {
     return Creation(
       id: json['id'] as String,
       poem: Poem.fromJson(json['poem'] as Map<String, dynamic>),
-      analysis: json['analysis'] != null
-          ? AnalysisResult.fromJson(json['analysis'] as Map<String, dynamic>)
-          : null,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'] as String)
-          : null,
       frameType: json['frame_type'] as String,
+      createdAt: DateTime.parse(json['created_at'] as String),
       isFavorite: json['is_favorite'] as bool? ?? false,
-      isPublic: json['is_public'] as bool? ?? false,
-      viewCount: json['view_count'] as int? ?? 0,
-      likeCount: json['like_count'] as int? ?? 0,
-      shareUrl: json['share_url'] as String?,
-      metadata: json['metadata'] as Map<String, dynamic>?,
+      shareLink: json['share_link'] as String?,
+      views: json['views'] as int? ?? 0,
+      notes: json['notes'] as String?,
     );
   }
-
-  /// Convert Creation to JSON
+  
+  /// Convert to JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'poem': poem.toJson(),
-      'analysis': analysis?.toJson(),
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt?.toIso8601String(),
       'frame_type': frameType,
+      'created_at': createdAt.toIso8601String(),
       'is_favorite': isFavorite,
-      'is_public': isPublic,
-      'view_count': viewCount,
-      'like_count': likeCount,
-      'share_url': shareUrl,
-      'metadata': metadata,
+      'share_link': shareLink,
+      'views': views,
+      'notes': notes,
     };
   }
-
-  /// Get a copy of this Creation with updated fields
+  
+  /// Create a copy with some fields changed
   Creation copyWith({
     String? id,
     Poem? poem,
-    AnalysisResult? analysis,
-    DateTime? createdAt,
-    DateTime? updatedAt,
     String? frameType,
+    DateTime? createdAt,
     bool? isFavorite,
-    bool? isPublic,
-    int? viewCount,
-    int? likeCount,
-    String? shareUrl,
-    Map<String, dynamic>? metadata,
+    String? shareLink,
+    int? views,
+    String? notes,
   }) {
     return Creation(
       id: id ?? this.id,
       poem: poem ?? this.poem,
-      analysis: analysis ?? this.analysis,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
       frameType: frameType ?? this.frameType,
+      createdAt: createdAt ?? this.createdAt,
       isFavorite: isFavorite ?? this.isFavorite,
-      isPublic: isPublic ?? this.isPublic,
-      viewCount: viewCount ?? this.viewCount,
-      likeCount: likeCount ?? this.likeCount,
-      shareUrl: shareUrl ?? this.shareUrl,
-      metadata: metadata ?? this.metadata,
+      shareLink: shareLink ?? this.shareLink,
+      views: views ?? this.views,
+      notes: notes ?? this.notes,
     );
   }
-
-  /// Toggle favorite status
-  Creation toggleFavorite() {
-    return copyWith(
-      isFavorite: !isFavorite,
-      updatedAt: DateTime.now(),
-    );
-  }
-
-  /// Toggle public status
-  Creation togglePublic() {
-    return copyWith(
-      isPublic: !isPublic,
-      updatedAt: DateTime.now(),
-    );
-  }
-
-  /// Update share URL
-  Creation withShareUrl(String url) {
-    return copyWith(
-      shareUrl: url,
-      isPublic: true,
-      updatedAt: DateTime.now(),
-    );
-  }
+  
+  @override
+  List<Object?> get props => [
+    id,
+    poem,
+    frameType,
+    createdAt,
+    isFavorite,
+    shareLink,
+    views,
+    notes,
+  ];
 }

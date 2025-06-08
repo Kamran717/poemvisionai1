@@ -1,220 +1,280 @@
 import 'package:flutter/foundation.dart';
-import 'package:frontend/core/utils/app_logger.dart';
 import 'package:frontend/features/gallery/domain/models/creation.dart';
 import 'package:frontend/features/gallery/domain/services/gallery_service.dart';
 
-/// Provider for gallery functionality
+/// Gallery provider
 class GalleryProvider extends ChangeNotifier {
+  /// Gallery service
   final GalleryService _galleryService;
   
-  // Creations
+  /// List of all creations
   List<Creation> _creations = [];
+  
+  /// List of filtered creations
+  List<Creation> _filteredCreations = [];
+  
+  /// Sort by field
+  String _sortBy = 'created_at';
+  
+  /// Sort in descending order
+  bool _sortDescending = true;
+  
+  /// Show favorites only
+  bool _showFavoritesOnly = false;
+  
+  /// Search query
+  String? _searchQuery;
+  
+  /// Loading state
+  bool _isLoading = false;
+  
+  /// Loading more state
+  bool _isLoadingMore = false;
+  
+  /// Has more pages
+  bool _hasMorePages = true;
+  
+  /// Current page
+  int _currentPage = 1;
+  
+  /// Error message
+  String? _errorMessage;
+  
+  /// Constructor
+  GalleryProvider({
+    required GalleryService galleryService,
+  }) : _galleryService = galleryService;
+  
+  /// Get list of all creations
   List<Creation> get creations => _creations;
   
-  // Filtered creations
-  List<Creation> _filteredCreations = [];
+  /// Get list of filtered creations
   List<Creation> get filteredCreations => _filteredCreations;
   
-  // Selected creation
-  Creation? _selectedCreation;
-  Creation? get selectedCreation => _selectedCreation;
-  
-  // Filter and sort options
-  bool _showFavoritesOnly = false;
-  bool get showFavoritesOnly => _showFavoritesOnly;
-  
-  String _sortBy = 'created_at';
+  /// Get sort by field
   String get sortBy => _sortBy;
   
-  bool _sortDescending = true;
+  /// Get sort direction
   bool get sortDescending => _sortDescending;
   
-  String? _searchQuery;
+  /// Get show favorites only
+  bool get showFavoritesOnly => _showFavoritesOnly;
+  
+  /// Get search query
   String? get searchQuery => _searchQuery;
   
-  // Loading and error states
-  bool _isLoading = false;
+  /// Get loading state
   bool get isLoading => _isLoading;
   
-  bool _isLoadingMore = false;
+  /// Get loading more state
   bool get isLoadingMore => _isLoadingMore;
   
-  String? _errorMessage;
-  String? get errorMessage => _errorMessage;
-  
-  // Pagination
-  int _currentPage = 0;
-  final int _pageSize = 10;
-  bool _hasMorePages = true;
+  /// Get has more pages
   bool get hasMorePages => _hasMorePages;
   
-  GalleryProvider(this._galleryService);
+  /// Get error message
+  String? get errorMessage => _errorMessage;
   
-  /// Load user creations
-  Future<void> loadCreations({bool refresh = false}) async {
-    if (_isLoading) return;
+  /// Load creations from API
+  Future<void> loadCreations({
+    bool refresh = false,
+  }) async {
+    if (refresh) {
+      _isLoading = true;
+      _currentPage = 1;
+      _hasMorePages = true;
+      _errorMessage = null;
+      notifyListeners();
+    }
     
     try {
-      if (refresh) {
-        _setLoading(true);
-        _currentPage = 0;
-        _hasMorePages = true;
-      }
-      
-      // Get creations
-      final creations = await _galleryService.getUserCreations(
-        favoritesOnly: _showFavoritesOnly,
+      final response = await _galleryService.getCreations(
+        page: _currentPage,
+        limit: 10,
         sortBy: _sortBy,
-        descending: _sortDescending,
-        limit: _pageSize,
-        offset: _currentPage * _pageSize,
+        sortDescending: _sortDescending,
+        favoritesOnly: _showFavoritesOnly,
+        search: _searchQuery,
       );
       
-      // Update state
-      if (refresh || _currentPage == 0) {
-        _creations = creations;
+      if (refresh) {
+        _creations = response.creations;
       } else {
-        _creations.addAll(creations);
+        _creations = [..._creations, ...response.creations];
       }
       
-      // Check if there are more pages
-      _hasMorePages = creations.length == _pageSize;
-      
-      // Increment page number
-      _currentPage++;
-      
-      // Apply filters
+      _hasMorePages = response.hasNextPage;
       _applyFilters();
-      
-      _setLoading(false);
+      _errorMessage = null;
     } catch (e) {
-      AppLogger.e('Error loading creations', e);
-      _setError('Failed to load creations');
+      _errorMessage = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
   
-  /// Load more creations (pagination)
+  /// Load more creations
   Future<void> loadMoreCreations() async {
-    if (_isLoadingMore || !_hasMorePages) return;
+    if (!_hasMorePages || _isLoadingMore) return;
+    
+    _isLoadingMore = true;
+    _currentPage++;
+    notifyListeners();
     
     try {
-      _isLoadingMore = true;
-      notifyListeners();
-      
-      await loadCreations();
-      
-      _isLoadingMore = false;
-      notifyListeners();
-    } catch (e) {
-      AppLogger.e('Error loading more creations', e);
-      _isLoadingMore = false;
-      notifyListeners();
-    }
-  }
-  
-  /// Get a specific creation by ID
-  Future<Creation?> getCreationById(String creationId) async {
-    try {
-      _setLoading(true);
-      
-      // Try to find creation in current list
-      final existingCreation = _creations.firstWhere(
-        (creation) => creation.id == creationId,
-        orElse: () => null as Creation,
+      final response = await _galleryService.getCreations(
+        page: _currentPage,
+        limit: 10,
+        sortBy: _sortBy,
+        sortDescending: _sortDescending,
+        favoritesOnly: _showFavoritesOnly,
+        search: _searchQuery,
       );
       
-      if (existingCreation != null) {
-        _selectedCreation = existingCreation;
-        _setLoading(false);
-        return existingCreation;
-      }
-      
-      // If not found, fetch from API
-      final creation = await _galleryService.getCreationById(creationId);
-      _selectedCreation = creation;
-      
-      _setLoading(false);
-      return creation;
+      _creations = [..._creations, ...response.creations];
+      _hasMorePages = response.hasNextPage;
+      _applyFilters();
+      _errorMessage = null;
     } catch (e) {
-      AppLogger.e('Error getting creation by ID', e);
-      _setError('Failed to get creation');
-      return null;
+      _errorMessage = e.toString();
+      _currentPage--; // Revert page increment
+    } finally {
+      _isLoadingMore = false;
+      notifyListeners();
     }
   }
   
-  /// Set selected creation
-  void setSelectedCreation(Creation creation) {
-    _selectedCreation = creation;
+  /// Set favorites filter
+  void setFavoritesFilter(bool showFavoritesOnly) {
+    _showFavoritesOnly = showFavoritesOnly;
+    _applyFilters();
+    
+    // Reload from API if needed
+    loadCreations(refresh: true);
+  }
+  
+  /// Set sort options
+  void setSortOptions(String sortBy, bool sortDescending) {
+    _sortBy = sortBy;
+    _sortDescending = sortDescending;
+    _applyFilters();
+    
+    // Reload from API if needed
+    loadCreations(refresh: true);
+  }
+  
+  /// Search creations
+  void searchCreations(String query) {
+    _searchQuery = query.isNotEmpty ? query : null;
+    
+    // Reload from API
+    loadCreations(refresh: true);
+  }
+  
+  /// Clear search
+  void clearSearch() {
+    if (_searchQuery != null) {
+      _searchQuery = null;
+      
+      // Reload from API
+      loadCreations(refresh: true);
+    }
+  }
+  
+  /// Apply filters to creations
+  void _applyFilters() {
+    // Start with all creations
+    _filteredCreations = List.from(_creations);
+    
+    // Apply local filtering if needed
+    // Note: API should handle most filtering, but we can do additional filtering here
+    if (_searchQuery != null && _searchQuery!.isNotEmpty) {
+      final query = _searchQuery!.toLowerCase();
+      _filteredCreations = _filteredCreations.where((creation) {
+        return creation.poem.title.toLowerCase().contains(query) ||
+            creation.poem.content.toLowerCase().contains(query);
+      }).toList();
+    }
+    
+    // Apply local sorting if needed
+    // Note: API should handle most sorting, but we can do additional sorting here
+    _filteredCreations.sort((a, b) {
+      int result;
+      
+      switch (_sortBy) {
+        case 'title':
+          result = a.poem.title.compareTo(b.poem.title);
+          break;
+        case 'created_at':
+        default:
+          result = a.createdAt.compareTo(b.createdAt);
+          break;
+      }
+      
+      return _sortDescending ? -result : result;
+    });
+    
     notifyListeners();
   }
   
-  /// Toggle favorite status of a creation
-  Future<bool> toggleFavorite(String creationId) async {
+  /// Toggle favorite status for a creation
+  Future<void> toggleFavorite(String creationId) async {
     try {
-      // Get the creation
-      final creationIndex = _creations.indexWhere((c) => c.id == creationId);
-      if (creationIndex == -1) return false;
-      
-      // Toggle favorite in UI immediately for better UX
-      final updatedCreation = _creations[creationIndex].toggleFavorite();
-      _creations[creationIndex] = updatedCreation;
-      
-      // Update selected creation if necessary
-      if (_selectedCreation?.id == creationId) {
-        _selectedCreation = updatedCreation;
+      // Optimistic update
+      final index = _creations.indexWhere((c) => c.id == creationId);
+      if (index != -1) {
+        final creation = _creations[index];
+        final updatedCreation = creation.copyWith(
+          isFavorite: !creation.isFavorite,
+        );
+        
+        _creations[index] = updatedCreation;
+        _applyFilters();
       }
       
-      // Apply filters
-      _applyFilters();
-      
-      notifyListeners();
-      
-      // Call API to update favorite status
-      final result = await _galleryService.toggleFavorite(creationId);
-      
-      // Update with server response
-      _creations[creationIndex] = result;
-      
-      if (_selectedCreation?.id == creationId) {
-        _selectedCreation = result;
-      }
-      
-      // Apply filters again with updated data
-      _applyFilters();
-      
-      notifyListeners();
-      return true;
+      // Call API
+      await _galleryService.toggleFavorite(creationId);
     } catch (e) {
-      AppLogger.e('Error toggling favorite', e);
-      _setError('Failed to update favorite status');
-      return false;
+      // Revert on error
+      final index = _creations.indexWhere((c) => c.id == creationId);
+      if (index != -1) {
+        final creation = _creations[index];
+        final revertedCreation = creation.copyWith(
+          isFavorite: !creation.isFavorite,
+        );
+        
+        _creations[index] = revertedCreation;
+        _applyFilters();
+      }
+      
+      _errorMessage = e.toString();
+      notifyListeners();
     }
   }
   
   /// Delete a creation
   Future<bool> deleteCreation(String creationId) async {
     try {
+      // Optimistic update
+      final originalCreations = List<Creation>.from(_creations);
+      
+      _creations.removeWhere((c) => c.id == creationId);
+      _applyFilters();
+      
+      // Call API
       final success = await _galleryService.deleteCreation(creationId);
       
-      if (success) {
-        // Remove from list
-        _creations.removeWhere((c) => c.id == creationId);
-        
-        // Clear selected creation if necessary
-        if (_selectedCreation?.id == creationId) {
-          _selectedCreation = null;
-        }
-        
-        // Apply filters
+      if (!success) {
+        // Revert on error
+        _creations = originalCreations;
         _applyFilters();
-        
-        notifyListeners();
       }
       
       return success;
     } catch (e) {
-      AppLogger.e('Error deleting creation', e);
-      _setError('Failed to delete creation');
+      _errorMessage = e.toString();
+      notifyListeners();
       return false;
     }
   }
@@ -223,23 +283,10 @@ class GalleryProvider extends ChangeNotifier {
   Future<String?> shareCreation(String creationId) async {
     try {
       final shareUrl = await _galleryService.shareCreation(creationId);
-      
-      // Update creation with share URL
-      final creationIndex = _creations.indexWhere((c) => c.id == creationId);
-      if (creationIndex != -1) {
-        _creations[creationIndex] = _creations[creationIndex].withShareUrl(shareUrl);
-        
-        if (_selectedCreation?.id == creationId) {
-          _selectedCreation = _creations[creationIndex];
-        }
-        
-        notifyListeners();
-      }
-      
       return shareUrl;
     } catch (e) {
-      AppLogger.e('Error sharing creation', e);
-      _setError('Failed to share creation');
+      _errorMessage = e.toString();
+      notifyListeners();
       return null;
     }
   }
@@ -247,97 +294,12 @@ class GalleryProvider extends ChangeNotifier {
   /// Export creation as image
   Future<String?> exportCreationAsImage(String creationId) async {
     try {
-      return await _galleryService.exportCreationAsImage(creationId);
+      final imageUrl = await _galleryService.exportCreationAsImage(creationId);
+      return imageUrl;
     } catch (e) {
-      AppLogger.e('Error exporting creation', e);
-      _setError('Failed to export creation');
+      _errorMessage = e.toString();
+      notifyListeners();
       return null;
     }
-  }
-  
-  /// Set favorites filter
-  void setFavoritesFilter(bool showFavoritesOnly) {
-    _showFavoritesOnly = showFavoritesOnly;
-    _applyFilters();
-    notifyListeners();
-  }
-  
-  /// Set sort options
-  void setSortOptions(String sortBy, bool descending) {
-    _sortBy = sortBy;
-    _sortDescending = descending;
-    loadCreations(refresh: true);
-  }
-  
-  /// Search creations
-  Future<void> searchCreations(String query) async {
-    if (query.isEmpty) {
-      _searchQuery = null;
-      _applyFilters();
-      notifyListeners();
-      return;
-    }
-    
-    try {
-      _setLoading(true);
-      _searchQuery = query;
-      
-      final results = await _galleryService.searchCreations(query);
-      _creations = results;
-      _applyFilters();
-      
-      _setLoading(false);
-    } catch (e) {
-      AppLogger.e('Error searching creations', e);
-      _setError('Failed to search creations');
-    }
-  }
-  
-  /// Clear search
-  void clearSearch() {
-    _searchQuery = null;
-    loadCreations(refresh: true);
-  }
-  
-  /// Apply filters to creations
-  void _applyFilters() {
-    _filteredCreations = List.from(_creations);
-    
-    // Apply favorites filter
-    if (_showFavoritesOnly) {
-      _filteredCreations = _filteredCreations.where((c) => c.isFavorite).toList();
-    }
-    
-    // Sort locally if needed
-    if (_sortBy == 'title') {
-      _filteredCreations.sort((a, b) {
-        final result = a.poem.title.compareTo(b.poem.title);
-        return _sortDescending ? -result : result;
-      });
-    } else if (_sortBy == 'created_at' && (_creations.length != _pageSize || _currentPage > 1)) {
-      // Only sort by date locally if we have loaded more than one page or have all results
-      _filteredCreations.sort((a, b) {
-        final result = a.createdAt.compareTo(b.createdAt);
-        return _sortDescending ? -result : result;
-      });
-    }
-    
-    notifyListeners();
-  }
-  
-  /// Set loading state
-  void _setLoading(bool loading) {
-    _isLoading = loading;
-    if (!loading) {
-      _errorMessage = null;
-    }
-    notifyListeners();
-  }
-  
-  /// Set error message
-  void _setError(String message) {
-    _errorMessage = message;
-    _isLoading = false;
-    notifyListeners();
   }
 }
