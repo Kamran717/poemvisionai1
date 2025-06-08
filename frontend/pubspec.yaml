@@ -10,7 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.6
-  dio: ^5.4.0
+  http: ^1.1.0
   provider: ^6.1.1
   shared_preferences: ^2.2.2
   flutter_secure_storage: ^9.0.0
@@ -28,11 +28,7 @@ dependencies:
   flutter_svg: ^2.0.9
   json_annotation: ^4.8.1
   equatable: ^2.0.5
-  hive: ^2.2.3
-  hive_flutter: ^1.1.0
   logger: ^2.0.2
-  # Temporarily commenting out to troubleshoot build issues
-  # animated_introduction: ^1.0.0
 
 dev_dependencies:
   flutter_test:
@@ -40,7 +36,6 @@ dev_dependencies:
   flutter_lints: ^3.0.1
   build_runner: ^2.4.7
   json_serializable: ^6.7.1
-  hive_generator: ^2.0.1
   mockito: ^5.4.4
 
 flutter:
@@ -51,15 +46,3 @@ flutter:
     - assets/icons/
     - assets/frames/
     - assets/animations/
-  
-  # Temporarily commenting out fonts until we add the font files
-  # fonts:
-  #   - family: Poppins
-  #     fonts:
-  #       - asset: assets/fonts/Poppins-Regular.ttf
-  #       - asset: assets/fonts/Poppins-Medium.ttf
-  #         weight: 500
-  #       - asset: assets/fonts/Poppins-SemiBold.ttf
-  #         weight: 600
-  #       - asset: assets/fonts/Poppins-Bold.ttf
-  #         weight: 700
