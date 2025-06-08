@@ -8,6 +8,8 @@ import 'package:frontend/core/storage/secure_storage.dart';
 import 'package:frontend/core/constants/api_constants.dart';
 import 'package:frontend/features/auth/domain/services/auth_service.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
+import 'package:frontend/features/poem_generation/domain/services/poem_service.dart';
+import 'package:frontend/features/poem_generation/presentation/providers/poem_generation_provider.dart';
 
 /// Global ServiceLocator instance
 final GetIt serviceLocator = GetIt.instance;
@@ -58,9 +60,18 @@ Future<void> setupServiceLocator() async {
     ),
   );
   
+  // Poem Services
+  serviceLocator.registerSingleton<PoemService>(
+    PoemService(serviceLocator<ApiClient>()),
+  );
+  
   // Providers
   serviceLocator.registerSingleton<AuthProvider>(
     AuthProvider(serviceLocator<AuthService>()),
+  );
+  
+  serviceLocator.registerSingleton<PoemGenerationProvider>(
+    PoemGenerationProvider(serviceLocator<PoemService>()),
   );
   
   // Add more services as needed
