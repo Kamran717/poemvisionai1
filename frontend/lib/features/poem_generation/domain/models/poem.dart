@@ -5,23 +5,26 @@ class Poem extends Equatable {
   /// Unique identifier
   final String id;
   
-  /// Title of the poem
+  /// Poem title
   final String title;
   
-  /// Content of the poem
+  /// Poem content
   final String content;
   
-  /// Type of poem (e.g., Sonnet, Haiku)
+  /// Type of poem (sonnet, haiku, etc.)
   final String poemType;
   
   /// Mood of the poem
   final String mood;
   
-  /// Generated date
+  /// Generation date
   final DateTime generatedAt;
   
-  /// Custom prompt used for generation (if any)
+  /// Custom prompt used (if any)
   final String? customPrompt;
+  
+  /// Custom theme (if any)
+  final String? theme;
   
   /// Constructor
   const Poem({
@@ -32,6 +35,7 @@ class Poem extends Equatable {
     required this.mood,
     required this.generatedAt,
     this.customPrompt,
+    this.theme,
   });
   
   @override
@@ -43,7 +47,31 @@ class Poem extends Equatable {
     mood,
     generatedAt,
     customPrompt,
+    theme,
   ];
+  
+  /// Create a copy with modified properties
+  Poem copyWith({
+    String? id,
+    String? title,
+    String? content,
+    String? poemType,
+    String? mood,
+    DateTime? generatedAt,
+    String? customPrompt,
+    String? theme,
+  }) {
+    return Poem(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      content: content ?? this.content,
+      poemType: poemType ?? this.poemType,
+      mood: mood ?? this.mood,
+      generatedAt: generatedAt ?? this.generatedAt,
+      customPrompt: customPrompt ?? this.customPrompt,
+      theme: theme ?? this.theme,
+    );
+  }
   
   /// Create from JSON
   factory Poem.fromJson(Map<String, dynamic> json) {
@@ -55,6 +83,7 @@ class Poem extends Equatable {
       mood: json['mood'] as String,
       generatedAt: DateTime.parse(json['generated_at'] as String),
       customPrompt: json['custom_prompt'] as String?,
+      theme: json['theme'] as String?,
     );
   }
   
@@ -68,27 +97,7 @@ class Poem extends Equatable {
       'mood': mood,
       'generated_at': generatedAt.toIso8601String(),
       'custom_prompt': customPrompt,
+      'theme': theme,
     };
-  }
-  
-  /// Create a copy with modified properties
-  Poem copyWith({
-    String? id,
-    String? title,
-    String? content,
-    String? poemType,
-    String? mood,
-    DateTime? generatedAt,
-    String? customPrompt,
-  }) {
-    return Poem(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      content: content ?? this.content,
-      poemType: poemType ?? this.poemType,
-      mood: mood ?? this.mood,
-      generatedAt: generatedAt ?? this.generatedAt,
-      customPrompt: customPrompt ?? this.customPrompt,
-    );
   }
 }

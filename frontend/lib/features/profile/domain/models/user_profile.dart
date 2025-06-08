@@ -27,6 +27,12 @@ class UserProfile extends Equatable {
   /// Membership plan expiration date
   final DateTime? planExpiresAt;
   
+  /// Membership plan ID
+  final String? membershipPlan;
+  
+  /// Whether membership is active
+  final bool isMembershipActive;
+  
   /// Number of poems created
   final int poemsCreated;
   
@@ -46,6 +52,8 @@ class UserProfile extends Equatable {
     required this.createdAt,
     required this.planType,
     this.planExpiresAt,
+    this.membershipPlan,
+    this.isMembershipActive = false,
     this.poemsCreated = 0,
     this.favorites = 0,
     this.shares = 0,
@@ -75,6 +83,8 @@ class UserProfile extends Equatable {
     DateTime? createdAt,
     MembershipPlanType? planType,
     DateTime? planExpiresAt,
+    String? membershipPlan,
+    bool? isMembershipActive,
     int? poemsCreated,
     int? favorites,
     int? shares,
@@ -88,6 +98,8 @@ class UserProfile extends Equatable {
       createdAt: createdAt ?? this.createdAt,
       planType: planType ?? this.planType,
       planExpiresAt: planExpiresAt ?? this.planExpiresAt,
+      membershipPlan: membershipPlan ?? this.membershipPlan,
+      isMembershipActive: isMembershipActive ?? this.isMembershipActive,
       poemsCreated: poemsCreated ?? this.poemsCreated,
       favorites: favorites ?? this.favorites,
       shares: shares ?? this.shares,
@@ -110,6 +122,8 @@ class UserProfile extends Equatable {
       planExpiresAt: json['plan_expires_at'] != null
           ? DateTime.parse(json['plan_expires_at'] as String)
           : null,
+      membershipPlan: json['membership_plan'] as String?,
+      isMembershipActive: json['is_membership_active'] as bool? ?? false,
       poemsCreated: json['poems_created'] as int? ?? 0,
       favorites: json['favorites'] as int? ?? 0,
       shares: json['shares'] as int? ?? 0,
@@ -127,6 +141,8 @@ class UserProfile extends Equatable {
       'created_at': createdAt.toIso8601String(),
       'plan_type': planType.name,
       'plan_expires_at': planExpiresAt?.toIso8601String(),
+      'membership_plan': membershipPlan,
+      'is_membership_active': isMembershipActive,
       'poems_created': poemsCreated,
       'favorites': favorites,
       'shares': shares,
@@ -143,6 +159,8 @@ class UserProfile extends Equatable {
     createdAt,
     planType,
     planExpiresAt,
+    membershipPlan,
+    isMembershipActive,
     poemsCreated,
     favorites,
     shares,

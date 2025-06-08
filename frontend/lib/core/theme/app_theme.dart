@@ -38,6 +38,12 @@ class AppTheme {
   /// Dark text color
   static const Color textDarkColor = Color(0xFF212121);
   
+  /// Primary text color
+  static const Color textPrimaryColor = Color(0xFF212121);
+  
+  /// Secondary text color
+  static const Color textSecondaryColor = Color(0xFF757575);
+  
   /// Disabled color
   static const Color disabledColor = Color(0xFFBDBDBD);
   

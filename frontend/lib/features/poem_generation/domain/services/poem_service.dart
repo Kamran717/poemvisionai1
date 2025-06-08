@@ -1,65 +1,66 @@
-import 'dart:io';
-import 'package:dio/dio.dart';
-import 'package:http_parser/http_parser.dart';
-import 'package:frontend/core/network/api_client.dart';
 import 'package:frontend/features/poem_generation/domain/models/analysis_result.dart';
 import 'package:frontend/features/poem_generation/domain/models/poem.dart';
-import 'package:path/path.dart' as path;
 
-/// Poem service
-class PoemService {
-  /// API client
-  final ApiClient _apiClient;
+/// Service for poem generation operations
+abstract class PoemService {
+  /// Upload an image
+  Future<String> uploadImage(String imagePath);
   
-  /// Constructor
-  PoemService({
-    required ApiClient apiClient,
-  }) : _apiClient = apiClient;
+  /// Analyze an image
+  Future<AnalysisResult> analyzeImage(String imageId);
   
-  /// Upload an image for analysis
+  /// Generate a poem
+  Future<Poem> generatePoem({
+    required String imageId,
+    required String analysisId,
+    required String poemType,
+    String? customPrompt,
+    String? mood,
+    String? theme,
+  });
+  
+  /// Edit a poem
+  Future<Poem> editPoem({
+    required String poemId,
+    required String title,
+    required String content,
+  });
+  
+  /// Finalize creation
+  Future<String> finalizeCreation({
+    required String poemId,
+    required String frameType,
+  });
+}
+
+/// Implementation of poem service
+class PoemServiceImpl implements PoemService {
+  @override
   Future<String> uploadImage(String imagePath) async {
-    try {
-      final file = File(imagePath);
-      final fileName = path.basename(imagePath);
-      final fileExtension = path.extension(imagePath).replaceAll('.', '');
-      
-      // Create form data
-      final formData = FormData.fromMap({
-        'image': await MultipartFile.fromFile(
-          file.path,
-          filename: fileName,
-          contentType: MediaType('image', fileExtension),
-        ),
-      });
-      
-      final response = await _apiClient.post(
-        '/images/upload',
-        data: formData,
-      );
-      
-      return response['image_id'] as String;
-    } catch (e) {
-      rethrow;
-    }
+    // TODO: Implement API call
+    // Mock implementation
+    await Future.delayed(const Duration(seconds: 1));
+    return 'mock_image_id_${DateTime.now().millisecondsSinceEpoch}';
   }
   
-  /// Analyze an uploaded image
+  @override
   Future<AnalysisResult> analyzeImage(String imageId) async {
-    try {
-      final response = await _apiClient.post(
-        '/images/analyze',
-        data: {
-          'image_id': imageId,
-        },
-      );
-      
-      return AnalysisResult.fromJson(response as Map<String, dynamic>);
-    } catch (e) {
-      rethrow;
-    }
+    // TODO: Implement API call
+    // Mock implementation
+    await Future.delayed(const Duration(seconds: 2));
+    return AnalysisResult(
+      id: 'mock_analysis_id_${DateTime.now().millisecondsSinceEpoch}',
+      imageId: imageId,
+      analyzedAt: DateTime.now(),
+      contentDescription: 'A beautiful nature scene with mountains and trees',
+      detectedSubjects: ['mountains', 'trees', 'sky', 'water'],
+      dominantColors: ['blue', 'green', 'white'],
+      dominantMood: 'serene',
+      sceneType: 'landscape',
+    );
   }
   
-  /// Generate a poem based on analysis
+  @override
   Future<Poem> generatePoem({
     required String imageId,
     required String analysisId,
@@ -68,76 +69,57 @@ class PoemService {
     String? mood,
     String? theme,
   }) async {
-    try {
-      final data = <String, dynamic>{
-        'image_id': imageId,
-        'analysis_id': analysisId,
-        'poem_type': poemType,
-      };
-      
-      if (customPrompt != null) data['custom_prompt'] = customPrompt;
-      if (mood != null) data['mood'] = mood;
-      if (theme != null) data['theme'] = theme;
-      
-      final response = await _apiClient.post(
-        '/poems/generate',
-        data: data,
-      );
-      
-      return Poem.fromJson(response as Map<String, dynamic>);
-    } catch (e) {
-      rethrow;
-    }
+    // TODO: Implement API call
+    // Mock implementation
+    await Future.delayed(const Duration(seconds: 3));
+    return Poem(
+      id: 'mock_poem_id_${DateTime.now().millisecondsSinceEpoch}',
+      title: 'Mountain Serenity',
+      content: '''
+As mountains rise to meet the sky,
+In nature's grand display,
+The trees stand tall and proud nearby,
+As shadows grow and play.
+
+The water's calm reflects the scene,
+A mirror to the world,
+Where peace and beauty reign supreme,
+And nature's flag unfurled.
+''',
+      poemType: poemType,
+      mood: mood ?? 'serene',
+      generatedAt: DateTime.now(),
+      customPrompt: customPrompt,
+    );
   }
   
-  /// Edit an existing poem
+  @override
   Future<Poem> editPoem({
     required String poemId,
     required String title,
     required String content,
   }) async {
-    try {
-      final response = await _apiClient.put(
-        '/poems/$poemId',
-        data: {
-          'title': title,
-          'content': content,
-        },
-      );
-      
-      return Poem.fromJson(response as Map<String, dynamic>);
-    } catch (e) {
-      rethrow;
-    }
+    // TODO: Implement API call
+    // Mock implementation
+    await Future.delayed(const Duration(seconds: 1));
+    return Poem(
+      id: poemId,
+      title: title,
+      content: content,
+      poemType: 'custom', // Assuming edited poems are custom
+      mood: 'custom',
+      generatedAt: DateTime.now(),
+    );
   }
   
-  /// Finalize a creation
+  @override
   Future<String> finalizeCreation({
     required String poemId,
     required String frameType,
   }) async {
-    try {
-      final response = await _apiClient.post(
-        '/creations/finalize',
-        data: {
-          'poem_id': poemId,
-          'frame_type': frameType,
-        },
-      );
-      
-      return response['creation_id'] as String;
-    } catch (e) {
-      rethrow;
-    }
-  }
-  
-  /// Get poem by ID
-  Future<Poem> getPoemById(String poemId) async {
-    try {
-      final response = await _apiClient.get('/poems/$poemId');
-      return Poem.fromJson(response as Map<String, dynamic>);
-    } catch (e) {
-      rethrow;
-    }
+    // TODO: Implement API call
+    // Mock implementation
+    await Future.delayed(const Duration(seconds: 1));
+    return 'mock_creation_id_${DateTime.now().millisecondsSinceEpoch}';
   }
 }
