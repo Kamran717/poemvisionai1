@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:frontend/core/theme/app_theme.dart';
 import 'package:frontend/core/utils/app_logger.dart';
 import 'package:frontend/core/routes/route_paths.dart';
+import 'package:frontend/core/widgets/shimmer_loading.dart';
 import 'package:frontend/features/gallery/domain/models/creation.dart';
 import 'package:frontend/features/gallery/presentation/providers/gallery_provider.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
@@ -22,6 +24,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
   
   final ScrollController _scrollController = ScrollController();
   bool _isGridView = true;
+  bool _isFirstLoad = true;
+  int _retryCount = 0;
   
   @override
   void initState() {
@@ -54,8 +58,39 @@ class _GalleryScreenState extends State<GalleryScreen> {
     try {
       final galleryProvider = Provider.of<GalleryProvider>(context, listen: false);
       await galleryProvider.loadCreations(refresh: true);
+      
+      if (mounted) {
+        setState(() {
+          _isFirstLoad = false;
+        });
+      }
     } catch (e) {
       AppLogger.e('Error loading creations', e);
+      
+      if (mounted) {
+        setState(() {
+          _isFirstLoad = false;
+        });
+        
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Failed to load creations. Tap to retry.'),
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: () {
+                setState(() {
+                  _isFirstLoad = true;
+                  _retryCount++;
+                });
+                _loadCreations();
+              },
+            ),
+          ),
+        );
+      }
     }
   }
   
@@ -196,13 +231,48 @@ class _GalleryScreenState extends State<GalleryScreen> {
     
     if (result == true) {
       final galleryProvider = Provider.of<GalleryProvider>(context, listen: false);
+      
+      // Show loading indicator
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Deleting...'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+      
       final success = await galleryProvider.deleteCreation(creation.id);
       
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Creation deleted successfully'),
+          SnackBar(
+            content: const Text('Creation deleted successfully'),
             backgroundColor: Colors.green,
+            action: SnackBarAction(
+              label: 'Undo',
+              textColor: Colors.white,
+              onPressed: () {
+                // This would restore the deleted creation in a real app
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('This feature is not available in the demo'),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Failed to delete creation. Tap to retry.'),
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: () => _showDeleteConfirmation(creation),
+            ),
           ),
         );
       }
@@ -211,6 +281,16 @@ class _GalleryScreenState extends State<GalleryScreen> {
   
   Future<void> _shareCreation(Creation creation) async {
     try {
+      // Show loading indicator
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Preparing to share...'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+      
       final galleryProvider = Provider.of<GalleryProvider>(context, listen: false);
       final shareUrl = await galleryProvider.shareCreation(creation.id);
       
@@ -233,9 +313,14 @@ class _GalleryScreenState extends State<GalleryScreen> {
       AppLogger.e('Error sharing creation', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to share creation'),
+          SnackBar(
+            content: const Text('Failed to share creation. Tap to retry.'),
             backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: () => _shareCreation(creation),
+            ),
           ),
         );
       }
@@ -244,15 +329,37 @@ class _GalleryScreenState extends State<GalleryScreen> {
   
   Future<void> _exportCreation(Creation creation) async {
     try {
+      // Show loading indicator
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Exporting...'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+      
       final galleryProvider = Provider.of<GalleryProvider>(context, listen: false);
       final imageUrl = await galleryProvider.exportCreationAsImage(creation.id);
       
       if (imageUrl != null && mounted) {
         // Show export success
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Creation exported as image'),
+          SnackBar(
+            content: const Text('Creation exported as image'),
             backgroundColor: Colors.green,
+            action: SnackBarAction(
+              label: 'View',
+              textColor: Colors.white,
+              onPressed: () {
+                // This would open the image in a viewer in a real app
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('This feature is not available in the demo'),
+                  ),
+                );
+              },
+            ),
           ),
         );
       }
@@ -260,9 +367,14 @@ class _GalleryScreenState extends State<GalleryScreen> {
       AppLogger.e('Error exporting creation', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to export creation'),
+          SnackBar(
+            content: const Text('Failed to export creation. Tap to retry.'),
             backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: () => _exportCreation(creation),
+            ),
           ),
         );
       }
@@ -422,6 +534,16 @@ class _GalleryScreenState extends State<GalleryScreen> {
           Expanded(
             child: Consumer<GalleryProvider>(
               builder: (context, galleryProvider, child) {
+                // Show shimmer loading for first load
+                if (_isFirstLoad) {
+                  return ShimmerListPlaceholder(
+                    isGrid: _isGridView,
+                    gridCrossAxisCount: 2,
+                    itemAspectRatio: 0.75,
+                  );
+                }
+                
+                // Show loading indicator for subsequent loads
                 if (galleryProvider.isLoading && galleryProvider.filteredCreations.isEmpty) {
                   return const Center(child: CircularProgressIndicator());
                 }
@@ -430,9 +552,12 @@ class _GalleryScreenState extends State<GalleryScreen> {
                   return _buildEmptyState(galleryProvider);
                 }
                 
-                return _isGridView
-                    ? _buildGridView(galleryProvider)
-                    : _buildListView(galleryProvider);
+                return RefreshIndicator(
+                  onRefresh: () => galleryProvider.loadCreations(refresh: true),
+                  child: _isGridView
+                      ? _buildGridView(galleryProvider)
+                      : _buildListView(galleryProvider),
+                );
               },
             ),
           ),
@@ -492,18 +617,21 @@ class _GalleryScreenState extends State<GalleryScreen> {
       message = 'No creations matching "${galleryProvider.searchQuery}"';
     }
     
+    String errorMessage = galleryProvider.errorMessage ?? '';
+    bool hasError = errorMessage.isNotEmpty;
+    
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.auto_awesome,
+          Icon(
+            hasError ? Icons.error_outline : Icons.auto_awesome,
             size: 64,
-            color: Colors.grey,
+            color: hasError ? Colors.red : Colors.grey,
           ),
           const SizedBox(height: 16),
           Text(
-            message,
+            hasError ? 'Error loading creations' : message,
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -511,16 +639,37 @@ class _GalleryScreenState extends State<GalleryScreen> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Create a new poem to get started',
-            textAlign: TextAlign.center,
-          ),
+          if (hasError)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                errorMessage,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.red[700]),
+              ),
+            )
+          else
+            const Text(
+              'Create a new poem to get started',
+              textAlign: TextAlign.center,
+            ),
           const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () => context.go(RoutePaths.imageUpload),
-            icon: const Icon(Icons.add),
-            label: const Text('Create New Poem'),
-          ),
+          if (hasError)
+            ElevatedButton.icon(
+              onPressed: _loadCreations,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+            )
+          else
+            ElevatedButton.icon(
+              onPressed: () => context.go(RoutePaths.imageUpload),
+              icon: const Icon(Icons.add),
+              label: const Text('Create New Poem'),
+            ),
         ],
       ),
     );
@@ -571,7 +720,10 @@ class _GalleryScreenState extends State<GalleryScreen> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             image: DecorationImage(
-              image: AssetImage('assets/frames/${creation.frameType}.jpg'),
+              image: CachedNetworkImageProvider(
+                'https://api.poemvision.ai/frames/${creation.frameType}.jpg',
+                errorListener: () => AppLogger.e('Error loading frame image', null),
+              ),
               fit: BoxFit.cover,
               colorFilter: ColorFilter.mode(
                 Colors.black.withOpacity(0.1),
@@ -701,7 +853,10 @@ class _GalleryScreenState extends State<GalleryScreen> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           image: DecorationImage(
-            image: AssetImage('assets/frames/${creation.frameType}.jpg'),
+            image: CachedNetworkImageProvider(
+              'https://api.poemvision.ai/frames/${creation.frameType}.jpg',
+              errorListener: () => AppLogger.e('Error loading frame image', null),
+            ),
             fit: BoxFit.cover,
           ),
         ),
@@ -803,34 +958,4 @@ class _GalleryScreenState extends State<GalleryScreen> {
                         leading: const Icon(Icons.download),
                         title: const Text('Export as Image'),
                         onTap: () {
-                          Navigator.pop(context);
-                          _exportCreation(creation);
-                        },
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.delete, color: Colors.red),
-                        title: const Text('Delete', style: TextStyle(color: Colors.red)),
-                        onTap: () {
-                          Navigator.pop(context);
-                          _showDeleteConfirmation(creation);
-                        },
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Helper extension for string capitalization
-extension StringExtension on String {
-  String capitalize() {
-    if (isEmpty) return this;
-    return split('_').map((word) => '${word[0].toUpperCase()}${word.substring(1)}').join(' ');
-  }
-}
+                          Navigator

@@ -1,412 +1,308 @@
-import 'dart:io';
+import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:frontend/core/utils/app_logger.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:retry/retry.dart';
 import 'package:frontend/core/network/api_response.dart';
 import 'package:frontend/core/network/api_exception.dart';
-import 'package:frontend/core/constants/api_constants.dart';
+import 'package:frontend/core/network/network_error_handler.dart';
+import 'package:frontend/core/utils/app_logger.dart';
 
-/// API client for handling network requests
+/// Client for API requests
 class ApiClient {
   final Dio _dio;
+  final Connectivity _connectivity = Connectivity();
   
   ApiClient(this._dio) {
-    _dio.options.baseUrl = ApiConstants.baseUrl;
-    
-    // Add authorization interceptor
+    _setupInterceptors();
+  }
+  
+  /// Configure Dio interceptors
+  void _setupInterceptors() {
     _dio.interceptors.add(
       InterceptorsWrapper(
-        onRequest: (options, handler) async {
-          // This is where we would add the auth token if we have one
-          // Will be implemented when we build the auth module
-          
-          AppLogger.d('API Request: ${options.method} ${options.path}');
+        onRequest: (options, handler) {
+          AppLogger.d('API Request: ${options.method} ${options.uri}');
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          AppLogger.d('API Response [${response.statusCode}]: ${response.requestOptions.path}');
+          AppLogger.d('API Response: ${response.statusCode} ${response.requestOptions.uri}');
           return handler.next(response);
         },
         onError: (DioException error, handler) {
-          AppLogger.e(
-            'API Error [${error.response?.statusCode}]: ${error.requestOptions.path}',
-            error,
-            error.stackTrace,
-          );
+          AppLogger.e('API Error: ${error.requestOptions.uri}', error);
           return handler.next(error);
         },
       ),
     );
   }
   
-  /// Perform a GET request
-  Future<ApiResponse<T>> get<T>(
+  /// Add authentication token to request headers
+  void setAuthToken(String token) {
+    _dio.options.headers['Authorization'] = 'Bearer $token';
+  }
+  
+  /// Remove authentication token from request headers
+  void clearAuthToken() {
+    _dio.options.headers.remove('Authorization');
+  }
+  
+  /// Check if device is connected to the internet
+  Future<bool> _checkConnectivity() async {
+    final connectivityResult = await _connectivity.checkConnectivity();
+    return connectivityResult != ConnectivityResult.none;
+  }
+  
+  /// Perform a GET request with retry logic
+  Future<ApiResponse> get(
     String path, {
     Map<String, dynamic>? queryParameters,
     Options? options,
     CancelToken? cancelToken,
-    ProgressCallback? onReceiveProgress,
+    int maxRetries = 3,
   }) async {
-    try {
-      final response = await _dio.get<dynamic>(
+    return _executeRequest(
+      () => _dio.get(
         path,
         queryParameters: queryParameters,
         options: options,
         cancelToken: cancelToken,
-        onReceiveProgress: onReceiveProgress,
-      );
-      
-      return ApiResponse<T>.success(response.data);
-    } on DioException catch (e) {
-      return _handleError<T>(e);
-    } catch (e) {
-      return ApiResponse<T>.error(
-        ApiException(
-          message: e.toString(),
-          code: ApiExceptionType.unknown,
-        ),
-      );
-    }
+      ),
+      maxRetries: maxRetries,
+    );
   }
   
-  /// Perform a POST request
-  Future<ApiResponse<T>> post<T>(
+  /// Perform a POST request with retry logic
+  Future<ApiResponse> post(
     String path, {
     dynamic data,
     Map<String, dynamic>? queryParameters,
     Options? options,
     CancelToken? cancelToken,
-    ProgressCallback? onSendProgress,
-    ProgressCallback? onReceiveProgress,
+    int maxRetries = 3,
   }) async {
-    try {
-      final response = await _dio.post<dynamic>(
+    return _executeRequest(
+      () => _dio.post(
         path,
         data: data,
         queryParameters: queryParameters,
         options: options,
         cancelToken: cancelToken,
-        onSendProgress: onSendProgress,
-        onReceiveProgress: onReceiveProgress,
-      );
-      
-      return ApiResponse<T>.success(response.data);
-    } on DioException catch (e) {
-      return _handleError<T>(e);
-    } catch (e) {
-      return ApiResponse<T>.error(
-        ApiException(
-          message: e.toString(),
-          code: ApiExceptionType.unknown,
+      ),
+      maxRetries: maxRetries,
+    );
+  }
+  
+  /// Perform a PUT request with retry logic
+  Future<ApiResponse> put(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+    int maxRetries = 3,
+  }) async {
+    return _executeRequest(
+      () => _dio.put(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+      ),
+      maxRetries: maxRetries,
+    );
+  }
+  
+  /// Perform a PATCH request with retry logic
+  Future<ApiResponse> patch(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+    int maxRetries = 3,
+  }) async {
+    return _executeRequest(
+      () => _dio.patch(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+      ),
+      maxRetries: maxRetries,
+    );
+  }
+  
+  /// Perform a DELETE request with retry logic
+  Future<ApiResponse> delete(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+    int maxRetries = 3,
+  }) async {
+    return _executeRequest(
+      () => _dio.delete(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+      ),
+      maxRetries: maxRetries,
+    );
+  }
+  
+  /// Execute request with retry logic and error handling
+  Future<ApiResponse> _executeRequest(
+    Future<Response> Function() request, {
+    int maxRetries = 3,
+  }) async {
+    if (!await _checkConnectivity()) {
+      return ApiResponse.error(
+        NetworkErrorHandler.handleError(
+          ApiException(
+            message: 'No internet connection',
+            code: ApiExceptionType.noInternet,
+          ),
         ),
       );
     }
+    
+    try {
+      // Use retry package to automatically retry failed requests
+      final response = await retry(
+        () => request(),
+        retryIf: (e) => _shouldRetry(e),
+        maxAttempts: maxRetries,
+        onRetry: (e, attempt) {
+          AppLogger.d('Retrying API request (Attempt: $attempt): ${e.toString()}');
+        },
+      );
+      
+      return _processResponse(response);
+    } catch (error) {
+      final apiException = NetworkErrorHandler.handleError(error);
+      return ApiResponse.error(apiException);
+    }
   }
   
-  /// Upload image and analyze
-  Future<ApiResponse<Map<String, dynamic>>> analyzeImage(File imageFile) async {
-    try {
-      String fileName = imageFile.path.split('/').last;
-      FormData formData = FormData.fromMap({
-        "image": await MultipartFile.fromFile(
-          imageFile.path,
-          filename: fileName,
+  /// Process API response
+  ApiResponse _processResponse(Response response) {
+    final int statusCode = response.statusCode ?? 0;
+    
+    if (statusCode >= 200 && statusCode < 300) {
+      return ApiResponse.success(response.data);
+    } else {
+      final apiException = NetworkErrorHandler.handleError(response);
+      return ApiResponse.error(apiException);
+    }
+  }
+  
+  /// Determine if a request should be retried
+  bool _shouldRetry(Exception error) {
+    if (error is DioException) {
+      // Retry on connection timeout, network errors and server errors
+      return error.type == DioExceptionType.connectionTimeout ||
+             error.type == DioExceptionType.receiveTimeout ||
+             error.type == DioExceptionType.sendTimeout ||
+             error.type == DioExceptionType.connectionError ||
+             (error.response != null && error.response!.statusCode != null && 
+              error.response!.statusCode! >= 500 && error.response!.statusCode! < 600);
+    }
+    return false;
+  }
+  
+  /// Download file with progress tracking
+  Future<ApiResponse> downloadFile(
+    String url,
+    String savePath, {
+    ProgressCallback? onReceiveProgress,
+    CancelToken? cancelToken,
+    int maxRetries = 3,
+  }) async {
+    if (!await _checkConnectivity()) {
+      return ApiResponse.error(
+        NetworkErrorHandler.handleError(
+          ApiException(
+            message: 'No internet connection',
+            code: ApiExceptionType.noInternet,
+          ),
         ),
+      );
+    }
+    
+    try {
+      final response = await retry(
+        () => _dio.download(
+          url,
+          savePath,
+          onReceiveProgress: onReceiveProgress,
+          cancelToken: cancelToken,
+        ),
+        retryIf: (e) => _shouldRetry(e),
+        maxAttempts: maxRetries,
+      );
+      
+      if (response.statusCode == 200) {
+        return ApiResponse.success({'path': savePath});
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          error: 'Download failed with status: ${response.statusCode}',
+        );
+      }
+    } catch (error) {
+      final apiException = NetworkErrorHandler.handleError(error);
+      return ApiResponse.error(apiException);
+    }
+  }
+  
+  /// Upload file with progress tracking
+  Future<ApiResponse> uploadFile(
+    String path,
+    String filePath, {
+    String fileField = 'file',
+    Map<String, dynamic>? data,
+    ProgressCallback? onSendProgress,
+    CancelToken? cancelToken,
+    int maxRetries = 3,
+  }) async {
+    if (!await _checkConnectivity()) {
+      return ApiResponse.error(
+        NetworkErrorHandler.handleError(
+          ApiException(
+            message: 'No internet connection',
+            code: ApiExceptionType.noInternet,
+          ),
+        ),
+      );
+    }
+    
+    try {
+      final formData = FormData.fromMap({
+        ...?data,
+        fileField: await MultipartFile.fromFile(filePath),
       });
       
-      final response = await _dio.post<dynamic>(
-        ApiConstants.analyzeImage,
-        data: formData,
-        options: Options(
-          contentType: 'multipart/form-data',
+      final response = await retry(
+        () => _dio.post(
+          path,
+          data: formData,
+          onSendProgress: onSendProgress,
+          cancelToken: cancelToken,
         ),
+        retryIf: (e) => _shouldRetry(e),
+        maxAttempts: maxRetries,
       );
       
-      return ApiResponse<Map<String, dynamic>>.success(response.data);
-    } on DioException catch (e) {
-      return _handleError<Map<String, dynamic>>(e);
-    } catch (e) {
-      return ApiResponse<Map<String, dynamic>>.error(
-        ApiException(
-          message: e.toString(),
-          code: ApiExceptionType.unknown,
-        ),
-      );
+      return _processResponse(response);
+    } catch (error) {
+      final apiException = NetworkErrorHandler.handleError(error);
+      return ApiResponse.error(apiException);
     }
-  }
-  
-  /// Generate poem from analysis
-  Future<ApiResponse<Map<String, dynamic>>> generatePoem({
-    required String analysisId,
-    required String poemType,
-    required String poemLength,
-    List<String>? emphasis,
-    Map<String, dynamic>? customPrompt,
-    bool isRegeneration = false,
-  }) async {
-    try {
-      final data = {
-        'analysisId': analysisId,
-        'poemType': poemType,
-        'poemLength': poemLength,
-        'emphasis': emphasis ?? [],
-        'isRegeneration': isRegeneration,
-      };
-      
-      if (customPrompt != null) {
-        data['customPrompt'] = customPrompt;
-      }
-      
-      final response = await _dio.post<dynamic>(
-        ApiConstants.generatePoem,
-        data: data,
-      );
-      
-      return ApiResponse<Map<String, dynamic>>.success(response.data);
-    } on DioException catch (e) {
-      return _handleError<Map<String, dynamic>>(e);
-    } catch (e) {
-      return ApiResponse<Map<String, dynamic>>.error(
-        ApiException(
-          message: e.toString(),
-          code: ApiExceptionType.unknown,
-        ),
-      );
-    }
-  }
-  
-  /// Create final image with poem
-  Future<ApiResponse<Map<String, dynamic>>> createFinalImage({
-    required String analysisId,
-    required String frameStyle,
-  }) async {
-    try {
-      final data = {
-        'analysisId': analysisId,
-        'frameStyle': frameStyle,
-      };
-      
-      final response = await _dio.post<dynamic>(
-        ApiConstants.createFinalImage,
-        data: data,
-      );
-      
-      return ApiResponse<Map<String, dynamic>>.success(response.data);
-    } on DioException catch (e) {
-      return _handleError<Map<String, dynamic>>(e);
-    } catch (e) {
-      return ApiResponse<Map<String, dynamic>>.error(
-        ApiException(
-          message: e.toString(),
-          code: ApiExceptionType.unknown,
-        ),
-      );
-    }
-  }
-  
-  /// Login user
-  Future<ApiResponse<Map<String, dynamic>>> login({
-    required String email,
-    required String password,
-  }) async {
-    try {
-      final data = {
-        'email': email,
-        'password': password,
-      };
-      
-      final response = await _dio.post<dynamic>(
-        ApiConstants.login,
-        data: FormData.fromMap(data),
-      );
-      
-      return ApiResponse<Map<String, dynamic>>.success(response.data);
-    } on DioException catch (e) {
-      return _handleError<Map<String, dynamic>>(e);
-    } catch (e) {
-      return ApiResponse<Map<String, dynamic>>.error(
-        ApiException(
-          message: e.toString(),
-          code: ApiExceptionType.unknown,
-        ),
-      );
-    }
-  }
-  
-  /// Register user
-  Future<ApiResponse<Map<String, dynamic>>> signup({
-    required String username,
-    required String email,
-    required String password,
-    required String confirmPassword,
-  }) async {
-    try {
-      final data = {
-        'username': username,
-        'email': email,
-        'password': password,
-        'confirm_password': confirmPassword,
-      };
-      
-      final response = await _dio.post<dynamic>(
-        ApiConstants.signup,
-        data: FormData.fromMap(data),
-      );
-      
-      return ApiResponse<Map<String, dynamic>>.success(response.data);
-    } on DioException catch (e) {
-      return _handleError<Map<String, dynamic>>(e);
-    } catch (e) {
-      return ApiResponse<Map<String, dynamic>>.error(
-        ApiException(
-          message: e.toString(),
-          code: ApiExceptionType.unknown,
-        ),
-      );
-    }
-  }
-  
-  /// Get user profile
-  Future<ApiResponse<Map<String, dynamic>>> getUserProfile() async {
-    try {
-      final response = await _dio.get<dynamic>(ApiConstants.profile);
-      
-      return ApiResponse<Map<String, dynamic>>.success(response.data);
-    } on DioException catch (e) {
-      return _handleError<Map<String, dynamic>>(e);
-    } catch (e) {
-      return ApiResponse<Map<String, dynamic>>.error(
-        ApiException(
-          message: e.toString(),
-          code: ApiExceptionType.unknown,
-        ),
-      );
-    }
-  }
-  
-  /// Get available poem types
-  Future<ApiResponse<Map<String, dynamic>>> getAvailablePoemTypes() async {
-    try {
-      final response = await _dio.get<dynamic>(ApiConstants.availablePoemTypes);
-      
-      return ApiResponse<Map<String, dynamic>>.success(response.data);
-    } on DioException catch (e) {
-      return _handleError<Map<String, dynamic>>(e);
-    } catch (e) {
-      return ApiResponse<Map<String, dynamic>>.error(
-        ApiException(
-          message: e.toString(),
-          code: ApiExceptionType.unknown,
-        ),
-      );
-    }
-  }
-  
-  /// Get available frames
-  Future<ApiResponse<Map<String, dynamic>>> getAvailableFrames() async {
-    try {
-      final response = await _dio.get<dynamic>(ApiConstants.availableFrames);
-      
-      return ApiResponse<Map<String, dynamic>>.success(response.data);
-    } on DioException catch (e) {
-      return _handleError<Map<String, dynamic>>(e);
-    } catch (e) {
-      return ApiResponse<Map<String, dynamic>>.error(
-        ApiException(
-          message: e.toString(),
-          code: ApiExceptionType.unknown,
-        ),
-      );
-    }
-  }
-  
-  /// Get creation by share code
-  Future<ApiResponse<Map<String, dynamic>>> getSharedCreation(String shareCode) async {
-    try {
-      final response = await _dio.get<dynamic>(
-        '${ApiConstants.shared}/$shareCode',
-      );
-      
-      return ApiResponse<Map<String, dynamic>>.success(response.data);
-    } on DioException catch (e) {
-      return _handleError<Map<String, dynamic>>(e);
-    } catch (e) {
-      return ApiResponse<Map<String, dynamic>>.error(
-        ApiException(
-          message: e.toString(),
-          code: ApiExceptionType.unknown,
-        ),
-      );
-    }
-  }
-  
-  /// Delete creation
-  Future<ApiResponse<Map<String, dynamic>>> deleteCreation(int creationId) async {
-    try {
-      final response = await _dio.delete<dynamic>(
-        '${ApiConstants.deleteCreation}/$creationId',
-      );
-      
-      return ApiResponse<Map<String, dynamic>>.success(response.data);
-    } on DioException catch (e) {
-      return _handleError<Map<String, dynamic>>(e);
-    } catch (e) {
-      return ApiResponse<Map<String, dynamic>>.error(
-        ApiException(
-          message: e.toString(),
-          code: ApiExceptionType.unknown,
-        ),
-      );
-    }
-  }
-  
-  /// Handle error responses
-  ApiResponse<T> _handleError<T>(DioException exception) {
-    ApiExceptionType code = ApiExceptionType.unknown;
-    String message = 'An unexpected error occurred';
-    
-    if (exception.type == DioExceptionType.connectionTimeout ||
-        exception.type == DioExceptionType.sendTimeout ||
-        exception.type == DioExceptionType.receiveTimeout) {
-      code = ApiExceptionType.timeout;
-      message = 'Connection timed out';
-    } else if (exception.type == DioExceptionType.connectionError) {
-      code = ApiExceptionType.network;
-      message = 'No internet connection';
-    } else if (exception.response != null) {
-      final statusCode = exception.response!.statusCode;
-      
-      if (statusCode == 401) {
-        code = ApiExceptionType.unauthorized;
-        message = 'Unauthorized access';
-      } else if (statusCode == 403) {
-        code = ApiExceptionType.forbidden;
-        message = 'Access forbidden';
-      } else if (statusCode == 404) {
-        code = ApiExceptionType.notFound;
-        message = 'Resource not found';
-      } else if (statusCode == 500) {
-        code = ApiExceptionType.server;
-        message = 'Server error';
-      }
-      
-      // Try to get error message from response
-      try {
-        if (exception.response?.data != null &&
-            exception.response!.data is Map<String, dynamic> &&
-            exception.response!.data['error'] != null) {
-          message = exception.response!.data['error'].toString();
-        }
-      } catch (_) {
-        // Ignore parsing errors
-      }
-    }
-    
-    return ApiResponse<T>.error(
-      ApiException(
-        message: message,
-        code: code,
-        statusCode: exception.response?.statusCode,
-      ),
-    );
   }
 }
