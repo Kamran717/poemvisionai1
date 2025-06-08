@@ -3,35 +3,48 @@ class RoutePaths {
   /// Private constructor to prevent instantiation
   RoutePaths._();
   
+  /// Login screen
+  static const String login = '/login';
+  
+  /// Signup screen
+  static const String signup = '/signup';
+  
+  /// Forgot password screen
+  static const String forgotPassword = '/forgot-password';
+  
+  /// Reset password screen
+  static const String resetPassword = '/reset-password';
+  
   /// Splash screen
   static const String splash = '/splash';
   
-  /// Intro screen
+  /// Introduction screen
   static const String intro = '/intro';
   
   /// Home screen
-  static const String home = '/';
+  static const String home = '/home';
   
-  /// Authentication routes
-  static const String login = '/login';
-  static const String signup = '/signup';
-  static const String forgotPassword = '/forgot-password';
-  static const String resetPassword = '/reset-password';
+  /// Gallery screen
+  static const String gallery = '/gallery';
   
-  /// User profile routes
+  /// Image upload screen
+  static const String imageUpload = '/create/upload';
+  
+  /// Poem customization screen
+  static const String poemCustomization = '/create/customize';
+  
+  /// Final creation screen
+  static const String finalCreation = '/create/final';
+  
+  /// Profile screen
   static const String profile = '/profile';
-  static const String editProfile = '/profile/edit';
-  static const String settings = '/settings';
   
-  /// Membership routes
+  /// Edit profile screen
+  static const String editProfile = '/profile/edit';
+  
+  /// Membership screen
   static const String membership = '/membership';
   
-  /// Poem creation routes
-  static const String imageUpload = '/create/upload';
-  static const String poemCustomization = '/create/customize';
-  static const String finalCreation = '/create/finalize';
-  
-  /// Gallery routes
-  static const String gallery = '/gallery';
+  /// Shared creation screen
   static const String sharedCreation = '/shared';
 }

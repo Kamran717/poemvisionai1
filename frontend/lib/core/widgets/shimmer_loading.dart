@@ -1,31 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:frontend/core/theme/app_theme.dart';
 
-/// A widget that displays a shimmer loading effect for lists or grids
-class ShimmerListPlaceholder extends StatelessWidget {
-  /// Whether to display as a grid or list
-  final bool isGrid;
+/// Shimmer loading placeholder
+class ShimmerLoadingPlaceholder extends StatelessWidget {
+  /// Width of the placeholder
+  final double? width;
   
-  /// Number of items to display
-  final int itemCount;
+  /// Height of the placeholder
+  final double? height;
   
-  /// Padding around the list
-  final EdgeInsets padding;
+  /// Border radius of the placeholder
+  final double borderRadius;
   
-  /// Number of columns for grid view
-  final int gridCrossAxisCount;
-  
-  /// Aspect ratio for grid items
-  final double itemAspectRatio;
+  /// Whether the placeholder is circular
+  final bool isCircular;
   
   /// Constructor
-  const ShimmerListPlaceholder({
+  const ShimmerLoadingPlaceholder({
     super.key,
-    this.isGrid = false,
-    this.itemCount = 10,
-    this.padding = const EdgeInsets.all(16.0),
-    this.gridCrossAxisCount = 2,
-    this.itemAspectRatio = 1.0,
+    this.width,
+    this.height,
+    this.borderRadius = 8.0,
+    this.isCircular = false,
   });
 
   @override
@@ -33,180 +30,73 @@ class ShimmerListPlaceholder extends StatelessWidget {
     return Shimmer.fromColors(
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
-      child: Padding(
-        padding: padding,
-        child: isGrid
-            ? _buildGridPlaceholder()
-            : _buildListPlaceholder(),
-      ),
-    );
-  }
-  
-  /// Build grid placeholder
-  Widget _buildGridPlaceholder() {
-    return GridView.builder(
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: gridCrossAxisCount,
-        childAspectRatio: itemAspectRatio,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-      ),
-      itemCount: itemCount,
-      itemBuilder: (_, __) => _buildGridItem(),
-    );
-  }
-  
-  /// Build list placeholder
-  Widget _buildListPlaceholder() {
-    return ListView.builder(
-      itemCount: itemCount,
-      itemBuilder: (_, __) => _buildListItem(),
-    );
-  }
-  
-  /// Build a grid item placeholder
-  Widget _buildGridItem() {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
       child: Container(
+        width: width,
+        height: height,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Thumbnail area
-            Expanded(
-              flex: 3,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-            
-            // Content area
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title
-                    Container(
-                      width: double.infinity,
-                      height: 14,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(height: 8),
-                    
-                    // Content
-                    Container(
-                      width: double.infinity,
-                      height: 10,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(height: 4),
-                    Container(
-                      width: double.infinity * 0.7,
-                      height: 10,
-                      color: Colors.white,
-                    ),
-                    
-                    const SizedBox(height: 8),
-                    
-                    // Date
-                    Container(
-                      width: 80,
-                      height: 8,
-                      color: Colors.white,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+          shape: isCircular ? BoxShape.circle : BoxShape.rectangle,
+          borderRadius: isCircular ? null : BorderRadius.circular(borderRadius),
         ),
       ),
     );
   }
+}
+
+/// Shimmer loading placeholder for a text
+class ShimmerTextPlaceholder extends StatelessWidget {
+  /// Width of the placeholder
+  final double? width;
   
-  /// Build a list item placeholder
-  Widget _buildListItem() {
+  /// Height of the placeholder
+  final double height;
+  
+  /// Constructor
+  const ShimmerTextPlaceholder({
+    super.key,
+    this.width,
+    this.height = 16,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ShimmerLoadingPlaceholder(
+      width: width,
+      height: height,
+      borderRadius: 4,
+    );
+  }
+}
+
+/// Shimmer loading placeholder for a list item
+class ShimmerListItemPlaceholder extends StatelessWidget {
+  /// Constructor
+  const ShimmerListItemPlaceholder({super.key});
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Thumbnail
-          Container(
+          const ShimmerLoadingPlaceholder(
             width: 60,
             height: 60,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-            ),
+            isCircular: true,
           ),
           const SizedBox(width: 16),
-          
-          // Content
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title
-                Container(
-                  width: double.infinity,
-                  height: 14,
-                  color: Colors.white,
-                ),
+                const ShimmerTextPlaceholder(width: 140),
                 const SizedBox(height: 8),
-                
-                // Description
-                Container(
-                  width: double.infinity,
-                  height: 10,
-                  color: Colors.white,
-                ),
+                const ShimmerTextPlaceholder(width: 200),
                 const SizedBox(height: 8),
-                
-                // Tags and date
-                Row(
-                  children: [
-                    Container(
-                      width: 60,
-                      height: 16,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      width: 80,
-                      height: 10,
-                      color: Colors.white,
-                    ),
-                  ],
-                ),
+                ShimmerTextPlaceholder(width: MediaQuery.of(context).size.width * 0.6),
               ],
             ),
-          ),
-          
-          // Actions
-          Container(
-            width: 24,
-            height: 24,
-            color: Colors.white,
           ),
         ],
       ),
@@ -214,167 +104,95 @@ class ShimmerListPlaceholder extends StatelessWidget {
   }
 }
 
-/// A widget that displays a shimmer loading effect for a card
+/// Shimmer loading placeholder for a card
 class ShimmerCardPlaceholder extends StatelessWidget {
-  /// Height of the card
-  final double height;
-  
-  /// Width of the card
+  /// Width of the placeholder
   final double? width;
   
-  /// Border radius of the card
-  final double borderRadius;
+  /// Height of the placeholder
+  final double height;
   
   /// Constructor
   const ShimmerCardPlaceholder({
     super.key,
-    this.height = 200,
     this.width,
-    this.borderRadius = 12,
+    this.height = 180,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
-      child: Container(
-        height: height,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: ShimmerLoadingPlaceholder(
         width: width,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(borderRadius),
-        ),
+        height: height,
+        borderRadius: 12,
       ),
     );
   }
 }
 
-/// A widget that displays a shimmer loading effect for text
-class ShimmerTextPlaceholder extends StatelessWidget {
-  /// Width of the text
-  final double? width;
-  
-  /// Height of the text
-  final double height;
-  
-  /// Border radius of the text
-  final double borderRadius;
-  
+/// Shimmer loading placeholder for a grid item
+class ShimmerGridItemPlaceholder extends StatelessWidget {
   /// Constructor
-  const ShimmerTextPlaceholder({
-    super.key,
-    this.width,
-    this.height = 14,
-    this.borderRadius = 2,
-  });
+  const ShimmerGridItemPlaceholder({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
-      child: Container(
-        width: width,
-        height: height,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(borderRadius),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const ShimmerLoadingPlaceholder(
+          width: double.infinity,
+          height: 120,
+          borderRadius: 8,
         ),
-      ),
+        const SizedBox(height: 8),
+        const ShimmerTextPlaceholder(width: 100),
+        const SizedBox(height: 4),
+        const ShimmerTextPlaceholder(width: 80),
+      ],
     );
   }
 }
 
-/// A widget that displays a shimmer loading effect for a profile
+/// Shimmer loading placeholder for a profile
 class ShimmerProfilePlaceholder extends StatelessWidget {
   /// Constructor
   const ShimmerProfilePlaceholder({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Avatar
-          Container(
-            width: 100,
-            height: 100,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
+    return Column(
+      children: [
+        const ShimmerLoadingPlaceholder(
+          width: 100,
+          height: 100,
+          isCircular: true,
+        ),
+        const SizedBox(height: 16),
+        const ShimmerTextPlaceholder(width: 150),
+        const SizedBox(height: 8),
+        const ShimmerTextPlaceholder(width: 120),
+        const SizedBox(height: 24),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.grey[100],
+            borderRadius: BorderRadius.circular(12),
           ),
-          const SizedBox(height: 16),
-          
-          // Name
-          Container(
-            width: 150,
-            height: 20,
-            color: Colors.white,
+          child: Column(
+            children: [
+              const ShimmerTextPlaceholder(width: double.infinity),
+              const SizedBox(height: 12),
+              const ShimmerTextPlaceholder(width: double.infinity),
+              const SizedBox(height: 12),
+              const ShimmerTextPlaceholder(width: double.infinity),
+            ],
           ),
-          const SizedBox(height: 8),
-          
-          // Email
-          Container(
-            width: 200,
-            height: 14,
-            color: Colors.white,
-          ),
-          const SizedBox(height: 24),
-          
-          // Stats
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: List.generate(
-              3,
-              (index) => Column(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: 60,
-                    height: 12,
-                    color: Colors.white,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          
-          // Buttons
-          Container(
-            width: double.infinity,
-            height: 48,
-            margin: const EdgeInsets.symmetric(horizontal: 24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            height: 48,
-            margin: const EdgeInsets.symmetric(horizontal: 24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

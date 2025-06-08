@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:get_it/get_it.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import 'package:frontend/core/theme/app_theme.dart';
@@ -80,7 +79,7 @@ class _MyAppState extends State<MyApp> {
         AppLogger.e('Flutter error', details.exception, details.stack);
       };
 
-      PlatformDispatcher.instance.onError = (error, stack) {
+      WidgetsBinding.instance.platformDispatcher.onError = (error, stack) {
         AppLogger.e('Platform error', error, stack);
         return true;
       };

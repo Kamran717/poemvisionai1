@@ -1,55 +1,97 @@
 import 'package:equatable/equatable.dart';
-import 'package:frontend/features/poem_generation/domain/models/poem.dart';
 
-/// Represents a complete poem creation with frame
+/// Creation model representing a saved poem
 class Creation extends Equatable {
   /// Unique identifier
   final String id;
   
-  /// Poem data
-  final Poem poem;
+  /// Title of the creation
+  final String title;
   
-  /// Type of frame
-  final String frameType;
+  /// Content (poem text)
+  final String content;
   
-  /// Creation timestamp
+  /// Type of poem
+  final String poemType;
+  
+  /// Creation date
   final DateTime createdAt;
   
-  /// Whether the creation is marked as favorite
-  final bool isFavorite;
+  /// Image URL
+  final String imageUrl;
   
-  /// Public share link (if shared)
-  final String? shareLink;
+  /// Frame style
+  final String frameStyle;
   
-  /// Number of views (if shared)
-  final int views;
+  /// Share URL
+  final String? shareUrl;
   
-  /// User notes
-  final String? notes;
+  /// Whether the creation is public
+  final bool isPublic;
   
   /// Constructor
   const Creation({
     required this.id,
-    required this.poem,
-    required this.frameType,
+    required this.title,
+    required this.content,
+    required this.poemType,
     required this.createdAt,
-    this.isFavorite = false,
-    this.shareLink,
-    this.views = 0,
-    this.notes,
+    required this.imageUrl,
+    required this.frameStyle,
+    this.shareUrl,
+    this.isPublic = false,
   });
+  
+  @override
+  List<Object?> get props => [
+    id,
+    title,
+    content,
+    poemType,
+    createdAt,
+    imageUrl,
+    frameStyle,
+    shareUrl,
+    isPublic,
+  ];
+  
+  /// Create a copy with modified properties
+  Creation copyWith({
+    String? id,
+    String? title,
+    String? content,
+    String? poemType,
+    DateTime? createdAt,
+    String? imageUrl,
+    String? frameStyle,
+    String? shareUrl,
+    bool? isPublic,
+  }) {
+    return Creation(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      content: content ?? this.content,
+      poemType: poemType ?? this.poemType,
+      createdAt: createdAt ?? this.createdAt,
+      imageUrl: imageUrl ?? this.imageUrl,
+      frameStyle: frameStyle ?? this.frameStyle,
+      shareUrl: shareUrl ?? this.shareUrl,
+      isPublic: isPublic ?? this.isPublic,
+    );
+  }
   
   /// Create from JSON
   factory Creation.fromJson(Map<String, dynamic> json) {
     return Creation(
       id: json['id'] as String,
-      poem: Poem.fromJson(json['poem'] as Map<String, dynamic>),
-      frameType: json['frame_type'] as String,
+      title: json['title'] as String,
+      content: json['content'] as String,
+      poemType: json['poem_type'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
-      isFavorite: json['is_favorite'] as bool? ?? false,
-      shareLink: json['share_link'] as String?,
-      views: json['views'] as int? ?? 0,
-      notes: json['notes'] as String?,
+      imageUrl: json['image_url'] as String,
+      frameStyle: json['frame_style'] as String,
+      shareUrl: json['share_url'] as String?,
+      isPublic: json['is_public'] as bool? ?? false,
     );
   }
   
@@ -57,48 +99,14 @@ class Creation extends Equatable {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'poem': poem.toJson(),
-      'frame_type': frameType,
+      'title': title,
+      'content': content,
+      'poem_type': poemType,
       'created_at': createdAt.toIso8601String(),
-      'is_favorite': isFavorite,
-      'share_link': shareLink,
-      'views': views,
-      'notes': notes,
+      'image_url': imageUrl,
+      'frame_style': frameStyle,
+      'share_url': shareUrl,
+      'is_public': isPublic,
     };
   }
-  
-  /// Create a copy with some fields changed
-  Creation copyWith({
-    String? id,
-    Poem? poem,
-    String? frameType,
-    DateTime? createdAt,
-    bool? isFavorite,
-    String? shareLink,
-    int? views,
-    String? notes,
-  }) {
-    return Creation(
-      id: id ?? this.id,
-      poem: poem ?? this.poem,
-      frameType: frameType ?? this.frameType,
-      createdAt: createdAt ?? this.createdAt,
-      isFavorite: isFavorite ?? this.isFavorite,
-      shareLink: shareLink ?? this.shareLink,
-      views: views ?? this.views,
-      notes: notes ?? this.notes,
-    );
-  }
-  
-  @override
-  List<Object?> get props => [
-    id,
-    poem,
-    frameType,
-    createdAt,
-    isFavorite,
-    shareLink,
-    views,
-    notes,
-  ];
 }

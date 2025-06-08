@@ -1,30 +1,27 @@
 import 'package:equatable/equatable.dart';
 
-/// Represents a poem
+/// Poem model
 class Poem extends Equatable {
   /// Unique identifier
   final String id;
   
-  /// Poem title
+  /// Title of the poem
   final String title;
   
-  /// Poem content
+  /// Content of the poem
   final String content;
   
-  /// Type of poem (e.g., "sonnet", "haiku", etc.)
+  /// Type of poem (e.g., Sonnet, Haiku)
   final String poemType;
   
-  /// Image ID associated with this poem
-  final String? imageId;
+  /// Mood of the poem
+  final String mood;
   
-  /// Creation timestamp
-  final DateTime createdAt;
+  /// Generated date
+  final DateTime generatedAt;
   
-  /// Last update timestamp
-  final DateTime? updatedAt;
-  
-  /// User who created the poem
-  final String? userId;
+  /// Custom prompt used for generation (if any)
+  final String? customPrompt;
   
   /// Constructor
   const Poem({
@@ -32,11 +29,21 @@ class Poem extends Equatable {
     required this.title,
     required this.content,
     required this.poemType,
-    this.imageId,
-    required this.createdAt,
-    this.updatedAt,
-    this.userId,
+    required this.mood,
+    required this.generatedAt,
+    this.customPrompt,
   });
+  
+  @override
+  List<Object?> get props => [
+    id,
+    title,
+    content,
+    poemType,
+    mood,
+    generatedAt,
+    customPrompt,
+  ];
   
   /// Create from JSON
   factory Poem.fromJson(Map<String, dynamic> json) {
@@ -45,12 +52,9 @@ class Poem extends Equatable {
       title: json['title'] as String,
       content: json['content'] as String,
       poemType: json['poem_type'] as String,
-      imageId: json['image_id'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: json['updated_at'] != null 
-          ? DateTime.parse(json['updated_at'] as String) 
-          : null,
-      userId: json['user_id'] as String?,
+      mood: json['mood'] as String,
+      generatedAt: DateTime.parse(json['generated_at'] as String),
+      customPrompt: json['custom_prompt'] as String?,
     );
   }
   
@@ -61,56 +65,30 @@ class Poem extends Equatable {
       'title': title,
       'content': content,
       'poem_type': poemType,
-      'image_id': imageId,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt?.toIso8601String(),
-      'user_id': userId,
+      'mood': mood,
+      'generated_at': generatedAt.toIso8601String(),
+      'custom_prompt': customPrompt,
     };
   }
   
-  /// Create a copy with some fields changed
+  /// Create a copy with modified properties
   Poem copyWith({
     String? id,
     String? title,
     String? content,
     String? poemType,
-    String? imageId,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-    String? userId,
+    String? mood,
+    DateTime? generatedAt,
+    String? customPrompt,
   }) {
     return Poem(
       id: id ?? this.id,
       title: title ?? this.title,
       content: content ?? this.content,
       poemType: poemType ?? this.poemType,
-      imageId: imageId ?? this.imageId,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      userId: userId ?? this.userId,
+      mood: mood ?? this.mood,
+      generatedAt: generatedAt ?? this.generatedAt,
+      customPrompt: customPrompt ?? this.customPrompt,
     );
   }
-  
-  /// Create an empty poem
-  factory Poem.empty() {
-    return Poem(
-      id: '',
-      title: '',
-      content: '',
-      poemType: '',
-      createdAt: DateTime.now(),
-    );
-  }
-  
-  @override
-  List<Object?> get props => [
-    id,
-    title,
-    content,
-    poemType,
-    imageId,
-    createdAt,
-    updatedAt,
-    userId,
-  ];
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:go_router/src/state.dart';
 import 'package:frontend/core/routes/route_paths.dart';
 import 'package:frontend/features/auth/presentation/screens/login_screen.dart';
 import 'package:frontend/features/auth/presentation/screens/signup_screen.dart';
@@ -173,4 +174,7 @@ class AppRouter {
   
   /// Get the router instance
   GoRouter getRouter() => _router;
+  
+  /// Router getter
+  GoRouter get router => _router;
 }
