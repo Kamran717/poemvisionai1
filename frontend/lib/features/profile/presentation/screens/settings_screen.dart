@@ -25,11 +25,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _loadSettings();
   }
   
-  void _loadSettings() {
+  Future<void> _loadSettings() async {
     final profileProvider = Provider.of<ProfileProvider>(context, listen: false);
     
-    _selectedTheme = profileProvider.getThemePreference();
-    _notificationsEnabled = profileProvider.getNotificationPreference();
+    _selectedTheme = await profileProvider.getThemePreference();
+    _notificationsEnabled = await profileProvider.getNotificationPreference();
     
     // These would normally be loaded from user preferences
     // For now, we'll use defaults
@@ -46,12 +46,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       final profileProvider = Provider.of<ProfileProvider>(context, listen: false);
       
-      final success = await profileProvider.updatePreferences({
-        'theme': _selectedTheme,
-        'notifications': _notificationsEnabled,
-        'save_image_with_poems': _saveImageWithPoems,
-        'auto_save_creations': _autoSaveCreations,
-      });
+      final success = await profileProvider.updatePreferences(
+        themePreference: _selectedTheme,
+        notificationPreference: _notificationsEnabled,
+      );
       
       if (success) {
         if (mounted) {

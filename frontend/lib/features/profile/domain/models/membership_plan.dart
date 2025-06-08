@@ -91,6 +91,9 @@ class MembershipPlan extends Equatable {
     };
   }
   
+  /// Check if this is the free plan
+  bool get isFree => type == MembershipPlanType.free;
+  
   @override
   List<Object?> get props => [
     id,

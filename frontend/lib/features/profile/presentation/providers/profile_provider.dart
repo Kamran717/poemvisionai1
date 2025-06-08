@@ -209,7 +209,7 @@ class ProfileProvider extends ChangeNotifier {
   }
   
   /// Delete account
-  Future<bool> deleteAccount() async {
+  Future<bool> deleteAccount({required String password}) async {
     if (_profile == null) {
       return false;
     }
@@ -217,7 +217,9 @@ class ProfileProvider extends ChangeNotifier {
     _setLoading(true);
     
     try {
-      // TODO: Implement API call
+      // TODO: Implement API call with password
+      // In a real implementation, the password would be verified on the server
+      
       _profile = null;
       _currentPlan = null;
       

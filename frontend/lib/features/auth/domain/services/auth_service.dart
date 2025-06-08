@@ -1,187 +1,214 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'dart:convert';
+import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:frontend/core/network/api_client.dart';
 
-/// Authentication response model
-class AuthResponse {
-  /// Auth token
+/// Auth result model
+class AuthResult {
+  /// Authentication token
   final String token;
   
   /// User ID
   final String userId;
   
   /// Constructor
-  AuthResponse({
+  AuthResult({
     required this.token,
     required this.userId,
   });
 }
 
 /// Authentication service
-class AuthService {
-  /// API client
-  final ApiClient _apiClient;
-  
-  /// Secure storage for tokens
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
-  
-  /// Token storage key
-  static const String _tokenKey = 'auth_token';
-  
-  /// User ID storage key
-  static const String _userIdKey = 'user_id';
-  
-  /// Constructor
-  AuthService({
-    required ApiClient apiClient,
-  }) : _apiClient = apiClient;
-  
-  /// Set auth token in API client
-  void setToken(String token) {
-    _apiClient.setToken(token);
-  }
-  
-  /// Clear auth token in API client
-  void clearToken() {
-    _apiClient.clearToken();
-  }
-  
-  /// Store auth token securely
-  Future<void> storeToken(String token) async {
-    await _secureStorage.write(key: _tokenKey, value: token);
-  }
-  
-  /// Get stored auth token
-  Future<String?> getStoredToken() async {
-    return await _secureStorage.read(key: _tokenKey);
-  }
-  
-  /// Clear stored auth token
-  Future<void> clearStoredToken() async {
-    await _secureStorage.delete(key: _tokenKey);
-    
-    // Also clear user ID
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_userIdKey);
-  }
-  
-  /// Store user ID
-  Future<void> storeUserId(String userId) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_userIdKey, userId);
-  }
-  
-  /// Get stored user ID
-  Future<String?> getUserId() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_userIdKey);
-  }
-  
-  /// Validate auth token
-  Future<bool> validateToken(String token) async {
-    try {
-      // In a real app, we would validate the token with the server
-      // For now, just return true if token exists
-      return token.isNotEmpty;
-    } catch (e) {
-      return false;
-    }
-  }
-  
+abstract class AuthService {
   /// Login with email and password
-  Future<AuthResponse> login({
+  Future<AuthResult> login({
     required String email,
     required String password,
-  }) async {
-    try {
-      final response = await _apiClient.post(
-        '/auth/login',
-        data: {
-          'email': email,
-          'password': password,
-        },
-      );
-      
-      final token = response['token'] as String;
-      final userId = response['user_id'] as String;
-      
-      // Store user ID
-      await storeUserId(userId);
-      
-      return AuthResponse(
-        token: token,
-        userId: userId,
-      );
-    } catch (e) {
-      rethrow;
-    }
-  }
+  });
   
   /// Register a new user
-  Future<AuthResponse> signup({
+  Future<AuthResult> signup({
     required String name,
     required String email,
     required String password,
-  }) async {
-    try {
-      final response = await _apiClient.post(
-        '/auth/signup',
-        data: {
-          'name': name,
-          'email': email,
-          'password': password,
-        },
-      );
-      
-      final token = response['token'] as String;
-      final userId = response['user_id'] as String;
-      
-      // Store user ID
-      await storeUserId(userId);
-      
-      return AuthResponse(
-        token: token,
-        userId: userId,
-      );
-    } catch (e) {
-      rethrow;
-    }
-  }
+  });
   
-  /// Logout user
-  Future<void> logout() async {
-    try {
-      await _apiClient.post('/auth/logout');
-    } catch (e) {
-      // Ignore errors on logout
-    }
-  }
+  /// Logout
+  Future<void> logout();
   
   /// Request password reset
   Future<void> forgotPassword({
     required String email,
+  });
+  
+  /// Reset password
+  Future<void> resetPassword({
+    required String token,
+    required String password,
+    required String confirmPassword,
+  });
+  
+  /// Validate token
+  Future<bool> validateToken(String token);
+  
+  /// Get stored token
+  Future<String?> getStoredToken();
+  
+  /// Store token
+  Future<void> storeToken(String token);
+  
+  /// Clear stored token
+  Future<void> clearStoredToken();
+  
+  /// Set token in API client
+  void setToken(String token);
+  
+  /// Clear token in API client
+  void clearToken();
+  
+  /// Get user ID from token
+  Future<String?> getUserId();
+}
+
+/// Implementation of authentication service
+class AuthServiceImpl implements AuthService {
+  /// Token storage key
+  static const String _tokenKey = 'auth_token';
+  
+  /// API base URL
+  final String _apiBaseUrl;
+  
+  /// Current token
+  String? _currentToken;
+  
+  /// Constructor
+  AuthServiceImpl({
+    required String apiBaseUrl,
+  }) : _apiBaseUrl = apiBaseUrl;
+  
+  @override
+  Future<AuthResult> login({
+    required String email,
+    required String password,
   }) async {
-    await _apiClient.post(
-      '/auth/forgot-password',
-      data: {
-        'email': email,
-      },
+    // TODO: Implement API call
+    // Mock implementation
+    await Future.delayed(const Duration(seconds: 1));
+    
+    // Generate mock token
+    final userId = 'user_${DateTime.now().millisecondsSinceEpoch}';
+    final token = 'mock_token_${DateTime.now().millisecondsSinceEpoch}';
+    
+    return AuthResult(
+      token: token,
+      userId: userId,
     );
   }
   
-  /// Reset password with token
+  @override
+  Future<AuthResult> signup({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    // TODO: Implement API call
+    // Mock implementation
+    await Future.delayed(const Duration(seconds: 1));
+    
+    // Generate mock token
+    final userId = 'user_${DateTime.now().millisecondsSinceEpoch}';
+    final token = 'mock_token_${DateTime.now().millisecondsSinceEpoch}';
+    
+    return AuthResult(
+      token: token,
+      userId: userId,
+    );
+  }
+  
+  @override
+  Future<void> logout() async {
+    // TODO: Implement API call
+    // Mock implementation
+    await Future.delayed(const Duration(milliseconds: 500));
+    
+    // Clear token
+    _currentToken = null;
+  }
+  
+  @override
+  Future<void> forgotPassword({
+    required String email,
+  }) async {
+    // TODO: Implement API call
+    // Mock implementation
+    await Future.delayed(const Duration(seconds: 1));
+  }
+  
+  @override
   Future<void> resetPassword({
     required String token,
     required String password,
     required String confirmPassword,
   }) async {
-    await _apiClient.post(
-      '/auth/reset-password',
-      data: {
-        'token': token,
-        'password': password,
-        'confirm_password': confirmPassword,
-      },
-    );
+    // TODO: Implement API call
+    // Mock implementation
+    await Future.delayed(const Duration(seconds: 1));
+    
+    if (password != confirmPassword) {
+      throw Exception('Passwords do not match');
+    }
+  }
+  
+  @override
+  Future<bool> validateToken(String token) async {
+    // TODO: Implement API call
+    // Mock implementation
+    await Future.delayed(const Duration(milliseconds: 500));
+    
+    // Always valid for mock
+    return true;
+  }
+  
+  @override
+  Future<String?> getStoredToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_tokenKey);
+  }
+  
+  @override
+  Future<void> storeToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_tokenKey, token);
+  }
+  
+  @override
+  Future<void> clearStoredToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_tokenKey);
+  }
+  
+  @override
+  void setToken(String token) {
+    _currentToken = token;
+    // Set token in API client headers
+  }
+  
+  @override
+  void clearToken() {
+    _currentToken = null;
+    // Clear token from API client headers
+  }
+  
+  @override
+  Future<String?> getUserId() async {
+    // TODO: Implement JWT decode or API call
+    // Mock implementation
+    await Future.delayed(const Duration(milliseconds: 300));
+    
+    if (_currentToken == null) {
+      return null;
+    }
+    
+    // Extract user ID from token (mock)
+    return 'user_123';
   }
 }

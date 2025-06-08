@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:frontend/features/gallery/domain/models/creation.dart';
+import 'package:frontend/features/gallery/domain/models/creation_response.dart';
 import 'package:frontend/features/gallery/domain/services/gallery_service.dart';
 
 /// Gallery provider
@@ -192,8 +193,8 @@ class GalleryProvider extends ChangeNotifier {
     if (_searchQuery != null && _searchQuery!.isNotEmpty) {
       final query = _searchQuery!.toLowerCase();
       _filteredCreations = _filteredCreations.where((creation) {
-        return creation.poem.title.toLowerCase().contains(query) ||
-            creation.poem.content.toLowerCase().contains(query);
+        return creation.title.toLowerCase().contains(query) ||
+               creation.content.toLowerCase().contains(query);
       }).toList();
     }
     
@@ -204,7 +205,7 @@ class GalleryProvider extends ChangeNotifier {
       
       switch (_sortBy) {
         case 'title':
-          result = a.poem.title.compareTo(b.poem.title);
+          result = a.title.compareTo(b.title);
           break;
         case 'created_at':
         default:

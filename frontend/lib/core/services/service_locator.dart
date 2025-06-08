@@ -1,5 +1,7 @@
 import 'package:get_it/get_it.dart';
+import 'package:frontend/features/auth/domain/services/auth_service.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
+import 'package:frontend/features/gallery/domain/services/gallery_service.dart';
 import 'package:frontend/features/gallery/presentation/providers/gallery_provider.dart';
 import 'package:frontend/features/poem_generation/domain/services/poem_service.dart';
 import 'package:frontend/features/poem_generation/presentation/providers/poem_generation_provider.dart';
@@ -10,10 +12,23 @@ final GetIt serviceLocator = GetIt.instance;
 
 /// Setup service locator
 Future<void> setupServiceLocator() async {
-  // Register providers
-  serviceLocator.registerLazySingleton<AuthProvider>(() => AuthProvider());
+  // Register services
+  serviceLocator.registerLazySingleton<AuthService>(
+    () => AuthServiceImpl(apiBaseUrl: 'https://api.poemvision.ai'),
+  );
   
-  serviceLocator.registerLazySingleton<GalleryProvider>(() => GalleryProvider());
+  serviceLocator.registerLazySingleton<GalleryService>(
+    () => GalleryServiceImpl(),
+  );
+  
+  // Register providers
+  serviceLocator.registerLazySingleton<AuthProvider>(
+    () => AuthProvider(authService: serviceLocator<AuthService>()),
+  );
+  
+  serviceLocator.registerLazySingleton<GalleryProvider>(
+    () => GalleryProvider(galleryService: serviceLocator<GalleryService>()),
+  );
   
   // Register services
   serviceLocator.registerLazySingleton<PoemService>(() => PoemServiceImpl());

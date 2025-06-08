@@ -59,6 +59,12 @@ class UserProfile extends Equatable {
     this.shares = 0,
   });
   
+  /// Get user name (alias for displayName)
+  String get name => displayName;
+  
+  /// Get membership expiration date (alias for planExpiresAt)
+  DateTime? get membershipExpiresAt => planExpiresAt;
+  
   /// Get user initials
   String get initials {
     if (displayName.isEmpty) {
