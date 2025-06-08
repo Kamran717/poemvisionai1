@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Application theme
 class AppTheme {
@@ -69,75 +68,90 @@ class AppTheme {
     cardColor: surfaceColor,
     dividerColor: dividerColor,
     disabledColor: disabledColor,
-    textTheme: GoogleFonts.poppinsTextTheme().copyWith(
-      displayLarge: GoogleFonts.playfairDisplay(
+    textTheme: const TextTheme(
+      displayLarge: TextStyle(
+        fontFamily: 'Playfair Display',
         fontSize: 32,
         fontWeight: FontWeight.bold,
         color: textDarkColor,
       ),
-      displayMedium: GoogleFonts.playfairDisplay(
+      displayMedium: TextStyle(
+        fontFamily: 'Playfair Display',
         fontSize: 28,
         fontWeight: FontWeight.bold,
         color: textDarkColor,
       ),
-      displaySmall: GoogleFonts.playfairDisplay(
+      displaySmall: TextStyle(
+        fontFamily: 'Playfair Display',
         fontSize: 24,
         fontWeight: FontWeight.bold,
         color: textDarkColor,
       ),
-      headlineLarge: GoogleFonts.poppins(
+      headlineLarge: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 24,
         fontWeight: FontWeight.bold,
         color: textDarkColor,
       ),
-      headlineMedium: GoogleFonts.poppins(
+      headlineMedium: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 20,
         fontWeight: FontWeight.bold,
         color: textDarkColor,
       ),
-      headlineSmall: GoogleFonts.poppins(
+      headlineSmall: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 18,
         fontWeight: FontWeight.bold,
         color: textDarkColor,
       ),
-      titleLarge: GoogleFonts.poppins(
+      titleLarge: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 16,
         fontWeight: FontWeight.w600,
         color: textDarkColor,
       ),
-      titleMedium: GoogleFonts.poppins(
+      titleMedium: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 14,
         fontWeight: FontWeight.w600,
         color: textDarkColor,
       ),
-      titleSmall: GoogleFonts.poppins(
+      titleSmall: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 12,
         fontWeight: FontWeight.w600,
         color: textDarkColor,
       ),
-      bodyLarge: GoogleFonts.poppins(
+      bodyLarge: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 16,
         color: textDarkColor,
       ),
-      bodyMedium: GoogleFonts.poppins(
+      bodyMedium: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 14,
         color: textDarkColor,
       ),
-      bodySmall: GoogleFonts.poppins(
+      bodySmall: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 12,
         color: textLightColor,
       ),
-      labelLarge: GoogleFonts.poppins(
+      labelLarge: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 14,
         fontWeight: FontWeight.w600,
         color: primaryColor,
       ),
-      labelMedium: GoogleFonts.poppins(
+      labelMedium: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 12,
         fontWeight: FontWeight.w600,
         color: primaryColor,
       ),
-      labelSmall: GoogleFonts.poppins(
+      labelSmall: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 10,
         fontWeight: FontWeight.w600,
         color: primaryColor,
@@ -212,36 +226,26 @@ class AppTheme {
         borderRadius: BorderRadius.circular(8),
         borderSide: const BorderSide(color: errorColor, width: 2),
       ),
-      hintStyle: GoogleFonts.poppins(
+      hintStyle: const TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 14,
         color: textLightColor,
       ),
-      labelStyle: GoogleFonts.poppins(
+      labelStyle: const TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 14,
         color: textDarkColor,
       ),
-      errorStyle: GoogleFonts.poppins(
+      errorStyle: const TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 12,
         color: errorColor,
       ),
     ),
-    cardTheme: CardTheme(
-      color: surfaceColor,
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-    ),
-    dialogTheme: DialogTheme(
-      backgroundColor: surfaceColor,
-      elevation: 8,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-    ),
     snackBarTheme: SnackBarThemeData(
       backgroundColor: textDarkColor,
-      contentTextStyle: GoogleFonts.poppins(
+      contentTextStyle: const TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 14,
         color: Colors.white,
       ),
@@ -256,11 +260,13 @@ class AppTheme {
       selectedColor: primaryColor,
       secondarySelectedColor: secondaryColor,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      labelStyle: GoogleFonts.poppins(
+      labelStyle: const TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 12,
         color: primaryColor,
       ),
-      secondaryLabelStyle: GoogleFonts.poppins(
+      secondaryLabelStyle: const TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 12,
         color: Colors.white,
       ),
@@ -294,75 +300,90 @@ class AppTheme {
     cardColor: const Color(0xFF303030),
     dividerColor: const Color(0xFF424242),
     disabledColor: const Color(0xFF757575),
-    textTheme: GoogleFonts.poppinsTextTheme().copyWith(
-      displayLarge: GoogleFonts.playfairDisplay(
+    textTheme: const TextTheme(
+      displayLarge: TextStyle(
+        fontFamily: 'Playfair Display',
         fontSize: 32,
         fontWeight: FontWeight.bold,
         color: Colors.white,
       ),
-      displayMedium: GoogleFonts.playfairDisplay(
+      displayMedium: TextStyle(
+        fontFamily: 'Playfair Display',
         fontSize: 28,
         fontWeight: FontWeight.bold,
         color: Colors.white,
       ),
-      displaySmall: GoogleFonts.playfairDisplay(
+      displaySmall: TextStyle(
+        fontFamily: 'Playfair Display',
         fontSize: 24,
         fontWeight: FontWeight.bold,
         color: Colors.white,
       ),
-      headlineLarge: GoogleFonts.poppins(
+      headlineLarge: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 24,
         fontWeight: FontWeight.bold,
         color: Colors.white,
       ),
-      headlineMedium: GoogleFonts.poppins(
+      headlineMedium: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 20,
         fontWeight: FontWeight.bold,
         color: Colors.white,
       ),
-      headlineSmall: GoogleFonts.poppins(
+      headlineSmall: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 18,
         fontWeight: FontWeight.bold,
         color: Colors.white,
       ),
-      titleLarge: GoogleFonts.poppins(
+      titleLarge: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 16,
         fontWeight: FontWeight.w600,
         color: Colors.white,
       ),
-      titleMedium: GoogleFonts.poppins(
+      titleMedium: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 14,
         fontWeight: FontWeight.w600,
         color: Colors.white,
       ),
-      titleSmall: GoogleFonts.poppins(
+      titleSmall: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 12,
         fontWeight: FontWeight.w600,
         color: Colors.white,
       ),
-      bodyLarge: GoogleFonts.poppins(
+      bodyLarge: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 16,
         color: Colors.white,
       ),
-      bodyMedium: GoogleFonts.poppins(
+      bodyMedium: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 14,
         color: Colors.white,
       ),
-      bodySmall: GoogleFonts.poppins(
+      bodySmall: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 12,
         color: Colors.white70,
       ),
-      labelLarge: GoogleFonts.poppins(
+      labelLarge: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 14,
         fontWeight: FontWeight.w600,
         color: primaryColor,
       ),
-      labelMedium: GoogleFonts.poppins(
+      labelMedium: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 12,
         fontWeight: FontWeight.w600,
         color: primaryColor,
       ),
-      labelSmall: GoogleFonts.poppins(
+      labelSmall: TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 10,
         fontWeight: FontWeight.w600,
         color: primaryColor,
@@ -437,36 +458,26 @@ class AppTheme {
         borderRadius: BorderRadius.circular(8),
         borderSide: const BorderSide(color: errorColor, width: 2),
       ),
-      hintStyle: GoogleFonts.poppins(
+      hintStyle: const TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 14,
         color: Colors.white70,
       ),
-      labelStyle: GoogleFonts.poppins(
+      labelStyle: const TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 14,
         color: Colors.white,
       ),
-      errorStyle: GoogleFonts.poppins(
+      errorStyle: const TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 12,
         color: errorColor,
       ),
     ),
-    cardTheme: CardTheme(
-      color: const Color(0xFF303030),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-    ),
-    dialogTheme: DialogTheme(
-      backgroundColor: const Color(0xFF303030),
-      elevation: 8,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-    ),
     snackBarTheme: SnackBarThemeData(
       backgroundColor: const Color(0xFF424242),
-      contentTextStyle: GoogleFonts.poppins(
+      contentTextStyle: const TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 14,
         color: Colors.white,
       ),
@@ -481,11 +492,13 @@ class AppTheme {
       selectedColor: primaryColor,
       secondarySelectedColor: secondaryColor,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      labelStyle: GoogleFonts.poppins(
+      labelStyle: const TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 12,
         color: primaryColor,
       ),
-      secondaryLabelStyle: GoogleFonts.poppins(
+      secondaryLabelStyle: const TextStyle(
+        fontFamily: 'Poppins',
         fontSize: 12,
         color: Colors.white,
       ),

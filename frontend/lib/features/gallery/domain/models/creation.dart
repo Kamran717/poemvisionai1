@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:frontend/features/poem_generation/domain/models/poem.dart';
 
 /// Creation model representing a saved poem
 class Creation extends Equatable {
@@ -29,6 +30,9 @@ class Creation extends Equatable {
   /// Whether the creation is public
   final bool isPublic;
   
+  /// Whether the creation is favorited
+  final bool isFavorite;
+  
   /// Constructor
   const Creation({
     required this.id,
@@ -40,7 +44,21 @@ class Creation extends Equatable {
     required this.frameStyle,
     this.shareUrl,
     this.isPublic = false,
+    this.isFavorite = false,
   });
+  
+  /// Get the poem associated with this creation
+  Poem get poem => Poem(
+    id: id,
+    title: title,
+    content: content,
+    poemType: poemType,
+    mood: 'Generated',
+    generatedAt: createdAt,
+  );
+  
+  /// Get the frame type for this creation
+  String get frameType => frameStyle;
   
   @override
   List<Object?> get props => [
@@ -53,6 +71,7 @@ class Creation extends Equatable {
     frameStyle,
     shareUrl,
     isPublic,
+    isFavorite,
   ];
   
   /// Create a copy with modified properties
@@ -66,6 +85,7 @@ class Creation extends Equatable {
     String? frameStyle,
     String? shareUrl,
     bool? isPublic,
+    bool? isFavorite,
   }) {
     return Creation(
       id: id ?? this.id,
@@ -77,6 +97,7 @@ class Creation extends Equatable {
       frameStyle: frameStyle ?? this.frameStyle,
       shareUrl: shareUrl ?? this.shareUrl,
       isPublic: isPublic ?? this.isPublic,
+      isFavorite: isFavorite ?? this.isFavorite,
     );
   }
   
@@ -92,6 +113,7 @@ class Creation extends Equatable {
       frameStyle: json['frame_style'] as String,
       shareUrl: json['share_url'] as String?,
       isPublic: json['is_public'] as bool? ?? false,
+      isFavorite: json['is_favorite'] as bool? ?? false,
     );
   }
   
@@ -107,6 +129,7 @@ class Creation extends Equatable {
       'frame_style': frameStyle,
       'share_url': shareUrl,
       'is_public': isPublic,
+      'is_favorite': isFavorite,
     };
   }
 }

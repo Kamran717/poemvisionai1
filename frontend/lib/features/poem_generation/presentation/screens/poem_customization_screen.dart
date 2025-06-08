@@ -32,7 +32,6 @@ class _PoemCustomizationScreenState extends State<PoemCustomizationScreen> {
   ];
   
   String _selectedPoemType = 'Sonnet';
-  String? _customPrompt;
   String _mood = 'Reflective';
   bool _isGenerating = false;
   
@@ -152,7 +151,6 @@ class _PoemCustomizationScreenState extends State<PoemCustomizationScreen> {
                 maxLines: 3,
                 onChanged: (value) {
                   setState(() {
-                    _customPrompt = value.isEmpty ? null : value;
                   });
                 },
               ),

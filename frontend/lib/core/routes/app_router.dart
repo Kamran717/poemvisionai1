@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:go_router/src/state.dart';
 import 'package:frontend/core/routes/route_paths.dart';
 import 'package:frontend/features/auth/presentation/screens/login_screen.dart';
 import 'package:frontend/features/auth/presentation/screens/signup_screen.dart';
@@ -55,7 +54,8 @@ class AppRouter {
         GoRoute(
           path: RoutePaths.resetPassword,
           builder: (context, state) {
-            final token = state.queryParameters['token'] ?? '';
+            final params = GoRouterState.of(context).uri.queryParameters;
+            final token = params['token'] ?? '';
             return ResetPasswordScreen(token: token);
           },
         ),
@@ -88,8 +88,9 @@ class AppRouter {
         GoRoute(
           path: RoutePaths.poemCustomization,
           builder: (context, state) {
-            final imageId = state.queryParameters['image_id'] ?? '';
-            final analysisId = state.queryParameters['analysis_id'] ?? '';
+            final params = GoRouterState.of(context).uri.queryParameters;
+            final imageId = params['image_id'] ?? '';
+            final analysisId = params['analysis_id'] ?? '';
             return PoemCustomizationScreen(
               imageId: imageId,
               analysisId: analysisId,
@@ -99,7 +100,8 @@ class AppRouter {
         GoRoute(
           path: RoutePaths.finalCreation,
           builder: (context, state) {
-            final poemId = state.queryParameters['poem_id'] ?? '';
+            final params = GoRouterState.of(context).uri.queryParameters;
+            final poemId = params['poem_id'] ?? '';
             return FinalCreationScreen(poemId: poemId);
           },
         ),
@@ -122,7 +124,8 @@ class AppRouter {
         GoRoute(
           path: RoutePaths.sharedCreation,
           builder: (context, state) {
-            final shareId = state.queryParameters['id'] ?? '';
+            final params = GoRouterState.of(context).uri.queryParameters;
+            final shareId = params['id'] ?? '';
             return FinalCreationScreen(
               sharedId: shareId,
               isShared: true,
