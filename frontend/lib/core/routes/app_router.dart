@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/core/routes/route_paths.dart';
+import 'package:frontend/features/auth/presentation/guards/auth_guard.dart';
 import 'package:frontend/features/auth/presentation/screens/login_screen.dart';
 import 'package:frontend/features/auth/presentation/screens/signup_screen.dart';
 import 'package:frontend/features/auth/presentation/screens/forgot_password_screen.dart';
@@ -25,6 +26,8 @@ class AppRouter {
     initialLocation: RoutePaths.splash,
     debugLogDiagnostics: true,
     routes: [
+      // Public routes (no authentication required)
+      
       // Splash and intro
       GoRoute(
         path: RoutePaths.splash,
@@ -35,20 +38,16 @@ class AppRouter {
         builder: (context, state) => const IntroScreen(),
       ),
       
-      // Main app screens
-      GoRoute(
-        path: RoutePaths.home,
-        builder: (context, state) => const HomeScreen(),
-      ),
-      
       // Authentication
       GoRoute(
         path: RoutePaths.login,
         builder: (context, state) => const LoginScreen(),
+        redirect: AuthGuard.loginGuard,
       ),
       GoRoute(
         path: RoutePaths.signup,
         builder: (context, state) => const SignupScreen(),
+        redirect: AuthGuard.loginGuard,
       ),
       GoRoute(
         path: RoutePaths.forgotPassword,
@@ -62,10 +61,29 @@ class AppRouter {
         },
       ),
       
+      // Shared creation (public)
+      GoRoute(
+        path: '${RoutePaths.shared}/:shareCode',
+        builder: (context, state) {
+          final shareCode = state.pathParameters['shareCode'] ?? '';
+          return SharedCreationScreen(shareCode: shareCode);
+        },
+      ),
+      
+      // Protected routes (authentication required)
+      
+      // Main app screens
+      GoRoute(
+        path: RoutePaths.home,
+        builder: (context, state) => const HomeScreen(),
+        redirect: AuthGuard.guard,
+      ),
+      
       // Image processing and poem generation
       GoRoute(
         path: RoutePaths.imageUpload,
         builder: (context, state) => const ImageUploadScreen(),
+        redirect: AuthGuard.guard,
       ),
       GoRoute(
         path: RoutePaths.poemCustomization,
@@ -73,6 +91,7 @@ class AppRouter {
           final analysisId = state.pathParameters['analysisId'] ?? '';
           return PoemCustomizationScreen(analysisId: analysisId);
         },
+        redirect: AuthGuard.guard,
       ),
       GoRoute(
         path: RoutePaths.finalCreation,
@@ -80,25 +99,19 @@ class AppRouter {
           final analysisId = state.pathParameters['analysisId'] ?? '';
           return FinalCreationScreen(analysisId: analysisId);
         },
+        redirect: AuthGuard.guard,
       ),
       
       // Gallery and profile
       GoRoute(
         path: RoutePaths.gallery,
         builder: (context, state) => const GalleryScreen(),
+        redirect: AuthGuard.guard,
       ),
       GoRoute(
         path: RoutePaths.profile,
         builder: (context, state) => const ProfileScreen(),
-      ),
-      
-      // Shared creation
-      GoRoute(
-        path: '${RoutePaths.shared}/:shareCode',
-        builder: (context, state) {
-          final shareCode = state.pathParameters['shareCode'] ?? '';
-          return SharedCreationScreen(shareCode: shareCode);
-        },
+        redirect: AuthGuard.guard,
       ),
     ],
     
@@ -126,10 +139,22 @@ class AppRouter {
       ),
     ),
     
-    // Navigation observers for analytics, etc.
-    observers: [
-      // Add any navigation observers here
-    ],
+    // Redirect logic for initial auth check
+    redirect: (context, state) async {
+      // Skip redirect for these paths
+      if (state.fullPath == RoutePaths.splash ||
+          state.fullPath == RoutePaths.intro ||
+          state.fullPath == RoutePaths.login ||
+          state.fullPath == RoutePaths.signup ||
+          state.fullPath == RoutePaths.forgotPassword ||
+          state.fullPath?.startsWith(RoutePaths.resetPassword) == true ||
+          state.fullPath?.startsWith(RoutePaths.shared) == true) {
+        return null;
+      }
+      
+      // For other paths, check intro and authentication
+      return await AuthGuard.introGuard(context, state);
+    },
   );
   
   /// Navigate to a route with fade transition

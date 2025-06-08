@@ -6,6 +6,8 @@ import 'package:frontend/core/network/api_client.dart';
 import 'package:frontend/core/storage/local_storage.dart';
 import 'package:frontend/core/storage/secure_storage.dart';
 import 'package:frontend/core/constants/api_constants.dart';
+import 'package:frontend/features/auth/domain/services/auth_service.dart';
+import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
 
 /// Global ServiceLocator instance
 final GetIt serviceLocator = GetIt.instance;
@@ -48,15 +50,28 @@ Future<void> setupServiceLocator() async {
     ApiClient(serviceLocator<Dio>()),
   );
   
+  // Auth Services
+  serviceLocator.registerSingleton<AuthService>(
+    AuthService(
+      serviceLocator<ApiClient>(),
+      serviceLocator<SecureStorage>(),
+    ),
+  );
+  
+  // Providers
+  serviceLocator.registerSingleton<AuthProvider>(
+    AuthProvider(serviceLocator<AuthService>()),
+  );
+  
   // Add more services as needed
   // Repository layer
-  // _setupRepositories();
+  _setupRepositories();
   
   // Application business logic / Use cases
-  // _setupUseCases();
+  _setupUseCases();
   
   // ViewModels/BLoCs/Cubits
-  // _setupViewModels();
+  _setupViewModels();
 }
 
 /// Setup repositories
