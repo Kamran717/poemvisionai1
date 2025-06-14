@@ -3,27 +3,22 @@ import 'package:http/http.dart' as http;
 import '../models/user.dart';
 import '../models/creation.dart';
 import '../models/membership.dart';
+import '../config/api_config.dart';
 import 'dart:math';
 
 class ApiService {
-  static const String baseUrl = 'https://poemvisionai-api.example.com'; // Replace with your actual API URL
   final String? _token;
   final bool _useMockData; // Flag to use mock data when API is unavailable
 
-  ApiService({String? token, bool useMockData = true}) 
+  ApiService({String? token, bool useMockData = false}) 
       : _token = token,
         _useMockData = useMockData;
 
   Map<String, String> get _headers {
-    final headers = {
-      'Content-Type': 'application/json',
-    };
-    
     if (_token != null) {
-      headers['Authorization'] = 'Bearer $_token';
+      return ApiConfig.getAuthHeaders(_token!);
     }
-    
-    return headers;
+    return ApiConfig.defaultHeaders;
   }
 
   // Authentication methods
@@ -40,7 +35,7 @@ class ApiService {
     }
 
     final response = await http.post(
-      Uri.parse('$baseUrl/auth/login'),
+      Uri.parse(ApiConfig.loginEndpoint),
       headers: _headers,
       body: jsonEncode({
         'email': email,
@@ -68,7 +63,7 @@ class ApiService {
     }
 
     final response = await http.post(
-      Uri.parse('$baseUrl/auth/register'),
+      Uri.parse(ApiConfig.registerEndpoint),
       headers: _headers,
       body: jsonEncode({
         'username': username,
@@ -92,7 +87,7 @@ class ApiService {
     }
 
     final response = await http.post(
-      Uri.parse('$baseUrl/auth/reset-password-request'),
+      Uri.parse('${ApiConfig.apiBaseUrl}/auth/reset-password-request'),
       headers: _headers,
       body: jsonEncode({
         'email': email,
@@ -118,7 +113,7 @@ class ApiService {
     }
 
     final response = await http.get(
-      Uri.parse('$baseUrl/user/profile'),
+      Uri.parse(ApiConfig.userProfileEndpoint),
       headers: _headers,
     );
 
@@ -151,7 +146,7 @@ class ApiService {
     }
 
     final response = await http.get(
-      Uri.parse('$baseUrl/user/stats'),
+      Uri.parse('${ApiConfig.apiBaseUrl}/user/stats'),
       headers: _headers,
     );
 
@@ -175,7 +170,7 @@ class ApiService {
     }
 
     final response = await http.post(
-      Uri.parse('$baseUrl/creations/analyze-image'),
+      Uri.parse(ApiConfig.analyzeImageEndpoint),
       headers: _headers,
       body: jsonEncode({
         'image_data': base64Image,
@@ -204,9 +199,10 @@ class ApiService {
     }
 
     final response = await http.post(
-      Uri.parse('$baseUrl/creations/$creationId/generate-poem'),
+      Uri.parse(ApiConfig.generatePoemEndpoint),
       headers: _headers,
       body: jsonEncode({
+        'creation_id': creationId,
         'preferences': poemPreferences,
       }),
     );
@@ -240,7 +236,7 @@ class ApiService {
     }
 
     final response = await http.get(
-      Uri.parse('$baseUrl/user/creations'),
+      Uri.parse(ApiConfig.userPoemsEndpoint),
       headers: _headers,
     );
 
@@ -268,7 +264,7 @@ class ApiService {
     }
 
     final response = await http.get(
-      Uri.parse('$baseUrl/creations/$creationId'),
+      Uri.parse('${ApiConfig.apiBaseUrl}/creations/$creationId'),
       headers: _headers,
     );
 
@@ -296,7 +292,7 @@ class ApiService {
     }
 
     final response = await http.get(
-      Uri.parse('$baseUrl/shared/$shareCode'),
+      Uri.parse('${ApiConfig.apiBaseUrl}/shared/$shareCode'),
       headers: _headers,
     );
 
@@ -339,7 +335,7 @@ class ApiService {
     }
 
     final response = await http.get(
-      Uri.parse('$baseUrl/memberships'),
+      Uri.parse(ApiConfig.membershipStatusEndpoint),
       headers: _headers,
     );
 
@@ -365,7 +361,7 @@ class ApiService {
     }
 
     final response = await http.post(
-      Uri.parse('$baseUrl/memberships/subscribe'),
+      Uri.parse(ApiConfig.upgradeEndpoint),
       headers: _headers,
       body: jsonEncode({
         'membership_id': membershipId,
@@ -388,7 +384,7 @@ class ApiService {
     }
 
     final response = await http.post(
-      Uri.parse('$baseUrl/memberships/cancel'),
+      Uri.parse('${ApiConfig.apiBaseUrl}/memberships/cancel'),
       headers: _headers,
     );
 

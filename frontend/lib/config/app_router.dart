@@ -5,6 +5,8 @@ import '../screens/auth/register_screen.dart';
 import '../screens/creation/create_poem_screen.dart';
 import '../screens/gallery/gallery_screen.dart';
 import '../screens/profile/profile_screen.dart';
+import '../screens/onboarding/introduction_screen.dart';
+import '../screens/splash/splash_screen.dart';
 
 class AppRouter {
   static final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
@@ -15,6 +17,20 @@ class AppRouter {
     navigatorKey: _rootNavigatorKey,
     debugLogDiagnostics: true,
     routes: [
+      // Splash screen route
+      GoRoute(
+        path: '/',
+        name: 'splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
+      
+      // Onboarding route
+      GoRoute(
+        path: '/onboarding',
+        name: 'onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
+      
       // Auth routes
       GoRoute(
         path: '/login',
@@ -42,11 +58,9 @@ class AppRouter {
         routes: [
           // Home route
           GoRoute(
-            path: '/',
+            path: '/home',
             name: 'home',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: _HomeScreen(),
-            ),
+            builder: (context, state) => const _HomeScreen(),
             routes: [
               // Create poem route
               GoRoute(
@@ -61,35 +75,18 @@ class AppRouter {
           GoRoute(
             path: '/gallery',
             name: 'gallery',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: _GalleryScreen(),
-            ),
+            builder: (context, state) => const _GalleryScreen(),
           ),
           
           // Profile route
           GoRoute(
             path: '/profile',
             name: 'profile',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: _ProfileScreen(),
-            ),
+            builder: (context, state) => const _ProfileScreen(),
           ),
         ],
       ),
     ],
-    
-    // Redirect to login if not authenticated
-    redirect: (context, state) {
-      // TODO: Implement authentication check
-      // const isAuthenticated = false;
-      // final isAuthRoute = state.matchedLocation == '/login' || state.matchedLocation == '/register';
-      
-      // if (!isAuthenticated && !isAuthRoute) {
-      //   return '/login';
-      // }
-      
-      return null;
-    },
   );
 }
 

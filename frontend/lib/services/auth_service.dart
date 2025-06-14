@@ -1,10 +1,10 @@
 import 'dart:async';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 import 'api_service.dart';
 
-class AuthService {
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+class AuthService extends ChangeNotifier {
   final ApiService _apiService;
   User? _currentUser;
   final StreamController<User?> _userStreamController = StreamController<User?>.broadcast();
@@ -25,7 +25,8 @@ class AuthService {
 
   // Initialize the auth service by checking for existing token
   Future<bool> initialize() async {
-    final token = await _secureStorage.read(key: _tokenKey);
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString(_tokenKey);
     if (token != null) {
       try {
         // Create a new API service with the token
@@ -36,6 +37,7 @@ class AuthService {
         
         _currentUser = user;
         _userStreamController.add(user);
+        notifyListeners();
         return true;
       } catch (e) {
         // Token might be expired, clear it
@@ -50,13 +52,14 @@ class AuthService {
   Future<User> login(String email, String password) async {
     final response = await _apiService.login(email, password);
     
-    // Save the tokens to secure storage
-    await _secureStorage.write(key: _tokenKey, value: response['token']);
+    // Save the tokens to shared preferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_tokenKey, response['token']);
     if (response['refresh_token'] != null) {
-      await _secureStorage.write(key: _refreshTokenKey, value: response['refresh_token']);
+      await prefs.setString(_refreshTokenKey, response['refresh_token']);
     }
     if (response['user_id'] != null) {
-      await _secureStorage.write(key: _userIdKey, value: response['user_id'].toString());
+      await prefs.setString(_userIdKey, response['user_id'].toString());
     }
     
     // Get user profile with the new token
@@ -65,6 +68,7 @@ class AuthService {
     
     _currentUser = user;
     _userStreamController.add(user);
+    notifyListeners();
     
     return user;
   }
@@ -75,12 +79,13 @@ class AuthService {
     
     // If registration returns a token, save it
     if (response['token'] != null) {
-      await _secureStorage.write(key: _tokenKey, value: response['token']);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_tokenKey, response['token']);
       if (response['refresh_token'] != null) {
-        await _secureStorage.write(key: _refreshTokenKey, value: response['refresh_token']);
+        await prefs.setString(_refreshTokenKey, response['refresh_token']);
       }
       if (response['user_id'] != null) {
-        await _secureStorage.write(key: _userIdKey, value: response['user_id'].toString());
+        await prefs.setString(_userIdKey, response['user_id'].toString());
       }
       
       // Get user profile with the new token
@@ -104,10 +109,11 @@ class AuthService {
 
   // Log out user
   Future<void> logout() async {
-    // Clear secure storage
-    await _secureStorage.delete(key: _tokenKey);
-    await _secureStorage.delete(key: _refreshTokenKey);
-    await _secureStorage.delete(key: _userIdKey);
+    // Clear shared preferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_tokenKey);
+    await prefs.remove(_refreshTokenKey);
+    await prefs.remove(_userIdKey);
     
     // Clear current user
     _currentUser = null;
@@ -116,12 +122,14 @@ class AuthService {
 
   // Get current token
   Future<String?> getToken() async {
-    return await _secureStorage.read(key: _tokenKey);
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_tokenKey);
   }
 
   // Check if user is logged in
   Future<bool> isLoggedIn() async {
-    final token = await _secureStorage.read(key: _tokenKey);
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString(_tokenKey);
     return token != null;
   }
 
