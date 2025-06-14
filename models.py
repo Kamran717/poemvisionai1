@@ -4,6 +4,7 @@ import jwt
 import time
 import string
 import random
+from typing import Optional, Union
 from flask_sqlalchemy import SQLAlchemy
 from flask import current_app
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -486,13 +487,13 @@ class SiteVisitor(db.Model):
 
     def __init__(
         self,
-        ip_address: str | None = None,
-        user_agent: str | None = None,
-        first_visit: datetime | None = None,
-        last_visit: datetime | None = None,
+        ip_address: Optional[str] = None,
+        user_agent: Optional[str] = None,
+        first_visit: Optional[datetime] = None,
+        last_visit: Optional[datetime] = None,
         visit_count: int = 1,
-        user_id: int | None = None,
-        referrer: str | None = None
+        user_id: Optional[int] = None,
+        referrer: Optional[str] = None
     ):
         self.ip_address = ip_address
         self.user_agent = user_agent
@@ -528,9 +529,9 @@ class VisitorLog(db.Model):
         self,
         visitor_id: int,
         page_visited: str,
-        session_id: str | None = None,
-        time_spent_seconds: int | None = None,
-        timestamp: datetime | None = None
+        session_id: Optional[str] = None,
+        time_spent_seconds: Optional[int] = None,
+        timestamp: Optional[datetime] = None
     ):
         self.visitor_id = visitor_id
         self.page_visited = page_visited

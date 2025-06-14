@@ -1,5 +1,7 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
+import 'package:cookie_jar/cookie_jar.dart';
+import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import '../models/user.dart';
 import '../models/creation.dart';
 import '../models/membership.dart';
@@ -9,10 +11,21 @@ import 'dart:math';
 class ApiService {
   final String? _token;
   final bool _useMockData; // Flag to use mock data when API is unavailable
+  late final Dio _dio;
+  static final CookieJar _cookieJar = CookieJar();
 
   ApiService({String? token, bool useMockData = false}) 
       : _token = token,
-        _useMockData = useMockData;
+        _useMockData = useMockData {
+    _dio = Dio();
+    _dio.interceptors.add(CookieManager(_cookieJar));
+    
+    // Set default headers
+    _dio.options.headers.addAll(_headers);
+    _dio.options.connectTimeout = ApiConfig.connectTimeout;
+    _dio.options.receiveTimeout = ApiConfig.receiveTimeout;
+    _dio.options.sendTimeout = ApiConfig.sendTimeout;
+  }
 
   Map<String, String> get _headers {
     if (_token != null) {
@@ -34,19 +47,22 @@ class ApiService {
       };
     }
 
-    final response = await http.post(
-      Uri.parse(ApiConfig.loginEndpoint),
-      headers: _headers,
-      body: jsonEncode({
-        'email': email,
-        'password': password,
-      }),
-    );
+    try {
+      final response = await _dio.post(
+        ApiConfig.loginEndpoint,
+        data: {
+          'email': email,
+          'password': password,
+        },
+      );
 
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to login: ${response.body}');
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception('Failed to login: ${response.data}');
+      }
+    } catch (e) {
+      throw Exception('Failed to login: $e');
     }
   }
 
@@ -62,20 +78,23 @@ class ApiService {
       };
     }
 
-    final response = await http.post(
-      Uri.parse(ApiConfig.registerEndpoint),
-      headers: _headers,
-      body: jsonEncode({
-        'username': username,
-        'email': email,
-        'password': password,
-      }),
-    );
+    try {
+      final response = await _dio.post(
+        ApiConfig.registerEndpoint,
+        data: {
+          'username': username,
+          'email': email,
+          'password': password,
+        },
+      );
 
-    if (response.statusCode == 201) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to register: ${response.body}');
+      if (response.statusCode == 201) {
+        return response.data;
+      } else {
+        throw Exception('Failed to register: ${response.data}');
+      }
+    } catch (e) {
+      throw Exception('Failed to register: $e');
     }
   }
 
@@ -86,16 +105,19 @@ class ApiService {
       return;
     }
 
-    final response = await http.post(
-      Uri.parse('${ApiConfig.apiBaseUrl}/auth/reset-password-request'),
-      headers: _headers,
-      body: jsonEncode({
-        'email': email,
-      }),
-    );
+    try {
+      final response = await _dio.post(
+        '${ApiConfig.apiBaseUrl}/auth/reset-password-request',
+        data: {
+          'email': email,
+        },
+      );
 
-    if (response.statusCode != 200) {
-      throw Exception('Failed to request password reset: ${response.body}');
+      if (response.statusCode != 200) {
+        throw Exception('Failed to request password reset: ${response.data}');
+      }
+    } catch (e) {
+      throw Exception('Failed to request password reset: $e');
     }
   }
 
@@ -112,15 +134,16 @@ class ApiService {
       );
     }
 
-    final response = await http.get(
-      Uri.parse(ApiConfig.userProfileEndpoint),
-      headers: _headers,
-    );
+    try {
+      final response = await _dio.get(ApiConfig.userProfileEndpoint);
 
-    if (response.statusCode == 200) {
-      return User.fromJson(jsonDecode(response.body));
-    } else {
-      throw Exception('Failed to get user profile: ${response.body}');
+      if (response.statusCode == 200) {
+        return User.fromJson(response.data);
+      } else {
+        throw Exception('Failed to get user profile: ${response.data}');
+      }
+    } catch (e) {
+      throw Exception('Failed to get user profile: $e');
     }
   }
 
@@ -145,15 +168,16 @@ class ApiService {
       };
     }
 
-    final response = await http.get(
-      Uri.parse('${ApiConfig.apiBaseUrl}/user/stats'),
-      headers: _headers,
-    );
+    try {
+      final response = await _dio.get('${ApiConfig.apiBaseUrl}/user/stats');
 
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to get user stats: ${response.body}');
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception('Failed to get user stats: ${response.data}');
+      }
+    } catch (e) {
+      throw Exception('Failed to get user stats: $e');
     }
   }
 
@@ -169,28 +193,49 @@ class ApiService {
       );
     }
 
-    final response = await http.post(
-      Uri.parse(ApiConfig.analyzeImageEndpoint),
-      headers: _headers,
-      body: jsonEncode({
-        'image_data': base64Image,
-        'preferences': preferences,
-      }),
-    );
+    try {
+      final response = await _dio.post(
+        ApiConfig.analyzeImageEndpoint,
+        data: {
+          'image': base64Image,
+          'preferences': preferences,
+        },
+      );
 
-    if (response.statusCode == 200) {
-      return Creation.fromJson(jsonDecode(response.body));
-    } else {
-      throw Exception('Failed to analyze image: ${response.body}');
+      if (response.statusCode == 200) {
+        final responseData = response.data;
+        
+        // Flask returns: {"success": true, "analysisId": "abc123", "results": {...}}
+        // We need to create a temporary Creation object with the analysis ID
+        if (responseData['success'] == true && responseData['analysisId'] != null) {
+          print('Received analysisId from server: ${responseData['analysisId']}');
+          
+          // Create a temporary Creation object with the available data
+          // Store the analysisId in shareCode for later use in poem generation
+          return Creation(
+            id: responseData['analysisId'].hashCode, // Use hash of analysisId as temporary ID
+            imageData: base64Image,
+            analysisResults: responseData['results'],
+            shareCode: responseData['analysisId'], // Store analysisId here temporarily
+            createdAt: DateTime.now(),
+          );
+        } else {
+          throw Exception('Invalid response format: ${response.data}');
+        }
+      } else {
+        throw Exception('Failed to analyze image: ${response.data}');
+      }
+    } catch (e) {
+      throw Exception('Failed to analyze image: $e');
     }
   }
 
-  Future<Creation> generatePoem(int creationId, Map<String, dynamic> poemPreferences) async {
+  Future<Creation> generatePoem(String analysisId, Map<String, dynamic> poemPreferences) async {
     if (_useMockData) {
       // Return mock poem
       await Future.delayed(const Duration(seconds: 2)); // Longer delay to simulate poem generation
       return Creation(
-        id: creationId,
+        id: analysisId.hashCode,
         imageData: 'mock_image_data',
         poemText: _generateMockPoem(poemPreferences['poem_type'] ?? 'sonnet'),
         poemType: poemPreferences['poem_type'] ?? 'sonnet',
@@ -198,19 +243,44 @@ class ApiService {
       );
     }
 
-    final response = await http.post(
-      Uri.parse(ApiConfig.generatePoemEndpoint),
-      headers: _headers,
-      body: jsonEncode({
-        'creation_id': creationId,
-        'preferences': poemPreferences,
-      }),
-    );
+    final requestBody = {
+      'analysisId': analysisId,
+      'poemType': poemPreferences['poem_type'],
+      'poemLength': poemPreferences['poem_length'],
+      'emphasis': poemPreferences['emphasis'],
+      'customPrompt': poemPreferences['custom_prompt'],
+      'isRegeneration': poemPreferences['is_regeneration'] ?? false,
+    };
 
-    if (response.statusCode == 200) {
-      return Creation.fromJson(jsonDecode(response.body));
-    } else {
-      throw Exception('Failed to generate poem: ${response.body}');
+    print('Sending poem generation request with body: ${jsonEncode(requestBody)}');
+    print('Using analysisId: $analysisId');
+
+    try {
+      final response = await _dio.post(
+        ApiConfig.generatePoemEndpoint,
+        data: requestBody,
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = response.data;
+        if (responseData['success'] == true && responseData['poem'] != null) {
+          // Return creation with the poem
+          return Creation(
+            id: analysisId.hashCode,
+            imageData: 'temp_image_data', // This will be updated with actual data
+            poemText: responseData['poem'],
+            poemType: poemPreferences['poem_type'],
+            poemLength: poemPreferences['poem_length'],
+            createdAt: DateTime.now(),
+          );
+        } else {
+          throw Exception('Invalid poem generation response: ${response.data}');
+        }
+      } else {
+        throw Exception('Failed to generate poem: ${response.data}');
+      }
+    } catch (e) {
+      throw Exception('Failed to generate poem: $e');
     }
   }
 
@@ -235,16 +305,17 @@ class ApiService {
       return mockCreations;
     }
 
-    final response = await http.get(
-      Uri.parse(ApiConfig.userPoemsEndpoint),
-      headers: _headers,
-    );
+    try {
+      final response = await _dio.get(ApiConfig.userPoemsEndpoint);
 
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((json) => Creation.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to get user creations: ${response.body}');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => Creation.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to get user creations: ${response.data}');
+      }
+    } catch (e) {
+      throw Exception('Failed to get user creations: $e');
     }
   }
 
@@ -263,15 +334,16 @@ class ApiService {
       );
     }
 
-    final response = await http.get(
-      Uri.parse('${ApiConfig.apiBaseUrl}/creations/$creationId'),
-      headers: _headers,
-    );
+    try {
+      final response = await _dio.get('${ApiConfig.apiBaseUrl}/creations/$creationId');
 
-    if (response.statusCode == 200) {
-      return Creation.fromJson(jsonDecode(response.body));
-    } else {
-      throw Exception('Failed to get creation: ${response.body}');
+      if (response.statusCode == 200) {
+        return Creation.fromJson(response.data);
+      } else {
+        throw Exception('Failed to get creation: ${response.data}');
+      }
+    } catch (e) {
+      throw Exception('Failed to get creation: $e');
     }
   }
 
@@ -291,15 +363,16 @@ class ApiService {
       );
     }
 
-    final response = await http.get(
-      Uri.parse('${ApiConfig.apiBaseUrl}/shared/$shareCode'),
-      headers: _headers,
-    );
+    try {
+      final response = await _dio.get('${ApiConfig.apiBaseUrl}/shared/$shareCode');
 
-    if (response.statusCode == 200) {
-      return Creation.fromJson(jsonDecode(response.body));
-    } else {
-      throw Exception('Failed to get shared creation: ${response.body}');
+      if (response.statusCode == 200) {
+        return Creation.fromJson(response.data);
+      } else {
+        throw Exception('Failed to get shared creation: ${response.data}');
+      }
+    } catch (e) {
+      throw Exception('Failed to get shared creation: $e');
     }
   }
 
@@ -334,16 +407,17 @@ class ApiService {
       ];
     }
 
-    final response = await http.get(
-      Uri.parse(ApiConfig.membershipStatusEndpoint),
-      headers: _headers,
-    );
+    try {
+      final response = await _dio.get(ApiConfig.membershipStatusEndpoint);
 
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((json) => Membership.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to get membership plans: ${response.body}');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => Membership.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to get membership plans: ${response.data}');
+      }
+    } catch (e) {
+      throw Exception('Failed to get membership plans: $e');
     }
   }
 
@@ -360,19 +434,22 @@ class ApiService {
       };
     }
 
-    final response = await http.post(
-      Uri.parse(ApiConfig.upgradeEndpoint),
-      headers: _headers,
-      body: jsonEncode({
-        'membership_id': membershipId,
-        'payment_method_id': paymentMethodId,
-      }),
-    );
+    try {
+      final response = await _dio.post(
+        ApiConfig.upgradeEndpoint,
+        data: {
+          'membership_id': membershipId,
+          'payment_method_id': paymentMethodId,
+        },
+      );
 
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to create subscription: ${response.body}');
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception('Failed to create subscription: ${response.data}');
+      }
+    } catch (e) {
+      throw Exception('Failed to create subscription: $e');
     }
   }
 
@@ -383,13 +460,14 @@ class ApiService {
       return;
     }
 
-    final response = await http.post(
-      Uri.parse('${ApiConfig.apiBaseUrl}/memberships/cancel'),
-      headers: _headers,
-    );
+    try {
+      final response = await _dio.post('${ApiConfig.apiBaseUrl}/memberships/cancel');
 
-    if (response.statusCode != 200) {
-      throw Exception('Failed to cancel subscription: ${response.body}');
+      if (response.statusCode != 200) {
+        throw Exception('Failed to cancel subscription: ${response.data}');
+      }
+    } catch (e) {
+      throw Exception('Failed to cancel subscription: $e');
     }
   }
 

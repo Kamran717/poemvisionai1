@@ -103,17 +103,14 @@ app.jinja_env.globals['current_admin'] = None
 app.config['MAIL_DEFAULT_SENDER'] = 'Poem Vision <info@poemvisionai.com >'
 
 # Set up database with connection pooling and retry settings
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///poemvision.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_pre_ping": True,
     "pool_recycle": 280,
     "pool_timeout": 30,
     "max_overflow": 15,
-    "pool_size": 10,
-    "connect_args": {
-        "connect_timeout": 10
-    }
+    "pool_size": 10
 }
 db.init_app(app)
 
@@ -1662,4 +1659,4 @@ def deduplicate_elements(analysis_results):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=8000, debug=True)

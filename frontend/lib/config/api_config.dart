@@ -1,5 +1,7 @@
 class ApiConfig {
   // Base URL for the PoemVision AI API
+  // For local development, use: 'http://localhost:8000' or 'http://127.0.0.1:8000'
+  // For production, use: 'https://poemvisionai.com'
   static const String baseUrl = 'https://poemvisionai.com';
   
   // API endpoints
@@ -16,8 +18,8 @@ class ApiConfig {
   static const String updateProfileEndpoint = '$apiBaseUrl/user/update';
   
   // Poem generation endpoints
-  static const String generatePoemEndpoint = '$apiBaseUrl/generate-poem';
-  static const String analyzeImageEndpoint = '$apiBaseUrl/analyze-image';
+  static const String generatePoemEndpoint = '$baseUrl/generate-poem';
+  static const String analyzeImageEndpoint = '$baseUrl/analyze-image';
   
   // Gallery endpoints
   static const String userPoemsEndpoint = '$apiBaseUrl/user/poems';

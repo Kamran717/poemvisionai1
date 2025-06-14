@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import '../../models/creation.dart';
 import '../../services/creation_service.dart';
-import '../../services/auth_service.dart';
 import '../../utils/image_helper.dart';
 
 class CreatePoemScreen extends StatefulWidget {
@@ -647,7 +646,7 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
       };
       
       final completeCreation = await _creationService.generatePoem(
-        creation.id,
+        creation,
         poemPreferences,
       );
       
