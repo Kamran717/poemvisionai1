@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import '../../models/creation.dart';
 import '../../services/creation_service.dart';
 import '../../utils/image_helper.dart';
@@ -426,9 +427,7 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {
-                    // TODO: Implement sharing functionality
-                  },
+                  onPressed: _sharePoem,
                   icon: const Icon(Icons.share),
                   label: const Text('Share'),
                   style: OutlinedButton.styleFrom(
@@ -439,9 +438,7 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    // TODO: Implement download functionality
-                  },
+                  onPressed: _downloadPoem,
                   icon: const Icon(Icons.download),
                   label: const Text('Download'),
                   style: ElevatedButton.styleFrom(
@@ -673,5 +670,80 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
       _errorMessage = null;
       _selectedPoemType = 'sonnet';
     });
+  }
+
+  // Share functionality (temporarily using clipboard until share_plus is working)
+  Future<void> _sharePoem() async {
+    if (_creation?.poemText == null) {
+      print('DEBUG: No poem to share');
+      return;
+    }
+
+    try {
+      print('DEBUG: Starting share functionality');
+      
+      final String shareText = '''🌟 Check out this AI-generated poem! 🌟
+
+${_creation!.poemText!}
+
+Created with PoemVision AI
+#poetry #AI #creativity''';
+
+      print('DEBUG: Share text prepared, length: ${shareText.length}');
+      
+      // Copy to clipboard as temporary share functionality
+      await Clipboard.setData(ClipboardData(text: shareText));
+      
+      print('DEBUG: Share completed successfully');
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Poem copied to clipboard! You can now paste it to share.'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      print('DEBUG: Share error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to copy poem: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // Download functionality  
+  Future<void> _downloadPoem() async {
+    if (_creation?.poemText == null) return;
+
+    try {
+      // Copy poem text to clipboard
+      await Clipboard.setData(ClipboardData(text: _creation!.poemText!));
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Poem copied to clipboard!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to copy poem: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
