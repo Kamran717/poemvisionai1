@@ -457,15 +457,74 @@ def user_detail(user_id):
     # Get session statistics
     session_stats = user.get_session_stats()
     
-    return render_template(
-        'admin/user_detail.html',
-        user=user,
-        creations=creations,
-        transactions=transactions,
-        time_saved=time_saved,
-        poem_preferences=poem_preferences,
-        session_stats=session_stats
-    )
+    if wants_json():
+        # Convert creations to JSON format
+        creations_data = []
+        for creation in creations:
+            creation_data = {
+                'id': creation.id,
+                'user_id': creation.user_id,
+                'image_data': creation.image_data or '',
+                'analysis_results': creation.analysis_results,
+                'poem_text': creation.poem_text,
+                'frame_style': creation.frame_style,
+                'final_image_data': creation.final_image_data,
+                'poem_type': creation.poem_type,
+                'emphasis': creation.emphasis,
+                'poem_length': creation.poem_length,
+                'time_saved_minutes': creation.time_saved_minutes or 0,
+                'created_at': creation.created_at.isoformat() if creation.created_at else None,
+                'share_code': creation.share_code,
+                'is_downloaded': creation.is_downloaded or False,
+                'download_count': creation.download_count or 0,
+                'view_count': creation.view_count or 0,
+                'last_viewed_at': creation.last_viewed_at.isoformat() if creation.last_viewed_at else None,
+                'last_downloaded_at': creation.last_downloaded_at.isoformat() if creation.last_downloaded_at else None
+            }
+            creations_data.append(creation_data)
+        
+        # Convert transactions to JSON format
+        transactions_data = []
+        for transaction in transactions:
+            transaction_data = {
+                'id': transaction.id,
+                'user_id': transaction.user_id,
+                'membership_id': transaction.membership_id,
+                'amount': float(transaction.amount),
+                'currency': transaction.currency,
+                'transaction_id': transaction.transaction_id,
+                'status': transaction.status,
+                'created_at': transaction.created_at.isoformat() if transaction.created_at else None
+            }
+            transactions_data.append(transaction_data)
+        
+        return jsonify({
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'is_premium': user.is_premium,
+                'is_email_verified': user.is_email_verified,
+                'membership_start': user.membership_start.isoformat() if user.membership_start else None,
+                'membership_end': user.membership_end.isoformat() if user.membership_end else None,
+                'created_at': user.created_at.isoformat() if user.created_at else None
+            },
+            'creations': creations_data,
+            'transactions': transactions_data,
+            'time_saved': time_saved,
+            'poem_preferences': poem_preferences,
+            'session_stats': session_stats
+        })
+    else:
+        return render_template(
+            'admin/user_detail.html',
+            user=user,
+            creations=creations,
+            transactions=transactions,
+            time_saved=time_saved,
+            poem_preferences=poem_preferences,
+            session_stats=session_stats
+        )
 
 @admin_bp.route('/users/<int:user_id>/toggle-premium', methods=['POST'])
 @admin_required
@@ -495,8 +554,21 @@ def toggle_premium(user_id):
         {'new_status': user.is_premium}
     )
     
-    flash(f"Premium status for {user.username} has been {'activated' if user.is_premium else 'deactivated'}.", 'success')
-    return redirect(url_for('admin.user_detail', user_id=user.id))
+    if wants_json():
+        return jsonify({
+            'success': True,
+            'message': f"Premium status for {user.username} has been {'activated' if user.is_premium else 'deactivated'}.",
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'is_premium': user.is_premium,
+                'membership_start': user.membership_start.isoformat() if user.membership_start else None,
+                'membership_end': user.membership_end.isoformat() if user.membership_end else None
+            }
+        })
+    else:
+        flash(f"Premium status for {user.username} has been {'activated' if user.is_premium else 'deactivated'}.", 'success')
+        return redirect(url_for('admin.user_detail', user_id=user.id))
 
 @admin_bp.route('/users/<int:user_id>/verify-email', methods=['POST'])
 @admin_required
@@ -505,7 +577,19 @@ def verify_user_email(user_id):
     user = User.query.get_or_404(user_id)
     
     if user.is_email_verified:
-        flash(f"User {user.username}'s email is already verified.", 'info')
+        message = f"User {user.username}'s email is already verified."
+        if wants_json():
+            return jsonify({
+                'success': True,
+                'message': message,
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                    'is_email_verified': user.is_email_verified
+                }
+            })
+        flash(message, 'info')
     else:
         user.verify_email()
         db.session.commit()
@@ -516,8 +600,22 @@ def verify_user_email(user_id):
             'username': user.username
         })
         
-        flash(f"User {user.username}'s email has been manually verified.", 'success')
+        message = f"User {user.username}'s email has been manually verified."
+        if wants_json():
+            return jsonify({
+                'success': True,
+                'message': message,
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                    'is_email_verified': user.is_email_verified
+                }
+            })
+        flash(message, 'success')
     
+    if wants_json():
+        return jsonify({'success': True})
     return redirect(url_for('admin.user_detail', user_id=user.id))
 
 @admin_bp.route('/users/<int:user_id>/delete', methods=['POST'])
@@ -543,8 +641,17 @@ def delete_user(user_id):
     # Log the action
     log_admin_action('delete_user', 'user', user_id, user_data)
     
-    flash(f"User {username} has been deleted.", 'success')
-    return redirect(url_for('admin.users'))
+    message = f"User {username} has been deleted."
+    
+    if wants_json():
+        return jsonify({
+            'success': True,
+            'message': message,
+            'deleted_user': user_data
+        })
+    else:
+        flash(message, 'success')
+        return redirect(url_for('admin.users'))
 
 # Membership Management
 @admin_bp.route('/memberships')
