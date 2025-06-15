@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -44,7 +45,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      final authService = AuthService();
+      final authService = Provider.of<AuthService>(context, listen: false);
       await authService.register(
         _usernameController.text.trim(),
         _emailController.text.trim(),

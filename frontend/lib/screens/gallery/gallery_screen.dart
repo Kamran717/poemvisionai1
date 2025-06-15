@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../models/creation.dart';
 import '../../services/creation_service.dart';
+import '../../services/auth_service.dart';
 
 class GalleryScreen extends StatefulWidget {
   const GalleryScreen({super.key});
@@ -10,25 +13,53 @@ class GalleryScreen extends StatefulWidget {
 }
 
 class _GalleryScreenState extends State<GalleryScreen> {
-  final CreationService _creationService = CreationService();
+  CreationService? _creationService;
   bool _isLoading = true;
   List<Creation> _creations = [];
   String? _errorMessage;
+  bool _isAuthenticated = false;
 
   @override
   void initState() {
     super.initState();
-    _loadCreations();
+    _initializeService();
+  }
+
+  Future<void> _initializeService() async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final token = await authService.getToken();
+    
+    if (token != null) {
+      setState(() {
+        _isAuthenticated = true;
+        _creationService = CreationService(token: token);
+      });
+      _loadCreations();
+    } else {
+      setState(() {
+        _isAuthenticated = false;
+        _isLoading = false;
+        _errorMessage = 'Please log in to view your gallery';
+      });
+    }
   }
 
   Future<void> _loadCreations() async {
+    if (_creationService == null) {
+      setState(() {
+        _errorMessage = 'Please log in to view your gallery';
+        _isLoading = false;
+      });
+      return;
+    }
+
     try {
       setState(() {
         _isLoading = true;
         _errorMessage = null;
       });
 
-      final creations = await _creationService.getUserCreations();
+      final creations = await _creationService!.getUserCreations();
       
       setState(() {
         _creations = creations;
@@ -61,6 +92,52 @@ class _GalleryScreenState extends State<GalleryScreen> {
   }
 
   Widget _buildErrorView() {
+    // If not authenticated, show login button instead of "Try Again"
+    if (!_isAuthenticated) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.lock_outline,
+              size: 60,
+              color: Colors.grey,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Please log in to view your gallery',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Your gallery contains all the beautiful poems you\'ve created',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () => context.goNamed('login'),
+              icon: const Icon(Icons.login),
+              label: const Text('Log In'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // For other errors, show the regular error view
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -113,10 +190,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
           ),
           const SizedBox(height: 32),
           ElevatedButton.icon(
-            onPressed: () {
-              // Navigate to poem creation screen
-              // This will be implemented when we connect this to the router
-            },
+            onPressed: () => context.goNamed('create'),
             icon: const Icon(Icons.add_photo_alternate),
             label: const Text('Create a Poem'),
             style: ElevatedButton.styleFrom(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import '../../services/auth_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -24,10 +26,22 @@ class _SplashScreenState extends State<SplashScreen> {
     final hasSeenIntroduction = prefs.getBool('seen_introduction') ?? false;
     
     if (mounted) {
-      if (hasSeenIntroduction) {
+      if (!hasSeenIntroduction) {
+        // User hasn't seen introduction yet
+        context.go('/onboarding');
+        return;
+      }
+      
+      // Check authentication state
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final isLoggedIn = await authService.initialize();
+      
+      if (isLoggedIn) {
+        // User is logged in, go to home
         context.go('/home');
       } else {
-        context.go('/onboarding');
+        // User is not logged in, go to login screen
+        context.go('/login');
       }
     }
   }

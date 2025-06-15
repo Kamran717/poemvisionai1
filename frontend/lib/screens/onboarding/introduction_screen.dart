@@ -204,9 +204,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('seen_introduction', true);
     
-    // Navigate to the main app
+    // Navigate to login screen since user hasn't logged in yet
     if (mounted) {
-      context.go('/home');
+      context.go('/login');
     }
   }
 

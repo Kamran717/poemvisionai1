@@ -21,7 +21,7 @@ class AuthService extends ChangeNotifier {
   static const String _userIdKey = 'user_id';
 
   AuthService({ApiService? apiService}) 
-      : _apiService = apiService ?? ApiService();
+      : _apiService = apiService ?? ApiService(useMockData: true);
 
   // Initialize the auth service by checking for existing token
   Future<bool> initialize() async {
@@ -29,8 +29,8 @@ class AuthService extends ChangeNotifier {
     final token = prefs.getString(_tokenKey);
     if (token != null) {
       try {
-        // Create a new API service with the token
-        final apiService = ApiService(token: token);
+        // Create a new API service with the token and mock data flag
+        final apiService = ApiService(token: token, useMockData: true);
         
         // Try to get the user profile to validate the token
         final user = await apiService.getUserProfile();
@@ -62,8 +62,8 @@ class AuthService extends ChangeNotifier {
       await prefs.setString(_userIdKey, response['user_id'].toString());
     }
     
-    // Get user profile with the new token
-    final apiService = ApiService(token: response['token']);
+    // Get user profile with the new token and mock data flag
+    final apiService = ApiService(token: response['token'], useMockData: true);
     final user = await apiService.getUserProfile();
     
     _currentUser = user;
@@ -88,8 +88,8 @@ class AuthService extends ChangeNotifier {
         await prefs.setString(_userIdKey, response['user_id'].toString());
       }
       
-      // Get user profile with the new token
-      final apiService = ApiService(token: response['token']);
+      // Get user profile with the new token and mock data flag
+      final apiService = ApiService(token: response['token'], useMockData: true);
       final user = await apiService.getUserProfile();
       
       _currentUser = user;
