@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../models/creation.dart';
 import '../../services/creation_service.dart';
 import '../../utils/image_helper.dart';
@@ -672,48 +673,77 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
     });
   }
 
-  // Share functionality (temporarily using clipboard until share_plus is working)
+  // Share functionality using share_plus package
   Future<void> _sharePoem() async {
     if (_creation?.poemText == null) {
-      print('DEBUG: No poem to share');
+      debugPrint('No poem to share');
       return;
     }
 
     try {
-      print('DEBUG: Starting share functionality');
+      debugPrint('Starting share functionality');
       
       final String shareText = '''🌟 Check out this AI-generated poem! 🌟
 
 ${_creation!.poemText!}
 
-Created with PoemVision AI
-#poetry #AI #creativity''';
+✨ Created with PoemVision AI ✨
+Transform your moments into beautiful poetry!
 
-      print('DEBUG: Share text prepared, length: ${shareText.length}');
+#PoemVisionAI #Poetry #AI #CreativeWriting''';
+
+      debugPrint('Share text prepared, length: ${shareText.length}');
       
-      // Copy to clipboard as temporary share functionality
-      await Clipboard.setData(ClipboardData(text: shareText));
+      // Use share_plus to share the poem
+      await Share.share(
+        shareText,
+        subject: 'Beautiful AI-Generated Poem',
+      );
       
-      print('DEBUG: Share completed successfully');
+      debugPrint('Share completed');
       
+      // Show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Poem copied to clipboard! You can now paste it to share.'),
+            content: Text('Poem shared successfully!'),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
+            duration: Duration(seconds: 2),
           ),
         );
       }
     } catch (e) {
-      print('DEBUG: Share error: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to copy poem: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+      debugPrint('Share error: $e');
+      
+      // Fallback to clipboard if sharing fails
+      try {
+        final String fallbackText = '''🌟 AI-Generated Poem 🌟
+
+${_creation!.poemText!}
+
+Created with PoemVision AI''';
+        
+        await Clipboard.setData(ClipboardData(text: fallbackText));
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Sharing not available. Poem copied to clipboard instead!'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      } catch (clipboardError) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to share poem: $e'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
       }
     }
   }
