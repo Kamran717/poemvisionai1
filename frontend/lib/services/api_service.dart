@@ -181,42 +181,55 @@ class ApiService {
       );
     }
 
-    try {
-      final headers = await _headers;
-      final response = await http.get(
-        Uri.parse(ApiConfig.userProfileEndpoint),
-        headers: headers,
-      );
+    final headers = await _headers;
+    
+    // Add Accept header to request JSON response
+    final jsonHeaders = Map<String, String>.from(headers);
+    jsonHeaders['Accept'] = 'application/json';
+    jsonHeaders['X-Requested-With'] = 'XMLHttpRequest';
+    
+    print('Sending request to profile endpoint: ${ApiConfig.userProfileEndpoint}');
+    print('Request headers: $jsonHeaders');
+    
+    final response = await http.get(
+      Uri.parse(ApiConfig.userProfileEndpoint),
+      headers: jsonHeaders,
+    );
 
-      await _handleResponse(response);
+    await _handleResponse(response);
 
-      if (response.statusCode == 200) {
-        // Check if response is HTML (Flask returns HTML profile page)
-        if (response.body.trim().startsWith('<!DOCTYPE html') || 
-            response.body.trim().startsWith('<html')) {
-          print('Received HTML response from profile endpoint, using mock data');
-          // Flask backend returns HTML, use mock data for now
-          return User(
-            id: 1,
-            email: 'user@example.com',
-            username: 'demouser',
-            isPremium: false,
-          );
-        }
-        
-        return User.fromJson(jsonDecode(response.body));
-      } else {
-        throw Exception('Failed to get user profile: ${response.body}');
+    print('Profile response status: ${response.statusCode}');
+    print('Profile response body preview: ${response.body.length > 500 ? response.body.substring(0, 500) + "..." : response.body}');
+
+    if (response.statusCode == 200) {
+      // Check if response is HTML (Flask returns HTML profile page)
+      if (response.body.trim().startsWith('<!DOCTYPE html') || 
+          response.body.trim().startsWith('<html')) {
+        throw Exception('Backend returned HTML instead of JSON. Please ensure you are logged in and the API is configured correctly.');
       }
-    } catch (e) {
-      print('Error getting user profile: $e, falling back to mock data');
-      // Fallback to mock data if there's any error
-      return User(
-        id: 1,
-        email: 'user@example.com', 
-        username: 'demouser',
-        isPremium: false,
-      );
+      
+      try {
+        final responseData = jsonDecode(response.body);
+        
+        // Backend returns user data nested in a 'user' field
+        if (responseData is Map<String, dynamic> && responseData.containsKey('user')) {
+          final userData = responseData['user'] as Map<String, dynamic>;
+          return User.fromJson(userData);
+        } else {
+          // Fallback: assume responseData is the user object directly
+          return User.fromJson(responseData);
+        }
+      } catch (e) {
+        print('Error parsing user profile response: $e');
+        print('Response body: ${response.body}');
+        throw Exception('Failed to parse user profile response: $e');
+      }
+    } else if (response.statusCode == 401) {
+      throw Exception('Authentication required. Please log in again.');
+    } else if (response.statusCode == 403) {
+      throw Exception('Access denied. Please check your permissions.');
+    } else {
+      throw Exception('Failed to get user profile: ${response.statusCode} - ${response.body}');
     }
   }
 

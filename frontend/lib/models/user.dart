@@ -21,15 +21,15 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'],
-      email: json['email'],
-      username: json['username'],
+      id: json['id'] ?? 0,
+      email: json['email'] ?? '',
+      username: json['username'] ?? '',
       isPremium: json['is_premium'] ?? false,
       membershipStart: json['membership_start'] != null 
-          ? DateTime.parse(json['membership_start']) 
+          ? DateTime.tryParse(json['membership_start']) 
           : null,
       membershipEnd: json['membership_end'] != null 
-          ? DateTime.parse(json['membership_end']) 
+          ? DateTime.tryParse(json['membership_end']) 
           : null,
       isEmailVerified: json['is_email_verified'] ?? false,
       isCancelled: json['is_cancelled'] ?? false,

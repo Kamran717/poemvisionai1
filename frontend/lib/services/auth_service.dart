@@ -29,8 +29,8 @@ class AuthService extends ChangeNotifier {
     final token = prefs.getString(_tokenKey);
     if (token != null) {
       try {
-        // Create a new API service with the token and mock data flag
-        final apiService = ApiService(token: token, useMockData: true);
+        // Create a new API service with the token (no mock data)
+        final apiService = ApiService(token: token, useMockData: false);
         
         // Try to get the user profile to validate the token
         final user = await apiService.getUserProfile();
@@ -62,8 +62,8 @@ class AuthService extends ChangeNotifier {
       await prefs.setString(_userIdKey, response['user_id'].toString());
     }
     
-    // Get user profile with the new token and mock data flag
-    final apiService = ApiService(token: response['token'], useMockData: true);
+    // Get user profile with the new token (no mock data)
+    final apiService = ApiService(token: response['token'], useMockData: false);
     final user = await apiService.getUserProfile();
     
     _currentUser = user;
@@ -88,8 +88,8 @@ class AuthService extends ChangeNotifier {
         await prefs.setString(_userIdKey, response['user_id'].toString());
       }
       
-      // Get user profile with the new token and mock data flag
-      final apiService = ApiService(token: response['token'], useMockData: true);
+      // Get user profile with the new token (no mock data)
+      final apiService = ApiService(token: response['token'], useMockData: false);
       final user = await apiService.getUserProfile();
       
       _currentUser = user;
@@ -138,7 +138,7 @@ class AuthService extends ChangeNotifier {
     try {
       final token = await getToken();
       if (token != null) {
-        final apiService = ApiService(token: token);
+        final apiService = ApiService(token: token, useMockData: false);
         final user = await apiService.getUserProfile();
         
         _currentUser = user;
@@ -148,6 +148,7 @@ class AuthService extends ChangeNotifier {
       }
       return null;
     } catch (e) {
+      print('Error refreshing user data: $e');
       return null;
     }
   }
