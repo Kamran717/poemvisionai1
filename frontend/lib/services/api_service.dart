@@ -383,8 +383,18 @@ class ApiService {
       // Initialize session service first
       await _initSession();
       
+      // Ensure we have proper JSON headers to get JSON response from Flask
+      final baseHeaders = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',  // This is crucial for Flask to return JSON
+        'X-Requested-With': 'XMLHttpRequest',  // Additional hint that this is an API request
+      };
+      
       // Use session-based authentication (cookies) instead of Bearer tokens
-      final headers = await _sessionService.addSessionHeaders(ApiConfig.defaultHeaders);
+      final headers = await _sessionService.addSessionHeaders(baseHeaders);
+      
+      print('Sending request to: ${ApiConfig.userPoemsEndpoint}');
+      print('Request headers: $headers');
       
       final response = await http.get(
         Uri.parse(ApiConfig.userPoemsEndpoint),
@@ -393,18 +403,60 @@ class ApiService {
 
       await _handleResponse(response);
 
+      print('Server response status: ${response.statusCode}');
+      print('Server response body preview: ${response.body.length > 500 ? response.body.substring(0, 500) + "..." : response.body}');
+
       if (response.statusCode == 200) {
         // Check if response is HTML (Flask returns HTML profile page)
         if (response.body.trim().startsWith('<!DOCTYPE html') || 
             response.body.trim().startsWith('<html')) {
           // Flask returns HTML for the profile page, but we need JSON data
-          // The poems are stored in the database but there's no JSON API endpoint to retrieve them
-          throw Exception('Gallery feature requires a JSON API endpoint. Your poems are safely stored in the database but cannot be displayed in the mobile app yet. Please use the web version to view your gallery.');
+          // Return empty list for now to avoid crashes
+          print('Gallery endpoint returns HTML instead of JSON, returning empty list');
+          return [];
         }
         
         // If it's JSON, parse it
-        final List<dynamic> data = jsonDecode(response.body);
-        return data.map((json) => Creation.fromJson(json)).toList();
+        final dynamic responseData = jsonDecode(response.body);
+        
+        // Handle different response formats
+        List<dynamic> creationsData;
+        if (responseData is List) {
+          // Direct array response
+          creationsData = responseData;
+        } else if (responseData is Map<String, dynamic>) {
+          // Object response - check for common field names
+          if (responseData.containsKey('creations')) {
+            creationsData = responseData['creations'] as List<dynamic>;
+          } else if (responseData.containsKey('data')) {
+            creationsData = responseData['data'] as List<dynamic>;
+          } else if (responseData.containsKey('poems')) {
+            creationsData = responseData['poems'] as List<dynamic>;
+          } else if (responseData.containsKey('success') && responseData['success'] == false) {
+            // Handle error response
+            throw Exception(responseData['error'] ?? 'Failed to retrieve creations');
+          } else {
+            // If it's a single creation object, wrap it in a list
+            creationsData = [responseData];
+          }
+        } else {
+          throw Exception('Unexpected response format: ${responseData.runtimeType}');
+        }
+        
+        // Filter out any null entries and safely convert to Creation objects
+        final validCreations = <Creation>[];
+        for (final json in creationsData) {
+          if (json != null && json is Map<String, dynamic>) {
+            try {
+              validCreations.add(Creation.fromJson(json));
+            } catch (e) {
+              print('Error parsing creation: $e, skipping entry');
+              continue;
+            }
+          }
+        }
+        
+        return validCreations;
       } else if (response.statusCode == 401) {
         throw Exception('Authentication required. Please log in again.');
       } else if (response.statusCode == 403) {
@@ -415,6 +467,7 @@ class ApiService {
         throw Exception('Failed to get user creations: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
+      print('Error in getUserCreations: $e');
       // Re-throw the exception to show the actual error
       rethrow;
     }
