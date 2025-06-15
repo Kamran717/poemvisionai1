@@ -4,21 +4,44 @@ import '../models/user.dart';
 import '../models/creation.dart';
 import '../models/membership.dart';
 import '../config/api_config.dart';
+import 'session_service.dart';
 import 'dart:math';
 
 class ApiService {
   final String? _token;
   final bool _useMockData; // Flag to use mock data when API is unavailable
+  late SessionService _sessionService;
 
   ApiService({String? token, bool useMockData = false}) 
       : _token = token,
         _useMockData = useMockData;
 
-  Map<String, String> get _headers {
+  Future<void> _initSession() async {
+    _sessionService = await SessionService.getInstance();
+  }
+
+  Future<Map<String, String>> get _headers async {
+    await _initSession();
+    
+    Map<String, String> headers;
     if (_token != null) {
-      return ApiConfig.getAuthHeaders(_token!);
+      headers = ApiConfig.getAuthHeaders(_token!);
+    } else {
+      headers = ApiConfig.defaultHeaders;
     }
-    return ApiConfig.defaultHeaders;
+    
+    // Add session information
+    return _sessionService.addSessionHeaders(headers);
+  }
+
+  Future<void> _handleResponse(http.Response response) async {
+    await _initSession();
+    
+    // Extract and store session cookie if present
+    final sessionCookie = _sessionService.extractSessionCookie(response.headers);
+    if (sessionCookie != null) {
+      await _sessionService.setSessionCookie(sessionCookie);
+    }
   }
 
   // Authentication methods
@@ -34,14 +57,17 @@ class ApiService {
       };
     }
 
+    final headers = await _headers;
     final response = await http.post(
       Uri.parse(ApiConfig.loginEndpoint),
-      headers: _headers,
+      headers: headers,
       body: jsonEncode({
         'email': email,
         'password': password,
       }),
     );
+
+    await _handleResponse(response);
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -62,15 +88,18 @@ class ApiService {
       };
     }
 
+    final headers = await _headers;
     final response = await http.post(
       Uri.parse(ApiConfig.registerEndpoint),
-      headers: _headers,
+      headers: headers,
       body: jsonEncode({
         'username': username,
         'email': email,
         'password': password,
       }),
     );
+
+    await _handleResponse(response);
 
     if (response.statusCode == 201) {
       return jsonDecode(response.body);
@@ -86,13 +115,16 @@ class ApiService {
       return;
     }
 
+    final headers = await _headers;
     final response = await http.post(
       Uri.parse('${ApiConfig.apiBaseUrl}/auth/reset-password-request'),
-      headers: _headers,
+      headers: headers,
       body: jsonEncode({
         'email': email,
       }),
     );
+
+    await _handleResponse(response);
 
     if (response.statusCode != 200) {
       throw Exception('Failed to request password reset: ${response.body}');
@@ -112,10 +144,13 @@ class ApiService {
       );
     }
 
+    final headers = await _headers;
     final response = await http.get(
       Uri.parse(ApiConfig.userProfileEndpoint),
-      headers: _headers,
+      headers: headers,
     );
+
+    await _handleResponse(response);
 
     if (response.statusCode == 200) {
       return User.fromJson(jsonDecode(response.body));
@@ -145,10 +180,13 @@ class ApiService {
       };
     }
 
+    final headers = await _headers;
     final response = await http.get(
       Uri.parse('${ApiConfig.apiBaseUrl}/user/stats'),
-      headers: _headers,
+      headers: headers,
     );
+
+    await _handleResponse(response);
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -172,14 +210,18 @@ class ApiService {
     print('Uploading image to server...');
     print('Image data length: ${base64Image.length} characters');
     
+    final headers = await _headers;
     final response = await http.post(
       Uri.parse(ApiConfig.analyzeImageEndpoint),
-      headers: _headers,
+      headers: headers,
       body: jsonEncode({
         'image': base64Image,  // Flask expects this exact field name
         'preferences': preferences,
       }),
     );
+
+    // Handle session management
+    await _handleResponse(response);
 
     print('Server response status: ${response.statusCode}');
     print('Server response body: ${response.body}');
@@ -190,15 +232,22 @@ class ApiService {
       // Flask returns: {"success": true, "analysisId": "abc123", "results": {...}}
       // We need to create a temporary Creation object with the analysis ID
       if (responseData['success'] == true && responseData['analysisId'] != null) {
-        print('Received analysisId from server: ${responseData['analysisId']}');
+        final analysisId = responseData['analysisId'] as String;
+        print('Received analysisId from server: $analysisId');
+        
+        // Store the temporary creation data in session for later retrieval
+        await _sessionService.storeTempCreation(analysisId, {
+          'imageData': base64Image,
+          'analysisResults': responseData['results'],
+          'preferences': preferences,
+        });
         
         // Create a temporary Creation object with the available data
-        // Store the analysisId in shareCode for later use in poem generation
         return Creation(
-          id: responseData['analysisId'].hashCode, // Use hash of analysisId as temporary ID
+          id: analysisId.hashCode, // Use hash of analysisId as temporary ID
           imageData: base64Image,
           analysisResults: responseData['results'],
-          shareCode: responseData['analysisId'], // Store analysisId here temporarily
+          shareCode: analysisId, // Store analysisId here temporarily
           createdAt: DateTime.now(),
         );
       } else {
@@ -234,19 +283,27 @@ class ApiService {
     print('Sending poem generation request with body: ${jsonEncode(requestBody)}');
     print('Using analysisId: $analysisId');
 
+    final headers = await _headers;
     final response = await http.post(
       Uri.parse(ApiConfig.generatePoemEndpoint),
-      headers: _headers,
+      headers: headers,
       body: jsonEncode(requestBody),
     );
+
+    // Handle session management
+    await _handleResponse(response);
 
     if (response.statusCode == 200) {
       final responseData = jsonDecode(response.body);
       if (responseData['success'] == true && responseData['poem'] != null) {
-        // Return creation with the poem
+        // Try to get stored image data from session
+        final tempCreation = _sessionService.getTempCreation(analysisId);
+        final imageData = tempCreation?['imageData'] ?? 'temp_image_data';
+        
+        // Return creation with the poem and actual image data
         return Creation(
           id: analysisId.hashCode,
-          imageData: 'temp_image_data', // This will be updated with actual data
+          imageData: imageData,
           poemText: responseData['poem'],
           poemType: poemPreferences['poem_type'],
           poemLength: poemPreferences['poem_length'],
@@ -281,10 +338,13 @@ class ApiService {
       return mockCreations;
     }
 
+    final headers = await _headers;
     final response = await http.get(
       Uri.parse(ApiConfig.userPoemsEndpoint),
-      headers: _headers,
+      headers: headers,
     );
+
+    await _handleResponse(response);
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
@@ -309,10 +369,13 @@ class ApiService {
       );
     }
 
+    final headers = await _headers;
     final response = await http.get(
       Uri.parse('${ApiConfig.apiBaseUrl}/creations/$creationId'),
-      headers: _headers,
+      headers: headers,
     );
+
+    await _handleResponse(response);
 
     if (response.statusCode == 200) {
       return Creation.fromJson(jsonDecode(response.body));
@@ -337,10 +400,13 @@ class ApiService {
       );
     }
 
+    final headers = await _headers;
     final response = await http.get(
       Uri.parse('${ApiConfig.apiBaseUrl}/shared/$shareCode'),
-      headers: _headers,
+      headers: headers,
     );
+
+    await _handleResponse(response);
 
     if (response.statusCode == 200) {
       return Creation.fromJson(jsonDecode(response.body));
@@ -380,10 +446,13 @@ class ApiService {
       ];
     }
 
+    final headers = await _headers;
     final response = await http.get(
       Uri.parse(ApiConfig.membershipStatusEndpoint),
-      headers: _headers,
+      headers: headers,
     );
+
+    await _handleResponse(response);
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
@@ -406,14 +475,17 @@ class ApiService {
       };
     }
 
+    final headers = await _headers;
     final response = await http.post(
       Uri.parse(ApiConfig.upgradeEndpoint),
-      headers: _headers,
+      headers: headers,
       body: jsonEncode({
         'membership_id': membershipId,
         'payment_method_id': paymentMethodId,
       }),
     );
+
+    await _handleResponse(response);
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -429,10 +501,13 @@ class ApiService {
       return;
     }
 
+    final headers = await _headers;
     final response = await http.post(
       Uri.parse('${ApiConfig.apiBaseUrl}/memberships/cancel'),
-      headers: _headers,
+      headers: headers,
     );
+
+    await _handleResponse(response);
 
     if (response.statusCode != 200) {
       throw Exception('Failed to cancel subscription: ${response.body}');
