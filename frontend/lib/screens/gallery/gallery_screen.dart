@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -285,8 +286,6 @@ class _GalleryScreenState extends State<GalleryScreen> {
   }
 
   Widget _buildCreationCard(Creation creation) {
-    // This is a placeholder for now
-    // In a real implementation, we would display the image and poem preview
     return Card(
       clipBehavior: Clip.antiAlias,
       elevation: 3,
@@ -301,17 +300,13 @@ class _GalleryScreenState extends State<GalleryScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Image placeholder (in real implementation, we would load the actual image)
+            // Display actual image or final image
             Expanded(
               child: Container(
-                color: Colors.grey.shade200,
-                child: const Center(
-                  child: Icon(
-                    Icons.image,
-                    size: 40,
-                    color: Colors.grey,
-                  ),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
                 ),
+                child: _buildImageWidget(creation),
               ),
             ),
             
@@ -322,20 +317,118 @@ class _GalleryScreenState extends State<GalleryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    creation.poemType ?? 'Unknown Type',
+                    creation.poemType ?? 'Poem',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
+                      fontSize: 14,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'Created on ${_formatDate(creation.createdAt)}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
+                  if (creation.poemText != null) ...[
+                    Text(
+                      creation.poemText!,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey.shade700,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
+                    const SizedBox(height: 4),
+                  ],
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today,
+                        size: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          _formatDate(creation.createdAt),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ),
+                      if (creation.viewCount > 0) ...[
+                        Icon(
+                          Icons.visibility,
+                          size: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                        const SizedBox(width: 2),
+                        Text(
+                          '${creation.viewCount}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageWidget(Creation creation) {
+    try {
+      // Try to use final image first, then original image
+      String? imageData = creation.finalImageData ?? creation.imageData;
+      
+      if (imageData != null && imageData.isNotEmpty) {
+        // Remove data URL prefix if present
+        if (imageData.startsWith('data:')) {
+          imageData = imageData.split(',').last;
+        }
+        
+        final bytes = base64Decode(imageData);
+        return Image.memory(
+          bytes,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+          errorBuilder: (context, error, stackTrace) {
+            return _buildPlaceholderImage();
+          },
+        );
+      } else {
+        return _buildPlaceholderImage();
+      }
+    } catch (e) {
+      return _buildPlaceholderImage();
+    }
+  }
+
+  Widget _buildPlaceholderImage() {
+    return Container(
+      color: Colors.grey.shade200,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.image,
+              size: 32,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Image',
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.grey.shade400,
               ),
             ),
           ],

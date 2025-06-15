@@ -57,6 +57,9 @@ class ApiService {
       };
     }
 
+    // Initialize session service first
+    await _initSession();
+
     // Flask expects form data, not JSON
     final response = await http.post(
       Uri.parse(ApiConfig.loginEndpoint),
@@ -376,28 +379,13 @@ class ApiService {
   }
 
   Future<List<Creation>> getUserCreations() async {
-    if (_useMockData) {
-      // Return mock user creations
-      await Future.delayed(const Duration(seconds: 1));
-      
-      final mockCreations = List.generate(
-        5,
-        (index) => Creation(
-          id: index + 1,
-          imageData: 'mock_image_data',
-          poemText: _generateMockPoem(['sonnet', 'haiku', 'free verse'][index % 3]),
-          poemType: ['sonnet', 'haiku', 'free verse'][index % 3],
-          createdAt: DateTime.now().subtract(Duration(days: index)),
-          viewCount: Random().nextInt(50),
-          downloadCount: Random().nextInt(10),
-        ),
-      );
-      
-      return mockCreations;
-    }
-
     try {
-      final headers = await _headers;
+      // Initialize session service first
+      await _initSession();
+      
+      // Use session-based authentication (cookies) instead of Bearer tokens
+      final headers = await _sessionService.addSessionHeaders(ApiConfig.defaultHeaders);
+      
       final response = await http.get(
         Uri.parse(ApiConfig.userPoemsEndpoint),
         headers: headers,
@@ -409,44 +397,26 @@ class ApiService {
         // Check if response is HTML (Flask returns HTML profile page)
         if (response.body.trim().startsWith('<!DOCTYPE html') || 
             response.body.trim().startsWith('<html')) {
-          print('Received HTML response from user poems endpoint, using mock data');
-          // Flask backend returns HTML, use mock data for now
-          final mockCreations = List.generate(
-            5,
-            (index) => Creation(
-              id: index + 1,
-              imageData: 'mock_image_data',
-              poemText: _generateMockPoem(['sonnet', 'haiku', 'free verse'][index % 3]),
-              poemType: ['sonnet', 'haiku', 'free verse'][index % 3],
-              createdAt: DateTime.now().subtract(Duration(days: index)),
-              viewCount: Random().nextInt(50),
-              downloadCount: Random().nextInt(10),
-            ),
-          );
-          return mockCreations;
+          // Flask returns HTML for the profile page, but we need JSON data
+          // The poems are stored in the database but there's no JSON API endpoint to retrieve them
+          throw Exception('Gallery feature requires a JSON API endpoint. Your poems are safely stored in the database but cannot be displayed in the mobile app yet. Please use the web version to view your gallery.');
         }
         
+        // If it's JSON, parse it
         final List<dynamic> data = jsonDecode(response.body);
         return data.map((json) => Creation.fromJson(json)).toList();
+      } else if (response.statusCode == 401) {
+        throw Exception('Authentication required. Please log in again.');
+      } else if (response.statusCode == 403) {
+        throw Exception('Access denied. Please check your permissions.');
+      } else if (response.statusCode == 404) {
+        throw Exception('User creations endpoint not found. Please check API configuration.');
       } else {
-        throw Exception('Failed to get user creations: ${response.body}');
+        throw Exception('Failed to get user creations: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      print('Error getting user creations: $e, falling back to mock data');
-      // Fallback to mock data if there's any error
-      final mockCreations = List.generate(
-        5,
-        (index) => Creation(
-          id: index + 1,
-          imageData: 'mock_image_data',
-          poemText: _generateMockPoem(['sonnet', 'haiku', 'free verse'][index % 3]),
-          poemType: ['sonnet', 'haiku', 'free verse'][index % 3],
-          createdAt: DateTime.now().subtract(Duration(days: index)),
-          viewCount: Random().nextInt(50),
-          downloadCount: Random().nextInt(10),
-        ),
-      );
-      return mockCreations;
+      // Re-throw the exception to show the actual error
+      rethrow;
     }
   }
 
