@@ -97,8 +97,14 @@ def login():
     
     # Handle login form submission
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+        # Handle both JSON and form data
+        if request.is_json:
+            data = request.json
+            username = data.get('username')
+            password = data.get('password')
+        else:
+            username = request.form.get('username')
+            password = request.form.get('password')
         
         admin = AdminUser.query.filter_by(username=username).first()
         
@@ -113,15 +119,35 @@ def login():
             # Log the login
             log_admin_action('login')
             
-            # Redirect to dashboard
-            flash('Login successful!', 'success')
-            next_page = request.args.get('next')
-            if next_page:
-                return redirect(next_page)
-            return redirect(url_for('admin.dashboard'))
+            if wants_json():
+                return jsonify({
+                    'success': True,
+                    'message': 'Login successful!',
+                    'admin': {
+                        'id': admin.id,
+                        'username': admin.username,
+                        'email': admin.email,
+                        'role': admin.role.name if admin.role else None,
+                        'last_login': admin.last_login.isoformat() if admin.last_login else None
+                    }
+                })
+            else:
+                # Redirect to dashboard
+                flash('Login successful!', 'success')
+                next_page = request.args.get('next')
+                if next_page:
+                    return redirect(next_page)
+                return redirect(url_for('admin.dashboard'))
         else:
+            if wants_json():
+                return jsonify({'error': 'Invalid username or password.'}), 401
             flash('Invalid username or password.', 'danger')
     
+    if wants_json():
+        return jsonify({
+            'message': 'Admin login page',
+            'instructions': 'Please provide your admin username and password'
+        })
     return render_template('admin/login.html')
 
 @admin_bp.route('/logout')
@@ -131,8 +157,19 @@ def logout():
         log_admin_action('logout')
         # Clear session
         session.pop('admin_id', None)
+        
+        if wants_json():
+            return jsonify({
+                'success': True,
+                'message': 'You have been logged out.'
+            })
         flash('You have been logged out.', 'info')
     
+    if wants_json():
+        return jsonify({
+            'success': True,
+            'message': 'Already logged out.'
+        })
     return redirect(url_for('admin.login'))
 
 @admin_bp.route('/')
@@ -246,33 +283,70 @@ def dashboard():
     # Recent activity for admin logs
     recent_activity = AdminLog.query.order_by(AdminLog.timestamp.desc()).limit(10).all()
     
-    return render_template(
-        'admin/dashboard.html',
-        # Basic metrics
-        total_users=total_users,
-        active_premium=active_premium,
-        total_creations=total_creations,
-        verified_users=verified_users,
-        verified_percent=verified_percent,
-        premium_percent=premium_percent,
-        recent_revenue=recent_revenue,
-        recent_activity=recent_activity,
-        
-        # Enhanced metrics
-        total_downloads=total_downloads,
-        download_rate=download_rate,
-        active_sessions=active_sessions,
-        avg_session_minutes=avg_session_minutes,
-        total_session_hours=total_session_hours,
-        total_time_saved_hours=total_time_saved_hours,
-        
-        # Chart data
-        activity_dates=activity_dates,
-        active_users_data=active_users_data, 
-        poems_created_data=poems_created_data,
-        poem_types_labels=poem_types_labels,
-        poem_types_counts=poem_types_counts
-    )
+    if wants_json():
+        return jsonify({
+            # Basic metrics
+            'total_users': total_users,
+            'active_premium': active_premium,
+            'total_creations': total_creations,
+            'verified_users': verified_users,
+            'verified_percent': verified_percent,
+            'premium_percent': premium_percent,
+            'recent_revenue': float(recent_revenue),
+            'recent_activity': [{
+                'id': log.id,
+                'admin_id': log.admin_id,
+                'action': log.action,
+                'entity_type': log.entity_type,
+                'entity_id': log.entity_id,
+                'details': log.details,
+                'ip_address': log.ip_address,
+                'timestamp': log.timestamp.isoformat() if log.timestamp else None
+            } for log in recent_activity],
+            
+            # Enhanced metrics
+            'total_downloads': total_downloads,
+            'download_rate': download_rate,
+            'active_sessions': active_sessions,
+            'avg_session_minutes': avg_session_minutes,
+            'total_session_hours': total_session_hours,
+            'total_time_saved_hours': total_time_saved_hours,
+            
+            # Chart data
+            'activity_dates': activity_dates,
+            'active_users_data': active_users_data, 
+            'poems_created_data': poems_created_data,
+            'poem_types_labels': poem_types_labels,
+            'poem_types_counts': poem_types_counts
+        })
+    else:
+        return render_template(
+            'admin/dashboard.html',
+            # Basic metrics
+            total_users=total_users,
+            active_premium=active_premium,
+            total_creations=total_creations,
+            verified_users=verified_users,
+            verified_percent=verified_percent,
+            premium_percent=premium_percent,
+            recent_revenue=recent_revenue,
+            recent_activity=recent_activity,
+            
+            # Enhanced metrics
+            total_downloads=total_downloads,
+            download_rate=download_rate,
+            active_sessions=active_sessions,
+            avg_session_minutes=avg_session_minutes,
+            total_session_hours=total_session_hours,
+            total_time_saved_hours=total_time_saved_hours,
+            
+            # Chart data
+            activity_dates=activity_dates,
+            active_users_data=active_users_data, 
+            poems_created_data=poems_created_data,
+            poem_types_labels=poem_types_labels,
+            poem_types_counts=poem_types_counts
+        )
 
 # User Management
 @admin_bp.route('/users')
@@ -319,14 +393,48 @@ def users():
     # Paginate results
     users = query.paginate(page=page, per_page=per_page, error_out=False)
     
-    return render_template(
-        'admin/users.html',
-        users=users,
-        is_premium=is_premium,
-        search=search,
-        sort_by=sort_by,
-        sort_dir=sort_dir
-    )
+    if wants_json():
+        # Convert users pagination to JSON format
+        users_data = []
+        for user in users.items:
+            user_data = {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'is_premium': user.is_premium,
+                'is_email_verified': user.is_email_verified,
+                'membership_start': user.membership_start.isoformat() if user.membership_start else None,
+                'membership_end': user.membership_end.isoformat() if user.membership_end else None,
+                'created_at': user.created_at.isoformat() if user.created_at else None
+            }
+            users_data.append(user_data)
+        
+        return jsonify({
+            'users': users_data,
+            'pagination': {
+                'page': users.page,
+                'pages': users.pages,
+                'per_page': users.per_page,
+                'total': users.total,
+                'has_next': users.has_next,
+                'has_prev': users.has_prev
+            },
+            'filters': {
+                'is_premium': is_premium,
+                'search': search,
+                'sort_by': sort_by,
+                'sort_dir': sort_dir
+            }
+        })
+    else:
+        return render_template(
+            'admin/users.html',
+            users=users,
+            is_premium=is_premium,
+            search=search,
+            sort_by=sort_by,
+            sort_dir=sort_dir
+        )
 
 @admin_bp.route('/users/<int:user_id>')
 @admin_required
