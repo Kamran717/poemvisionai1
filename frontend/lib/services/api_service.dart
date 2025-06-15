@@ -57,22 +57,35 @@ class ApiService {
       };
     }
 
-    final headers = await _headers;
+    // Flask expects form data, not JSON
     final response = await http.post(
       Uri.parse(ApiConfig.loginEndpoint),
-      headers: headers,
-      body: jsonEncode({
+      headers: ApiConfig.formHeaders,
+      body: {
         'email': email,
         'password': password,
-      }),
+      },
     );
 
     await _handleResponse(response);
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final responseData = jsonDecode(response.body);
+      if (responseData['success'] == true) {
+        // Flask uses session-based auth, return mock token for compatibility
+        return {
+          'token': 'session_token_${DateTime.now().millisecondsSinceEpoch}',
+          'user_id': 1, // Flask doesn't return user_id in login response
+          'email': email,
+          'username': email.split('@').first,
+          'success': true,
+        };
+      } else {
+        throw Exception(responseData['error'] ?? 'Login failed');
+      }
     } else {
-      throw Exception('Failed to login: ${response.body}');
+      final errorData = jsonDecode(response.body);
+      throw Exception(errorData['error'] ?? 'Failed to login: ${response.body}');
     }
   }
 
@@ -88,23 +101,38 @@ class ApiService {
       };
     }
 
-    final headers = await _headers;
+    // Flask expects form data, not JSON
     final response = await http.post(
       Uri.parse(ApiConfig.registerEndpoint),
-      headers: headers,
-      body: jsonEncode({
+      headers: ApiConfig.formHeaders,
+      body: {
         'username': username,
         'email': email,
         'password': password,
-      }),
+        'confirm_password': password, // Flask expects this field
+      },
     );
 
     await _handleResponse(response);
 
-    if (response.statusCode == 201) {
-      return jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      final responseData = jsonDecode(response.body);
+      if (responseData['success'] == true) {
+        // Flask registration is successful, return mock token for compatibility
+        return {
+          'token': 'session_token_${DateTime.now().millisecondsSinceEpoch}',
+          'user_id': 1,
+          'email': email,
+          'username': username,
+          'success': true,
+          'message': responseData['message'],
+        };
+      } else {
+        throw Exception(responseData['error'] ?? 'Registration failed');
+      }
     } else {
-      throw Exception('Failed to register: ${response.body}');
+      final errorData = jsonDecode(response.body);
+      throw Exception(errorData['error'] ?? 'Failed to register: ${response.body}');
     }
   }
 
@@ -115,19 +143,25 @@ class ApiService {
       return;
     }
 
-    final headers = await _headers;
+    // Flask expects form data for password reset
     final response = await http.post(
-      Uri.parse('${ApiConfig.apiBaseUrl}/auth/reset-password-request'),
-      headers: headers,
-      body: jsonEncode({
+      Uri.parse(ApiConfig.forgotPasswordEndpoint),
+      headers: ApiConfig.formHeaders,
+      body: {
         'email': email,
-      }),
+      },
     );
 
     await _handleResponse(response);
 
-    if (response.statusCode != 200) {
-      throw Exception('Failed to request password reset: ${response.body}');
+    if (response.statusCode == 200) {
+      final responseData = jsonDecode(response.body);
+      if (responseData['success'] != true) {
+        throw Exception(responseData['error'] ?? 'Failed to request password reset');
+      }
+    } else {
+      final errorData = jsonDecode(response.body);
+      throw Exception(errorData['error'] ?? 'Failed to request password reset: ${response.body}');
     }
   }
 
@@ -182,7 +216,7 @@ class ApiService {
 
     final headers = await _headers;
     final response = await http.get(
-      Uri.parse('${ApiConfig.apiBaseUrl}/user/stats'),
+      Uri.parse('${ApiConfig.baseUrl}/user/stats'),
       headers: headers,
     );
 
@@ -371,7 +405,7 @@ class ApiService {
 
     final headers = await _headers;
     final response = await http.get(
-      Uri.parse('${ApiConfig.apiBaseUrl}/creations/$creationId'),
+      Uri.parse('${ApiConfig.baseUrl}/creations/$creationId'),
       headers: headers,
     );
 
@@ -402,7 +436,7 @@ class ApiService {
 
     final headers = await _headers;
     final response = await http.get(
-      Uri.parse('${ApiConfig.apiBaseUrl}/shared/$shareCode'),
+      Uri.parse('${ApiConfig.baseUrl}/shared/$shareCode'),
       headers: headers,
     );
 
@@ -448,7 +482,7 @@ class ApiService {
 
     final headers = await _headers;
     final response = await http.get(
-      Uri.parse(ApiConfig.membershipStatusEndpoint),
+      Uri.parse(ApiConfig.membershipPlansEndpoint),
       headers: headers,
     );
 
@@ -503,7 +537,7 @@ class ApiService {
 
     final headers = await _headers;
     final response = await http.post(
-      Uri.parse('${ApiConfig.apiBaseUrl}/memberships/cancel'),
+      Uri.parse(ApiConfig.cancelSubscriptionEndpoint),
       headers: headers,
     );
 

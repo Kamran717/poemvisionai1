@@ -21,7 +21,7 @@ class AuthService extends ChangeNotifier {
   static const String _userIdKey = 'user_id';
 
   AuthService({ApiService? apiService}) 
-      : _apiService = apiService ?? ApiService(useMockData: true);
+      : _apiService = apiService ?? ApiService(useMockData: false);
 
   // Initialize the auth service by checking for existing token
   Future<bool> initialize() async {

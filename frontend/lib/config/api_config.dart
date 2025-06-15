@@ -4,34 +4,27 @@ class ApiConfig {
   // For production, use: 'https://poemvisionai.com'
   static const String baseUrl = 'https://poemvisionai.com';
   
-  // API endpoints
-  static const String apiBaseUrl = '$baseUrl/api';
+  // Authentication endpoints (matching Flask routes)
+  static const String loginEndpoint = '$baseUrl/login';
+  static const String registerEndpoint = '$baseUrl/signup';
+  static const String logoutEndpoint = '$baseUrl/logout';
+  static const String forgotPasswordEndpoint = '$baseUrl/forgot-password';
   
-  // Authentication endpoints
-  static const String loginEndpoint = '$apiBaseUrl/auth/login';
-  static const String registerEndpoint = '$apiBaseUrl/auth/register';
-  static const String logoutEndpoint = '$apiBaseUrl/auth/logout';
-  static const String refreshTokenEndpoint = '$apiBaseUrl/auth/refresh';
-  
-  // User endpoints
-  static const String userProfileEndpoint = '$apiBaseUrl/user/profile';
-  static const String updateProfileEndpoint = '$apiBaseUrl/user/update';
+  // User endpoints  
+  static const String userProfileEndpoint = '$baseUrl/profile';
   
   // Poem generation endpoints
   static const String generatePoemEndpoint = '$baseUrl/generate-poem';
   static const String analyzeImageEndpoint = '$baseUrl/analyze-image';
+  static const String createFinalImageEndpoint = '$baseUrl/create-final-image';
   
   // Gallery endpoints
-  static const String userPoemsEndpoint = '$apiBaseUrl/user/poems';
-  static const String savePoemEndpoint = '$apiBaseUrl/poems/save';
-  static const String deletePoemEndpoint = '$apiBaseUrl/poems/delete';
+  static const String userPoemsEndpoint = '$baseUrl/profile'; // Flask uses profile for user creations
   
   // Membership endpoints
-  static const String membershipStatusEndpoint = '$apiBaseUrl/membership/status';
-  static const String upgradeEndpoint = '$apiBaseUrl/membership/upgrade';
-  
-  // Frame endpoints
-  static const String framesEndpoint = '$apiBaseUrl/frames';
+  static const String membershipPlansEndpoint = '$baseUrl/membership';
+  static const String upgradeEndpoint = '$baseUrl/upgrade';
+  static const String cancelSubscriptionEndpoint = '$baseUrl/cancel-subscription';
   
   // Headers
   static Map<String, String> get defaultHeaders => {
@@ -42,6 +35,12 @@ class ApiConfig {
   static Map<String, String> getAuthHeaders(String token) => {
     ...defaultHeaders,
     'Authorization': 'Bearer $token',
+  };
+  
+  // Form headers for Flask compatibility
+  static Map<String, String> get formHeaders => {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Accept': 'application/json',
   };
   
   // Timeout configurations
