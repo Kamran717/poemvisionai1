@@ -19,32 +19,38 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       title: "Welcome to PoemVision AI",
       description: "Transform your precious memories into beautiful, personalized poems using the power of artificial intelligence.",
       icon: Icons.auto_awesome,
-      color: Colors.blue,
+      color: const Color(0xFFEDD050), // Yellow
     ),
     OnboardingPageData(
       title: "Capture & Create",
       description: "Simply upload any image from your gallery or take a new photo, and watch as AI analyzes it to craft a unique poem.",
       icon: Icons.camera_alt,
-      color: Colors.green,
+      color: const Color(0xFF7DA1BF), // Blue Gray
     ),
     OnboardingPageData(
       title: "Beautiful Frames",
       description: "Choose from our collection of elegant frames to make your poem visually stunning and ready to share.",
       icon: Icons.crop_landscape,
-      color: Colors.orange,
+      color: const Color(0xFFC8C7B9), // Sage Green
     ),
     OnboardingPageData(
       title: "Save & Share",
       description: "Keep your favorite poems in your personal gallery and share them with friends and family on social media.",
       icon: Icons.share,
-      color: Colors.purple,
+      color: const Color(0xFF7DA1BF), // Blue Gray
     ),
   ];
 
   @override
   Widget build(BuildContext context) {
+    // Theme colors
+    const Color primaryBlack = Color(0xFF1B2A37);
+    const Color blueGray = Color(0xFF7DA1BF);
+    const Color yellow = Color(0xFFEDD050);
+    const Color sageGreen = Color(0xFFC8C7B9);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: primaryBlack,
       body: SafeArea(
         child: Column(
           children: [
@@ -56,11 +62,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 children: [
                   TextButton(
                     onPressed: _onIntroEnd,
-                    child: const Text(
+                    child: Text(
                       'Skip',
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.grey,
+                        color: sageGreen.withOpacity(0.8),
                       ),
                     ),
                   ),
@@ -105,7 +111,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: ElevatedButton(
                   onPressed: _currentPage == _totalPages - 1 ? _onIntroEnd : _nextPage,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: blueGray,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
@@ -128,6 +134,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildPage(OnboardingPageData pageData) {
+    const Color sageGreen = Color(0xFFC8C7B9);
+    
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -140,6 +148,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             decoration: BoxDecoration(
               color: pageData.color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(100),
+              border: Border.all(color: pageData.color.withOpacity(0.3), width: 2),
             ),
             child: Icon(
               pageData.icon,
@@ -156,7 +165,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Colors.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -166,9 +175,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           // Description
           Text(
             pageData.description,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
-              color: Colors.black54,
+              color: sageGreen.withOpacity(0.9),
               height: 1.5,
             ),
             textAlign: TextAlign.center,
@@ -179,12 +188,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildDot(int index) {
+    const Color blueGray = Color(0xFF7DA1BF);
+    const Color sageGreen = Color(0xFFC8C7B9);
+    
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4.0),
       width: _currentPage == index ? 24.0 : 10.0,
       height: 10.0,
       decoration: BoxDecoration(
-        color: _currentPage == index ? Colors.blue : Colors.grey[300],
+        color: _currentPage == index ? blueGray : sageGreen.withOpacity(0.4),
         borderRadius: BorderRadius.circular(5.0),
       ),
     );

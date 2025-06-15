@@ -31,11 +31,16 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
   
   @override
   Widget build(BuildContext context) {
+    // Theme colors
+    const Color primaryBlack = Color(0xFF1B2A37);
+
     return Scaffold(
+      backgroundColor: primaryBlack,
       appBar: AppBar(
         title: const Text('Create Poem'),
-        backgroundColor: Colors.blue,
+        backgroundColor: primaryBlack,
         foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: SafeArea(
         child: _isLoading
@@ -46,13 +51,20 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
   }
 
   Widget _buildLoadingState() {
-    return const Center(
+    // Theme colors
+    const Color yellow = Color(0xFFEDD050);
+    const Color sageGreen = Color(0xFFC8C7B9);
+
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 16),
-          Text('Processing your image...'),
+          CircularProgressIndicator(color: yellow),
+          const SizedBox(height: 16),
+          Text(
+            'Processing your image...',
+            style: TextStyle(color: sageGreen.withOpacity(0.9)),
+          ),
         ],
       ),
     );
@@ -72,6 +84,11 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
   }
 
   Widget _buildSelectImageStep() {
+    // Theme colors
+    const Color blueGray = Color(0xFF7DA1BF);
+    const Color yellow = Color(0xFFEDD050);
+    const Color sageGreen = Color(0xFFC8C7B9);
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -86,12 +103,13 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.shade100,
+                color: Colors.red.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red.withOpacity(0.5)),
               ),
               child: Text(
                 _errorMessage!,
-                style: TextStyle(color: Colors.red.shade800),
+                style: const TextStyle(color: Colors.redAccent),
               ),
             ),
             const SizedBox(height: 16),
@@ -125,8 +143,11 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
               onPressed: _proceedToPreferences,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: Colors.blue,
+                backgroundColor: blueGray,
                 foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: const Text('Continue'),
             ),
@@ -137,6 +158,11 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
               onPressed: _showImageSourceOptions,
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
+                side: BorderSide(color: yellow),
+                foregroundColor: yellow,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: const Text('Select Different Image'),
             ),
@@ -147,10 +173,10 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.image,
                       size: 100,
-                      color: Colors.grey,
+                      color: sageGreen.withOpacity(0.7),
                     ),
                     const SizedBox(height: 16),
                     const Text(
@@ -158,13 +184,14 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'Choose a meaningful photo that inspires you',
                       style: TextStyle(
-                        color: Colors.grey,
+                        color: sageGreen.withOpacity(0.8),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -180,8 +207,11 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
                           vertical: 12,
                           horizontal: 24,
                         ),
-                        backgroundColor: Colors.blue,
+                        backgroundColor: blueGray,
                         foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -193,6 +223,11 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
                         padding: const EdgeInsets.symmetric(
                           vertical: 12,
                           horizontal: 24,
+                        ),
+                        backgroundColor: yellow,
+                        foregroundColor: Colors.black87,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                     ),
@@ -207,6 +242,11 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
   }
 
   Widget _buildSelectPoemPreferencesStep() {
+    // Theme colors
+    const Color blueGray = Color(0xFF7DA1BF);
+    const Color yellow = Color(0xFFEDD050);
+    const Color sageGreen = Color(0xFFC8C7B9);
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -222,16 +262,17 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           
           // Subtitle
-          const Text(
+          Text(
             'Customize your poem generation',
             style: TextStyle(
-              color: Colors.grey,
+              color: sageGreen.withOpacity(0.8),
             ),
             textAlign: TextAlign.center,
           ),
@@ -243,6 +284,7 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
           const SizedBox(height: 12),
@@ -268,10 +310,10 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
                   },
                   child: Container(
                     decoration: BoxDecoration(
-                      color: isSelected ? Colors.blue.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                      color: isSelected ? blueGray.withOpacity(0.2) : sageGreen.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isSelected ? Colors.blue : Colors.grey.withOpacity(0.3),
+                        color: isSelected ? blueGray : sageGreen.withOpacity(0.3),
                         width: 2,
                       ),
                     ),
@@ -280,7 +322,7 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
                         poemType.toUpperCase(),
                         style: TextStyle(
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          color: isSelected ? Colors.blue : Colors.black,
+                          color: isSelected ? blueGray : Colors.white,
                         ),
                       ),
                     ),
@@ -297,8 +339,11 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
             onPressed: _generatePoem,
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: Colors.blue,
+              backgroundColor: blueGray,
               foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: const Text('Generate Poem'),
           ),
@@ -313,6 +358,11 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
             },
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
+              side: BorderSide(color: yellow),
+              foregroundColor: yellow,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: const Text('Back'),
           ),
@@ -322,12 +372,20 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
   }
 
   Widget _buildResultStep() {
+    // Theme colors
+    const Color blueGray = Color(0xFF7DA1BF);
+    const Color yellow = Color(0xFFEDD050);
+    const Color sageGreen = Color(0xFFC8C7B9);
+
     if (_creation == null || _creation!.poemText == null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('No poem generated yet'),
+            Text(
+              'No poem generated yet',
+              style: TextStyle(color: sageGreen.withOpacity(0.8)),
+            ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
@@ -335,6 +393,13 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
                   _currentStep = 1;
                 });
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: blueGray,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
               child: const Text('Start Over'),
             ),
           ],
@@ -357,6 +422,7 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -401,10 +467,10 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.1),
+                      color: sageGreen.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: Colors.grey.withOpacity(0.3),
+                        color: sageGreen.withOpacity(0.3),
                       ),
                     ),
                     child: Text(
@@ -412,6 +478,7 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
                       style: const TextStyle(
                         fontSize: 18,
                         height: 1.5,
+                        color: Colors.white,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -433,6 +500,11 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
                   label: const Text('Share'),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: yellow),
+                    foregroundColor: yellow,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                 ),
               ),
@@ -444,8 +516,11 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
                   label: const Text('Download'),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Colors.blue,
+                    backgroundColor: blueGray,
                     foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                 ),
               ),
@@ -458,6 +533,11 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
             onPressed: _resetCreation,
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
+              side: BorderSide(color: sageGreen),
+              foregroundColor: sageGreen,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: const Text('Create New Poem'),
           ),
@@ -467,6 +547,11 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
   }
 
   Widget _buildStepIndicator() {
+    // Theme colors
+    const Color blueGray = Color(0xFF7DA1BF);
+    const Color yellow = Color(0xFFEDD050);
+    const Color sageGreen = Color(0xFFC8C7B9);
+    
     return Row(
       children: List.generate(_totalSteps, (index) {
         final stepNumber = index + 1;
@@ -484,21 +569,21 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
                   height: 36,
                   decoration: BoxDecoration(
                     color: isCompleted
-                        ? Colors.green
-                        : (isActive ? Colors.blue : Colors.grey.withOpacity(0.3)),
+                        ? yellow
+                        : (isActive ? blueGray : sageGreen.withOpacity(0.3)),
                     shape: BoxShape.circle,
                   ),
                   child: Center(
                     child: isCompleted
                         ? const Icon(
                             Icons.check,
-                            color: Colors.white,
+                            color: Colors.black87,
                             size: 18,
                           )
                         : Text(
                             stepNumber.toString(),
                             style: TextStyle(
-                              color: isActive ? Colors.white : Colors.black54,
+                              color: isActive ? Colors.white : Colors.white70,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -511,7 +596,7 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
                   _getStepLabel(stepNumber),
                   style: TextStyle(
                     fontSize: 12,
-                    color: isActive ? Colors.blue : Colors.black54,
+                    color: isActive ? blueGray : sageGreen.withOpacity(0.8),
                     fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                   ),
                   textAlign: TextAlign.center,
@@ -539,28 +624,45 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
 
   // Image selection methods
   void _showImageSourceOptions() {
+    // Theme colors
+    const Color primaryBlack = Color(0xFF1B2A37);
+    const Color blueGray = Color(0xFF7DA1BF);
+
     showModalBottomSheet(
       context: context,
+      backgroundColor: primaryBlack,
       builder: (context) {
-        return Wrap(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Choose from Gallery'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImageFromGallery();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Take a Photo'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImageFromCamera();
-              },
-            ),
-          ],
+        return Container(
+          decoration: BoxDecoration(
+            color: primaryBlack,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: Icon(Icons.photo_library, color: blueGray),
+                title: const Text(
+                  'Choose from Gallery',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImageFromGallery();
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.camera_alt, color: blueGray),
+                title: const Text(
+                  'Take a Photo',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImageFromCamera();
+                },
+              ),
+            ],
+          ),
         );
       },
     );

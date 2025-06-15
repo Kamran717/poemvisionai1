@@ -48,8 +48,14 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Theme colors
+    const Color primaryBlack = Color(0xFF1B2A37);
+    const Color blueGray = Color(0xFF7DA1BF);
+    const Color yellow = Color(0xFFEDD050);
+    const Color sageGreen = Color(0xFFC8C7B9);
+
     return Scaffold(
-      backgroundColor: Colors.blue,
+      backgroundColor: primaryBlack,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -58,13 +64,14 @@ class _SplashScreenState extends State<SplashScreen> {
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: blueGray.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: blueGray, width: 2),
               ),
               child: const Icon(
                 Icons.auto_awesome,
                 size: 64,
-                color: Colors.blue,
+                color: yellow,
               ),
             ),
             const SizedBox(height: 24),
@@ -77,17 +84,17 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Transform images into beautiful poems',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.white70,
+                color: sageGreen.withOpacity(0.9),
               ),
             ),
             const SizedBox(height: 48),
             const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              valueColor: AlwaysStoppedAnimation<Color>(yellow),
             ),
           ],
         ),

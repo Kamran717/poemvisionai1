@@ -76,14 +76,21 @@ class _GalleryScreenState extends State<GalleryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Theme colors
+    const Color primaryBlack = Color(0xFF1B2A37);
+    const Color blueGray = Color(0xFF7DA1BF);
+    const Color yellow = Color(0xFFEDD050);
+
     return Scaffold(
+      backgroundColor: primaryBlack,
       appBar: AppBar(
         title: const Text('My Gallery'),
-        backgroundColor: Colors.blue,
+        backgroundColor: primaryBlack,
         foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator(color: yellow))
           : _errorMessage != null
               ? _buildErrorView()
               : _creations.isEmpty
@@ -93,6 +100,11 @@ class _GalleryScreenState extends State<GalleryScreen> {
   }
 
   Widget _buildErrorView() {
+    // Theme colors
+    const Color blueGray = Color(0xFF7DA1BF);
+    const Color yellow = Color(0xFFEDD050);
+    const Color sageGreen = Color(0xFFC8C7B9);
+
     // If not authenticated, show login button instead of "Try Again"
     if (!_isAuthenticated) {
       return SingleChildScrollView(
@@ -102,10 +114,10 @@ class _GalleryScreenState extends State<GalleryScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
+                Icon(
                   Icons.lock_outline,
                   size: 60,
-                  color: Colors.grey,
+                  color: sageGreen.withOpacity(0.7),
                 ),
                 const SizedBox(height: 16),
                 const Text(
@@ -114,13 +126,14 @@ class _GalleryScreenState extends State<GalleryScreen> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'Your gallery contains all the beautiful poems you\'ve created',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey),
+                  style: TextStyle(color: sageGreen.withOpacity(0.8)),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton.icon(
@@ -132,7 +145,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                       horizontal: 24,
                       vertical: 12,
                     ),
-                    backgroundColor: Colors.blue,
+                    backgroundColor: blueGray,
                     foregroundColor: Colors.white,
                   ),
                 ),
@@ -141,9 +154,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 8),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
+                    color: blueGray.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.blue.shade200),
+                    border: Border.all(color: blueGray.withOpacity(0.3)),
                   ),
                   child: Column(
                     children: [
@@ -151,7 +164,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                         children: [
                           Icon(
                             Icons.star,
-                            color: Colors.amber,
+                            color: yellow,
                             size: 20,
                           ),
                           const SizedBox(width: 8),
@@ -160,16 +173,17 @@ class _GalleryScreenState extends State<GalleryScreen> {
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 16,
+                              color: Colors.white,
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'Login to access premium frames, save poems, and more!',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey,
+                          color: sageGreen.withOpacity(0.9),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -179,8 +193,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
                         child: OutlinedButton(
                           onPressed: () => context.goNamed('login'),
                           style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: Colors.blue),
-                            foregroundColor: Colors.blue,
+                            side: BorderSide(color: yellow),
+                            foregroundColor: yellow,
                           ),
                           child: const Text('Login for Premium'),
                         ),
@@ -203,17 +217,21 @@ class _GalleryScreenState extends State<GalleryScreen> {
           const Icon(
             Icons.error_outline,
             size: 60,
-            color: Colors.red,
+            color: Colors.redAccent,
           ),
           const SizedBox(height: 16),
           Text(
             _errorMessage!,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.red),
+            style: const TextStyle(color: Colors.redAccent),
           ),
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: _loadCreations,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: blueGray,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Try Again'),
           ),
         ],
@@ -222,14 +240,18 @@ class _GalleryScreenState extends State<GalleryScreen> {
   }
 
   Widget _buildEmptyView() {
+    // Theme colors
+    const Color blueGray = Color(0xFF7DA1BF);
+    const Color sageGreen = Color(0xFFC8C7B9);
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
+          Icon(
             Icons.photo_album,
             size: 80,
-            color: Colors.grey,
+            color: sageGreen.withOpacity(0.7),
           ),
           const SizedBox(height: 24),
           const Text(
@@ -237,13 +259,14 @@ class _GalleryScreenState extends State<GalleryScreen> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Create your first poem to see it here',
             style: TextStyle(
-              color: Colors.grey,
+              color: sageGreen.withOpacity(0.8),
             ),
           ),
           const SizedBox(height: 32),
@@ -256,7 +279,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                 horizontal: 24,
                 vertical: 12,
               ),
-              backgroundColor: Colors.blue,
+              backgroundColor: blueGray,
               foregroundColor: Colors.white,
             ),
           ),
@@ -266,8 +289,11 @@ class _GalleryScreenState extends State<GalleryScreen> {
   }
 
   Widget _buildGalleryGrid() {
+    const Color yellow = Color(0xFFEDD050);
+    
     return RefreshIndicator(
       onRefresh: _loadCreations,
+      color: yellow,
       child: GridView.builder(
         padding: const EdgeInsets.all(16),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

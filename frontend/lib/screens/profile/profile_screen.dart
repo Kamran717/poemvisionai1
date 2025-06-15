@@ -54,16 +54,318 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _upgradeToPremium() async {
+    // Theme colors
+    const Color primaryBlack = Color(0xFF1B2A37);
+    const Color blueGray = Color(0xFF7DA1BF);
+    const Color yellow = Color(0xFFEDD050);
+    const Color sageGreen = Color(0xFFC8C7B9);
+
+    // Show upgrade options dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: primaryBlack,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Upgrade to Premium',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Unlock premium features:',
+                style: TextStyle(color: sageGreen.withOpacity(0.9), fontSize: 16),
+              ),
+              const SizedBox(height: 12),
+              _buildFeatureItem('✨ Unlimited poem generation'),
+              _buildFeatureItem('🎨 Premium frames and templates'),
+              _buildFeatureItem('💾 Save unlimited poems'),
+              _buildFeatureItem('📤 Enhanced sharing options'),
+              _buildFeatureItem('🚀 Priority processing'),
+              _buildFeatureItem('📧 Premium customer support'),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: blueGray.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: blueGray.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.star, color: yellow, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '\$9.99/month or \$79.99/year',
+                        style: TextStyle(
+                          color: yellow,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                foregroundColor: sageGreen,
+              ),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _initiatePayment();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: blueGray,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('Upgrade Now'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildFeatureItem(String feature) {
+    const Color sageGreen = Color(0xFFC8C7B9);
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Text(
+        feature,
+        style: TextStyle(
+          color: sageGreen.withOpacity(0.9),
+          fontSize: 14,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _initiatePayment() async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const AlertDialog(
+          backgroundColor: Color(0xFF1B2A37),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: Color(0xFFEDD050)),
+              SizedBox(height: 16),
+              Text(
+                'Processing payment...',
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    try {
+      // Simulate API call to initiate payment
+      await Future.delayed(const Duration(seconds: 2));
+      
+      // For now, we'll simulate a successful upgrade
+      // In a real implementation, this would integrate with a payment processor
+      // like Stripe, PayPal, or in-app purchases
+      
+      Navigator.of(context).pop(); // Close loading dialog
+      
+      // Show success message
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: const Color(0xFF1B2A37),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: const Text(
+              'Payment Integration',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+            content: const Text(
+              'This would integrate with a real payment processor like Stripe, PayPal, or platform-specific in-app purchases. The backend API would handle the payment processing and membership upgrade.',
+              style: TextStyle(color: Color(0xFFC8C7B9)),
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF7DA1BF),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+      
+    } catch (e) {
+      Navigator.of(context).pop(); // Close loading dialog
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Payment failed: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _manageSubscription() async {
+    // Theme colors
+    const Color primaryBlack = Color(0xFF1B2A37);
+    const Color blueGray = Color(0xFF7DA1BF);
+    const Color yellow = Color(0xFFEDD050);
+    const Color sageGreen = Color(0xFFC8C7B9);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: primaryBlack,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Manage Subscription',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.star, color: yellow, size: 24),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Premium Active',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Your premium membership includes:',
+                style: TextStyle(color: sageGreen.withOpacity(0.9)),
+              ),
+              const SizedBox(height: 8),
+              _buildFeatureItem('✅ Unlimited poem generation'),
+              _buildFeatureItem('✅ Premium frames and templates'),
+              _buildFeatureItem('✅ Unlimited saved poems'),
+              _buildFeatureItem('✅ Enhanced sharing options'),
+              const SizedBox(height: 16),
+              if (_user?.membershipEnd != null)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: blueGray.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: blueGray.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.schedule, color: yellow, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Expires: ${_formatDate(_user!.membershipEnd!)}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                foregroundColor: sageGreen,
+              ),
+              child: const Text('Close'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _renewSubscription();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: blueGray,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('Renew'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _renewSubscription() async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Subscription management would integrate with your payment provider'),
+        backgroundColor: Color(0xFF7DA1BF),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Theme colors
+    const Color primaryBlack = Color(0xFF1B2A37);
+    const Color blueGray = Color(0xFF7DA1BF);
+    const Color yellow = Color(0xFFEDD050);
+
     return Scaffold(
+      backgroundColor: primaryBlack,
       appBar: AppBar(
         title: const Text('My Profile'),
-        backgroundColor: Colors.blue,
+        backgroundColor: primaryBlack,
         foregroundColor: Colors.white,
+        elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: Icon(Icons.settings, color: blueGray),
             onPressed: () {
               // Navigate to settings screen
               // This will be implemented when we connect this to the router
@@ -72,7 +374,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator(color: yellow))
           : _errorMessage != null
               ? _buildErrorView()
               : _user == null
@@ -82,6 +384,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildErrorView() {
+    // Theme colors
+    const Color blueGray = Color(0xFF7DA1BF);
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -89,17 +394,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const Icon(
             Icons.error_outline,
             size: 60,
-            color: Colors.red,
+            color: Colors.redAccent,
           ),
           const SizedBox(height: 16),
           Text(
             _errorMessage!,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.red),
+            style: const TextStyle(color: Colors.redAccent),
           ),
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: _loadUserProfile,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: blueGray,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Try Again'),
           ),
         ],
@@ -108,6 +417,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildNotLoggedInView() {
+    // Theme colors
+    const Color blueGray = Color(0xFF7DA1BF);
+    const Color yellow = Color(0xFFEDD050);
+    const Color sageGreen = Color(0xFFC8C7B9);
+
     return SingleChildScrollView(
       child: Center(
         child: Padding(
@@ -115,10 +429,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
+              Icon(
                 Icons.account_circle,
                 size: 80,
-                color: Colors.grey,
+                color: sageGreen.withOpacity(0.7),
               ),
               const SizedBox(height: 24),
               const Text(
@@ -126,13 +440,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Please login to view your profile',
                 style: TextStyle(
-                  color: Colors.grey,
+                  color: sageGreen.withOpacity(0.8),
                 ),
               ),
               const SizedBox(height: 32),
@@ -145,8 +460,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     horizontal: 24,
                     vertical: 12,
                   ),
-                  backgroundColor: Colors.blue,
+                  backgroundColor: blueGray,
                   foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 child: const Text('Login'),
               ),
@@ -155,9 +473,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 margin: const EdgeInsets.symmetric(horizontal: 8),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
+                  color: blueGray.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blue.shade200),
+                  border: Border.all(color: blueGray.withOpacity(0.3)),
                 ),
                 child: Column(
                   children: [
@@ -165,7 +483,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         Icon(
                           Icons.star,
-                          color: Colors.amber,
+                          color: yellow,
                           size: 20,
                         ),
                         const SizedBox(width: 8),
@@ -174,16 +492,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 16,
+                            color: Colors.white,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'Login to access premium frames, save poems, and more!',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey,
+                        color: sageGreen.withOpacity(0.9),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -193,8 +512,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: OutlinedButton(
                         onPressed: () => context.goNamed('login'),
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.blue),
-                          foregroundColor: Colors.blue,
+                          side: BorderSide(color: yellow),
+                          foregroundColor: yellow,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                         child: const Text('Login for Premium'),
                       ),
@@ -227,7 +549,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   // Avatar
                   CircleAvatar(
                     radius: 50,
-                    backgroundColor: Colors.blue.shade200,
+                    backgroundColor: const Color(0xFF7DA1BF),
                     child: Text(
                       _getInitials(_user!.username),
                       style: const TextStyle(
@@ -245,15 +567,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
                   
                   // Email
                   Text(
                     _user!.email,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
-                      color: Colors.grey.shade600,
+                      color: Color(0xFFC8C7B9),
                     ),
                   ),
                 ],
@@ -271,6 +594,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
             const SizedBox(height: 12),
@@ -299,6 +623,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
             const SizedBox(height: 12),
@@ -350,6 +675,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildMembershipCard() {
+    // Theme colors
+    const Color blueGray = Color(0xFF7DA1BF);
+    const Color yellow = Color(0xFFEDD050);
+    const Color sageGreen = Color(0xFFC8C7B9);
+    
     final isPremium = _user?.isPremium ?? false;
     
     return Card(
@@ -357,7 +687,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
-      color: isPremium ? Colors.blue.shade800 : Colors.grey.shade200,
+      color: isPremium ? blueGray.withOpacity(0.8) : sageGreen.withOpacity(0.2),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -367,7 +697,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 Icon(
                   isPremium ? Icons.star : Icons.star_border,
-                  color: isPremium ? Colors.amber : Colors.grey.shade700,
+                  color: yellow,
                   size: 28,
                 ),
                 const SizedBox(width: 8),
@@ -376,7 +706,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: isPremium ? Colors.white : Colors.grey.shade800,
+                    color: isPremium ? Colors.white : Colors.white,
                   ),
                 ),
               ],
@@ -388,7 +718,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   : 'Upgrade to access premium features',
               style: TextStyle(
                 fontSize: 14,
-                color: isPremium ? Colors.white.withOpacity(0.8) : Colors.grey.shade600,
+                color: isPremium ? Colors.white.withOpacity(0.9) : sageGreen.withOpacity(0.9),
               ),
             ),
             if (isPremium && _user?.membershipEnd != null) ...[
@@ -405,12 +735,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  // Navigate to membership screen
-                },
+                onPressed: isPremium ? _manageSubscription : _upgradeToPremium,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isPremium ? Colors.white : Colors.blue,
-                  foregroundColor: isPremium ? Colors.blue.shade800 : Colors.white,
+                  backgroundColor: isPremium ? yellow : blueGray,
+                  foregroundColor: isPremium ? Colors.black87 : Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 child: Text(isPremium ? 'Manage Subscription' : 'Upgrade Now'),
               ),
@@ -426,10 +757,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String title,
     required VoidCallback onTap,
   }) {
+    // Theme colors
+    const Color blueGray = Color(0xFF7DA1BF);
+    const Color sageGreen = Color(0xFFC8C7B9);
+    
     return ListTile(
-      leading: Icon(icon),
-      title: Text(title),
-      trailing: const Icon(Icons.chevron_right),
+      leading: Icon(icon, color: blueGray),
+      title: Text(
+        title,
+        style: const TextStyle(color: Colors.white),
+      ),
+      trailing: Icon(Icons.chevron_right, color: sageGreen),
       onTap: onTap,
     );
   }

@@ -98,9 +98,19 @@ class _AppShell extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
+    // Theme colors
+    const Color primaryBlack = Color(0xFF1B2A37);
+    const Color yellow = Color(0xFFEDD050);
+    const Color sageGreen = Color(0xFFC8C7B9);
+
     return Scaffold(
+      backgroundColor: primaryBlack,
       body: child,
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: primaryBlack,
+        selectedItemColor: yellow,
+        unselectedItemColor: sageGreen,
+        type: BottomNavigationBarType.fixed,
         currentIndex: _calculateSelectedIndex(context),
         onTap: (index) => _onItemTapped(index, context),
         items: const [
@@ -152,11 +162,19 @@ class _HomeScreen extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
+    // Theme colors
+    const Color primaryBlack = Color(0xFF1B2A37);
+    const Color blueGray = Color(0xFF7DA1BF);
+    const Color yellow = Color(0xFFEDD050);
+    const Color sageGreen = Color(0xFFC8C7B9);
+
     return Scaffold(
+      backgroundColor: primaryBlack,
       appBar: AppBar(
         title: const Text('PoemVision AI'),
-        backgroundColor: Colors.blue,
+        backgroundColor: primaryBlack,
         foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: Center(
         child: Column(
@@ -166,13 +184,14 @@ class _HomeScreen extends StatelessWidget {
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: Colors.blue,
+                color: blueGray.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: blueGray, width: 2),
               ),
               child: const Icon(
                 Icons.auto_awesome,
                 size: 64,
-                color: Colors.white,
+                color: yellow,
               ),
             ),
             const SizedBox(height: 24),
@@ -181,24 +200,25 @@ class _HomeScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Transform images into beautiful poems',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey,
+                color: sageGreen.withOpacity(0.9),
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Free to use - No login required',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.green,
+                color: yellow,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -210,8 +230,11 @@ class _HomeScreen extends StatelessWidget {
                   horizontal: 32,
                   vertical: 16,
                 ),
-                backgroundColor: Colors.blue,
+                backgroundColor: blueGray,
                 foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: const Text('Create New Poem'),
             ),
