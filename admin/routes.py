@@ -11,6 +11,14 @@ from admin import admin_bp
 # Set up logging
 logger = logging.getLogger(__name__)
 
+def wants_json():
+    """Check if client prefers JSON response"""
+    # Check Accept header or if request content type is JSON
+    best = request.accept_mimetypes.best_match(['application/json', 'text/html'])
+    return (best == 'application/json' or 
+            request.headers.get('Content-Type', '').startswith('application/json') or
+            request.headers.get('Accept', '').find('application/json') > -1)
+
 # Add context processor to provide current date/time to all templates
 @admin_bp.context_processor
 def inject_now():

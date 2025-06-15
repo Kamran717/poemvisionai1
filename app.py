@@ -41,6 +41,14 @@ logger = logging.getLogger(__name__)
 # Simple in-memory cache for shared views
 _view_cache = {}
 
+def wants_json():
+    """Check if client prefers JSON response"""
+    # Check Accept header or if request content type is JSON
+    best = request.accept_mimetypes.best_match(['application/json', 'text/html'])
+    return (best == 'application/json' or 
+            request.headers.get('Content-Type', '').startswith('application/json') or
+            request.headers.get('Accept', '').find('application/json') > -1)
+
 
 def cache_view(timeout=3600):  # Default cache of 1 hour
     """Cache decorator for view functions"""
@@ -201,7 +209,25 @@ def index():
     user_id = session.get('user_id')
     user = User.query.get(user_id) if user_id else None
 
-    return render_template('index.html', user=user)
+    if wants_json():
+        user_data = None
+        if user:
+            user_data = {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'is_premium': user.is_premium,
+                'membership_start': user.membership_start.isoformat() if user.membership_start else None,
+                'membership_end': user.membership_end.isoformat() if user.membership_end else None,
+                'created_at': user.created_at.isoformat() if user.created_at else None
+            }
+        return jsonify({
+            'user': user_data,
+            'authenticated': user is not None,
+            'message': 'Welcome to Poem Vision AI'
+        })
+    else:
+        return render_template('index.html', user=user)
 
 
 @app.route('/analyze-image', methods=['POST'])
@@ -562,6 +588,8 @@ def view_shared_creation(share_code):
         creation = Creation.query.filter_by(share_code=share_code).first()
 
         if not creation:
+            if wants_json():
+                return jsonify({'error': 'Creation not found or no longer available'}), 404
             return render_template(
                 'error.html',
                 message="Creation not found or no longer available"), 404
@@ -573,13 +601,40 @@ def view_shared_creation(share_code):
             if creator:
                 creator_username = creator.username
 
-        # Render the shared creation template
-        return render_template('shared.html',
-                               creation=creation,
-                               creator_username=creator_username)
+        if wants_json():
+            # Return JSON format for API clients
+            creation_data = {
+                'id': creation.id,
+                'user_id': creation.user_id,
+                'creator_username': creator_username,
+                'image_data': creation.image_data or '',
+                'analysis_results': creation.analysis_results,
+                'poem_text': creation.poem_text,
+                'frame_style': creation.frame_style,
+                'final_image_data': creation.final_image_data,
+                'poem_type': creation.poem_type,
+                'emphasis': creation.emphasis,
+                'poem_length': creation.poem_length,
+                'time_saved_minutes': creation.time_saved_minutes or 0,
+                'created_at': creation.created_at.isoformat() if creation.created_at else None,
+                'share_code': creation.share_code,
+                'is_downloaded': creation.is_downloaded or False,
+                'download_count': creation.download_count or 0,
+                'view_count': creation.view_count or 0,
+                'last_viewed_at': creation.last_viewed_at.isoformat() if creation.last_viewed_at else None,
+                'last_downloaded_at': creation.last_downloaded_at.isoformat() if creation.last_downloaded_at else None
+            }
+            return jsonify(creation_data)
+        else:
+            # Render the shared creation template for web browsers
+            return render_template('shared.html',
+                                   creation=creation,
+                                   creator_username=creator_username)
 
     except Exception as e:
         logger.error(f"Error viewing shared creation: {str(e)}", exc_info=True)
+        if wants_json():
+            return jsonify({'error': 'An error occurred while loading this creation'}), 500
         return render_template(
             'error.html',
             message="An error occurred while loading this creation"), 500
@@ -594,10 +649,52 @@ def gallery():
         creations = Creation.query.order_by(
             Creation.created_at.desc()).limit(20).all()
 
-        return render_template('gallery.html', creations=creations)
+        if wants_json():
+            # Convert creations to JSON format
+            creations_data = []
+            for creation in creations:
+                # Get creator username if available
+                creator_username = None
+                if creation.user_id:
+                    creator = User.query.get(creation.user_id)
+                    if creator:
+                        creator_username = creator.username
+
+                creation_data = {
+                    'id': creation.id,
+                    'user_id': creation.user_id,
+                    'creator_username': creator_username,
+                    'image_data': creation.image_data or '',
+                    'analysis_results': creation.analysis_results,
+                    'poem_text': creation.poem_text,
+                    'frame_style': creation.frame_style,
+                    'final_image_data': creation.final_image_data,
+                    'poem_type': creation.poem_type,
+                    'emphasis': creation.emphasis,
+                    'poem_length': creation.poem_length,
+                    'time_saved_minutes': creation.time_saved_minutes or 0,
+                    'created_at': creation.created_at.isoformat() if creation.created_at else None,
+                    'share_code': creation.share_code,
+                    'is_downloaded': creation.is_downloaded or False,
+                    'download_count': creation.download_count or 0,
+                    'view_count': creation.view_count or 0,
+                    'last_viewed_at': creation.last_viewed_at.isoformat() if creation.last_viewed_at else None,
+                    'last_downloaded_at': creation.last_downloaded_at.isoformat() if creation.last_downloaded_at else None
+                }
+                creations_data.append(creation_data)
+
+            return jsonify({
+                'creations': creations_data,
+                'total_count': len(creations_data),
+                'message': 'Recent creations from the community'
+            })
+        else:
+            return render_template('gallery.html', creations=creations)
 
     except Exception as e:
         logger.error(f"Error loading gallery: {str(e)}", exc_info=True)
+        if wants_json():
+            return jsonify({'error': 'An error occurred while loading the gallery'}), 500
         return render_template(
             'error.html',
             message="An error occurred while loading the gallery"), 500
@@ -610,8 +707,14 @@ def gallery():
 def login():
     """Log in a user"""
     if request.method == 'POST':
-        email = request.form.get('email', '').strip().lower()
-        password = request.form.get('password', '')
+        # Handle both JSON and form data
+        if request.is_json:
+            data = request.json
+            email = data.get('email', '').strip().lower()
+            password = data.get('password', '')
+        else:
+            email = request.form.get('email', '').strip().lower()
+            password = request.form.get('password', '')
 
         # Validate inputs
         if not email or not password:
@@ -631,10 +734,28 @@ def login():
             #    }), 401
 
             session['user_id'] = user.id
-            return jsonify({'success': True, 'redirect': url_for('index')})
+            
+            if wants_json():
+                return jsonify({
+                    'success': True, 
+                    'user': {
+                        'id': user.id,
+                        'username': user.username,
+                        'email': user.email,
+                        'is_premium': user.is_premium
+                    },
+                    'message': 'Login successful'
+                })
+            else:
+                return jsonify({'success': True, 'redirect': url_for('index')})
         else:
             return jsonify({'error': 'Invalid email or password.'}), 401
 
+    if wants_json():
+        return jsonify({
+            'message': 'Login page',
+            'instructions': 'Please provide your email and password to log in'
+        })
     return render_template('login.html')
 
 
@@ -642,10 +763,18 @@ def login():
 def signup():
     """Register a new user"""
     if request.method == 'POST':
-        username = request.form.get('username', '').strip()
-        email = request.form.get('email', '').strip().lower()
-        password = request.form.get('password', '')
-        confirm_password = request.form.get('confirm_password', '')
+        # Handle both JSON and form data
+        if request.is_json:
+            data = request.json
+            username = data.get('username', '').strip()
+            email = data.get('email', '').strip().lower()
+            password = data.get('password', '')
+            confirm_password = data.get('confirm_password', '')
+        else:
+            username = request.form.get('username', '').strip()
+            email = request.form.get('email', '').strip().lower()
+            password = request.form.get('password', '')
+            confirm_password = request.form.get('confirm_password', '')
 
         # Validate inputs
         if not username or not email or not password:
@@ -686,23 +815,37 @@ def signup():
             
             db.session.commit()
 
-            # Try to send verification email, but don't fail registration if it doesn't work
-            try:
-                send_verification_email(new_user)
+            # Auto-login the user after successful registration
+            session['user_id'] = new_user.id
+
+            if wants_json():
                 return jsonify({
                     'success': True,
-                    'message': 'Please check your email to verify your account',
-                    'redirect': url_for('verification_pending')
+                    'user': {
+                        'id': new_user.id,
+                        'username': new_user.username,
+                        'email': new_user.email,
+                        'is_premium': new_user.is_premium
+                    },
+                    'message': 'Account created successfully!'
                 })
-            except Exception as mail_error:
-                logger.warning(f"Email verification couldn't be sent: {str(mail_error)}")
-                # Continue registration despite email verification failure
-                session['user_id'] = new_user.id
-                return jsonify({
-                    'success': True,
-                    'message': 'Account created successfully!',
-                    'redirect': url_for('index')
-                })
+            else:
+                # Try to send verification email, but don't fail registration if it doesn't work
+                try:
+                    send_verification_email(new_user)
+                    return jsonify({
+                        'success': True,
+                        'message': 'Please check your email to verify your account',
+                        'redirect': url_for('verification_pending')
+                    })
+                except Exception as mail_error:
+                    logger.warning(f"Email verification couldn't be sent: {str(mail_error)}")
+                    # Continue registration despite email verification failure
+                    return jsonify({
+                        'success': True,
+                        'message': 'Account created successfully!',
+                        'redirect': url_for('index')
+                    })
 
         except Exception as e:
             db.session.rollback()
@@ -712,6 +855,11 @@ def signup():
                 'An error occurred while creating your account. Please try again.'
             }), 500
 
+    if wants_json():
+        return jsonify({
+            'message': 'Sign up page',
+            'instructions': 'Please provide username, email, and password to create an account'
+        })
     return render_template('signup.html')
 
 
@@ -721,6 +869,10 @@ def verify_email(token):
     user = User.query.filter_by(email_verification_token=token).first()
 
     if not user or not user.is_token_valid(token):
+        if wants_json():
+            return jsonify({
+                'error': 'Invalid or expired verification link. Please request a new one.'
+            }), 400
         flash(
             'Invalid or expired verification link. Please request a new one.',
             'danger')
@@ -731,33 +883,85 @@ def verify_email(token):
 
     # Log the user in
     session['user_id'] = user.id
-    flash('Your email has been verified. Welcome!', 'success')
-    return redirect(url_for('index'))
+    
+    if wants_json():
+        return jsonify({
+            'success': True,
+            'message': 'Your email has been verified. Welcome!',
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'is_premium': user.is_premium
+            }
+        })
+    else:
+        flash('Your email has been verified. Welcome!', 'success')
+        return redirect(url_for('index'))
 
 
 @app.route('/verification-pending')
 def verification_pending():
     """Show a page informing the user to check their email"""
-    return render_template('verification_pending.html')
+    if wants_json():
+        return jsonify({
+            'message': 'Please check your email to verify your account',
+            'instructions': 'A verification email has been sent to your email address. Please click the link in the email to verify your account.'
+        })
+    else:
+        return render_template('verification_pending.html')
 
 
 @app.route('/resend-verification', methods=['GET', 'POST'])
 def resend_verification():
     """Resend verification email"""
     if request.method == 'POST':
-        email = request.form.get('email', '').strip().lower()
+        # Handle both JSON and form data
+        if request.is_json:
+            data = request.json
+            email = data.get('email', '').strip().lower()
+        else:
+            email = request.form.get('email', '').strip().lower()
+
+        if not email:
+            if wants_json():
+                return jsonify({'error': 'Email is required'}), 400
+            flash('Email is required.', 'danger')
+            return redirect(url_for('resend_verification'))
+
         user = User.query.filter_by(email=email).first()
 
         if user and not user.is_email_verified:
-            send_verification_email(user)
-            flash(
-                'Verification email has been resent. Please check your inbox.',
-                'success')
+            try:
+                send_verification_email(user)
+                if wants_json():
+                    return jsonify({
+                        'success': True,
+                        'message': 'Verification email has been resent. Please check your inbox.'
+                    })
+                flash('Verification email has been resent. Please check your inbox.', 'success')
+            except Exception as e:
+                logger.error(f"Failed to resend verification email: {str(e)}")
+                if wants_json():
+                    return jsonify({'error': 'Failed to send verification email. Please try again later.'}), 500
+                flash('Failed to send verification email. Please try again later.', 'danger')
         else:
-            flash('Email not found or already verified.', 'warning')
+            if wants_json():
+                return jsonify({
+                    'success': True,
+                    'message': 'If the email exists and is not already verified, a verification email has been sent.'
+                })
+            flash('If the email exists and is not already verified, a verification email has been sent.', 'info')
 
+        if wants_json():
+            return jsonify({'success': True})
         return redirect(url_for('login'))
 
+    if wants_json():
+        return jsonify({
+            'message': 'Please provide your email to resend verification',
+            'instructions': 'Enter the email address associated with your account to receive a new verification email.'
+        })
     return render_template('resend_verification.html')
 
 
@@ -855,13 +1059,25 @@ def logout():
     """Log out a user"""
     # Remove user ID from session
     session.pop('user_id', None)
-    return redirect(url_for('index'))
+    
+    if wants_json():
+        return jsonify({
+            'success': True,
+            'message': 'Logged out successfully'
+        })
+    else:
+        return redirect(url_for('index'))
 
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     """Handle forgot password request using SMTP"""
     if request.method == 'GET':
+        if wants_json():
+            return jsonify({
+                'message': 'Password reset request',
+                'instructions': 'Please provide your email address to receive a password reset link'
+            })
         return render_template('forgot_password.html')
         
     try:
@@ -990,27 +1206,49 @@ def reset_password(token):
         # Verify token and show reset form
         user = User.verify_password_reset_token(token)
         if not user:
+            if wants_json():
+                return jsonify({'error': 'Invalid or expired password reset link'}), 400
             flash('Invalid or expired password reset link', 'danger')
             return redirect(url_for('login'))
+        
+        if wants_json():
+            return jsonify({
+                'message': 'Password reset token is valid',
+                'user_email': user.email,
+                'instructions': 'Please provide your new password'
+            })
         return render_template('reset_password.html', token=token)
 
     else:  # POST
         try:
-            data = request.form
-            token = data.get('token')
-            password = data.get('password')
-            confirm_password = data.get('confirm_password')
+            # Handle both JSON and form data
+            if request.is_json:
+                data = request.json
+                token = data.get('token')
+                password = data.get('password')
+                confirm_password = data.get('confirm_password')
+            else:
+                data = request.form
+                token = data.get('token')
+                password = data.get('password')
+                confirm_password = data.get('confirm_password')
 
             if not password or not confirm_password:
+                if wants_json():
+                    return jsonify({'error': 'Please fill in all fields'}), 400
                 flash('Please fill in all fields', 'danger')
                 return redirect(url_for('reset_password', token=token))
 
             if password != confirm_password:
+                if wants_json():
+                    return jsonify({'error': 'Passwords do not match'}), 400
                 flash('Passwords do not match', 'danger')
                 return redirect(url_for('reset_password', token=token))
 
             user = User.verify_password_reset_token(token)
             if not user:
+                if wants_json():
+                    return jsonify({'error': 'Invalid or expired password reset link'}), 400
                 flash('Invalid or expired password reset link', 'danger')
                 return redirect(url_for('login'))
 
@@ -1018,12 +1256,19 @@ def reset_password(token):
             user.set_password(password)
             db.session.commit()
 
+            if wants_json():
+                return jsonify({
+                    'success': True,
+                    'message': 'Your password has been updated. Please log in.'
+                })
             flash('Your password has been updated. Please log in.', 'success')
             return redirect(url_for('login'))
 
         except Exception as e:
             db.session.rollback()
             logger.error(f"Error resetting password: {str(e)}", exc_info=True)
+            if wants_json():
+                return jsonify({'error': 'An error occurred while resetting your password'}), 500
             flash('An error occurred while resetting your password', 'danger')
             return redirect(url_for('reset_password', token=token))
 
@@ -1033,6 +1278,8 @@ def profile():
     """View user profile and creations"""
     # Check if user is logged in
     if 'user_id' not in session:
+        if wants_json():
+            return jsonify({'error': 'Authentication required'}), 401
         return redirect(url_for('login'))
 
     user_id = session['user_id']
@@ -1040,6 +1287,8 @@ def profile():
 
     if not user:
         session.pop('user_id', None)
+        if wants_json():
+            return jsonify({'error': 'User not found'}), 404
         return redirect(url_for('login'))
 
     # Get user's creations
@@ -1051,11 +1300,61 @@ def profile():
     # Calculate time saved statistics
     time_saved_stats = user.get_time_saved_stats()
 
-    return render_template('profile.html',
-                           user=user,
-                           creations=user_creations,
-                           plan=plan,
-                           time_saved_stats=time_saved_stats)
+    if wants_json():
+        # Convert creations to JSON format
+        creations_data = []
+        for creation in user_creations:
+            creation_data = {
+                'id': creation.id,
+                'user_id': creation.user_id,
+                'image_data': creation.image_data or '',
+                'analysis_results': creation.analysis_results,
+                'poem_text': creation.poem_text,
+                'frame_style': creation.frame_style,
+                'final_image_data': creation.final_image_data,
+                'poem_type': creation.poem_type,
+                'emphasis': creation.emphasis,
+                'poem_length': creation.poem_length,
+                'time_saved_minutes': creation.time_saved_minutes or 0,
+                'created_at': creation.created_at.isoformat() if creation.created_at else None,
+                'share_code': creation.share_code,
+                'is_downloaded': creation.is_downloaded or False,
+                'download_count': creation.download_count or 0,
+                'view_count': creation.view_count or 0,
+                'last_viewed_at': creation.last_viewed_at.isoformat() if creation.last_viewed_at else None,
+                'last_downloaded_at': creation.last_downloaded_at.isoformat() if creation.last_downloaded_at else None
+            }
+            creations_data.append(creation_data)
+
+        return jsonify({
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'is_premium': user.is_premium,
+                'membership_start': user.membership_start.isoformat() if user.membership_start else None,
+                'membership_end': user.membership_end.isoformat() if user.membership_end else None,
+                'created_at': user.created_at.isoformat() if user.created_at else None
+            },
+            'creations': creations_data,
+            'plan': {
+                'id': plan.id if plan else None,
+                'name': plan.name if plan else 'Free',
+                'description': plan.description if plan else 'Basic access',
+                'max_poem_types': plan.max_poem_types if plan else 3,
+                'max_frame_types': plan.max_frame_types if plan else 3,
+                'max_saved_poems': plan.max_saved_poems if plan else 5,
+                'has_gallery': plan.has_gallery if plan else False
+            },
+            'stats': time_saved_stats
+        })
+    else:
+        # Return HTML template for web browsers
+        return render_template('profile.html',
+                               user=user,
+                               creations=user_creations,
+                               plan=plan,
+                               time_saved_stats=time_saved_stats)
 
 
 @app.route('/api/contact', methods=['POST'])
@@ -1115,7 +1414,45 @@ def membership_plans():
     # Get available plans
     plans = Membership.query.all()
 
-    return render_template('membership.html', plans=plans, user=user)
+    if wants_json():
+        # Convert plans to JSON format
+        plans_data = []
+        for plan in plans:
+            plan_data = {
+                'id': plan.id,
+                'name': plan.name,
+                'price': plan.price,
+                'description': plan.description,
+                'features': plan.features,
+                'max_poem_types': plan.max_poem_types,
+                'max_frame_types': plan.max_frame_types,
+                'max_saved_poems': plan.max_saved_poems,
+                'has_gallery': plan.has_gallery,
+                'stripe_price_id': plan.stripe_price_id,
+                'created_at': plan.created_at.isoformat() if plan.created_at else None
+            }
+            plans_data.append(plan_data)
+
+        user_data = None
+        if user:
+            user_data = {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'is_premium': user.is_premium,
+                'membership_start': user.membership_start.isoformat() if user.membership_start else None,
+                'membership_end': user.membership_end.isoformat() if user.membership_end else None,
+                'created_at': user.created_at.isoformat() if user.created_at else None
+            }
+
+        return jsonify({
+            'plans': plans_data,
+            'user': user_data,
+            'authenticated': user is not None,
+            'message': 'Available membership plans'
+        })
+    else:
+        return render_template('membership.html', plans=plans, user=user)
 
 
 @app.route('/upgrade', methods=['GET', 'POST'])
@@ -1123,6 +1460,8 @@ def upgrade_membership():
     """Upgrade to premium membership with Stripe integration"""
     # Check if user is logged in
     if 'user_id' not in session:
+        if wants_json():
+            return jsonify({'error': 'Authentication required'}), 401
         return redirect(url_for('login'))
 
     user_id = session['user_id']
@@ -1130,10 +1469,22 @@ def upgrade_membership():
 
     if not user:
         session.pop('user_id', None)
+        if wants_json():
+            return jsonify({'error': 'User not found'}), 404
         return redirect(url_for('login'))
 
     # If user is already premium
     if user.is_premium:
+        if wants_json():
+            return jsonify({
+                'error': 'User already has premium membership',
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'is_premium': user.is_premium,
+                    'membership_end': user.membership_end.isoformat() if user.membership_end else None
+                }
+            }), 400
         return redirect(url_for('profile'))
 
     # Get premium plan details
@@ -1321,11 +1672,34 @@ def upgrade_membership():
             return jsonify(
                 {'error': 'An error occurred during payment processing'}), 500
 
-    # For GET requests, render the upgrade page with Stripe publishable key
-    return render_template('upgrade.html',
-                           plan=premium_plan,
-                           user=user,
-                           stripe_publishable_key=STRIPE_PUBLISHABLE_KEY)
+    # For GET requests
+    if wants_json():
+        return jsonify({
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'is_premium': user.is_premium,
+                'membership_start': user.membership_start.isoformat() if user.membership_start else None,
+                'membership_end': user.membership_end.isoformat() if user.membership_end else None
+            },
+            'plan': {
+                'id': premium_plan.id if premium_plan else None,
+                'name': premium_plan.name if premium_plan else 'Premium',
+                'price': premium_plan.price if premium_plan else 5.0,
+                'description': premium_plan.description if premium_plan else 'Premium features',
+                'features': premium_plan.features if premium_plan else [],
+                'stripe_price_id': premium_plan.stripe_price_id if premium_plan else None
+            },
+            'stripe_publishable_key': STRIPE_PUBLISHABLE_KEY,
+            'message': 'Upgrade to premium membership'
+        })
+    else:
+        # For GET requests, render the upgrade page with Stripe publishable key
+        return render_template('upgrade.html',
+                               plan=premium_plan,
+                               user=user,
+                               stripe_publishable_key=STRIPE_PUBLISHABLE_KEY)
 
 
 @app.route('/stripe-webhook', methods=['POST'])
