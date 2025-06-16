@@ -18,25 +18,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     OnboardingPageData(
       title: "Welcome to PoemVision AI",
       description: "Transform your precious memories into beautiful, personalized poems using the power of artificial intelligence.",
-      icon: Icons.auto_awesome,
+      imagePath: "assets/images/brand_hero.png",
       color: const Color(0xFFEDD050), // Yellow
     ),
     OnboardingPageData(
       title: "Capture & Create",
       description: "Simply upload any image from your gallery or take a new photo, and watch as AI analyzes it to craft a unique poem.",
-      icon: Icons.camera_alt,
+      imagePath: "assets/images/onboarding_1.png",
       color: const Color(0xFF7DA1BF), // Blue Gray
     ),
     OnboardingPageData(
       title: "Beautiful Frames",
       description: "Choose from our collection of elegant frames to make your poem visually stunning and ready to share.",
-      icon: Icons.crop_landscape,
+      imagePath: "assets/images/onboarding_2.jpg",
       color: const Color(0xFFC8C7B9), // Sage Green
     ),
     OnboardingPageData(
       title: "Save & Share",
       description: "Keep your favorite poems in your personal gallery and share them with friends and family on social media.",
-      icon: Icons.share,
+      imagePath: "assets/images/onboarding_3.jpg",
       color: const Color(0xFF7DA1BF), // Blue Gray
     ),
   ];
@@ -141,19 +141,54 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Icon
+          // Image instead of icon
           Container(
-            width: 200,
+            width: 280,
             height: 200,
             decoration: BoxDecoration(
-              color: pageData.color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(100),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: pageData.color.withOpacity(0.3), width: 2),
             ),
-            child: Icon(
-              pageData.icon,
-              size: 80,
-              color: pageData.color,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Image.asset(
+                pageData.imagePath,
+                width: 280,
+                height: 200,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  // Debug: Print the error and path
+                  print('Failed to load image: ${pageData.imagePath}');
+                  print('Error: $error');
+                  // Fallback to icon if image fails to load
+                  return Container(
+                    width: 280,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: pageData.color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.image,
+                          size: 60,
+                          color: pageData.color,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Image not found',
+                          style: TextStyle(
+                            color: pageData.color,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
           ),
           
@@ -232,13 +267,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 class OnboardingPageData {
   final String title;
   final String description;
-  final IconData icon;
+  final String imagePath;
   final Color color;
 
   OnboardingPageData({
     required this.title,
     required this.description,
-    required this.icon,
+    required this.imagePath,
     required this.color,
   });
 }

@@ -105,6 +105,7 @@ class PoemVisionApp extends StatelessWidget {
       ),
 
       // Text theme
+      fontFamily: 'Poppins',
       textTheme: const TextTheme(
         displayLarge: TextStyle(color: Colors.white),
         displayMedium: TextStyle(color: Colors.white),
