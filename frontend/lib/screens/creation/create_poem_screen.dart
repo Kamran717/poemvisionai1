@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:share_plus/share_plus.dart';
+// import 'package:share_plus/share_plus.dart';
 import '../../models/creation.dart';
 import '../../services/creation_service.dart';
 import '../../utils/image_helper.dart';
@@ -797,10 +797,11 @@ Transform your moments into beautiful poetry!
       debugPrint('Share text prepared, length: ${shareText.length}');
       
       // Use share_plus to share the poem
-      await Share.share(
-        shareText,
-        subject: 'Beautiful AI-Generated Poem',
-      );
+      // TODO: Fix sharing functionality 
+      // await Share.share(
+      //   shareText,
+      //   subject: 'Beautiful AI-Generated Poem',
+      // );
       
       debugPrint('Share completed');
       

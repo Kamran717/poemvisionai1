@@ -157,31 +157,41 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 height: 200,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
-                  // Debug: Print the error and path
+                  print('=== IMAGE LOAD ERROR ===');
                   print('Failed to load image: ${pageData.imagePath}');
                   print('Error: $error');
-                  // Fallback to icon if image fails to load
+                  print('Stack trace: $stackTrace');
+                  print('======================');
                   return Container(
                     width: 280,
                     height: 200,
                     decoration: BoxDecoration(
-                      color: pageData.color.withOpacity(0.1),
+                      color: Colors.red.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.red, width: 2),
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          Icons.image,
+                          Icons.error,
                           size: 60,
-                          color: pageData.color,
+                          color: Colors.red,
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Image not found',
+                          'ERROR: Image not found',
                           style: TextStyle(
-                            color: pageData.color,
+                            color: Colors.red,
                             fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          pageData.imagePath,
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontSize: 10,
                           ),
                         ),
                       ],

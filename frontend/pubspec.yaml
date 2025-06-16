@@ -32,14 +32,11 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/brand_hero.png
-    - assets/images/onboarding_1.png
-    - assets/images/onboarding_2.jpg
-    - assets/images/onboarding_3.jpg
+    - assets/images/
     - assets/icons/
-    - assets/frames/
-    - assets/animations/
-    - assets/fonts/
+    - assets/fonts/Poppins/
+    - assets/fonts/Inter/
+    - assets/fonts/Roboto/
   
   fonts:
     - family: Poppins
