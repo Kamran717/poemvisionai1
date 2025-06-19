@@ -36,7 +36,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     OnboardingPageData(
       title: "Save & Share",
       description: "Keep your favorite poems in your personal gallery and share them with friends and family on social media.",
-      imagePath: "assets/images/onboarding_3.jpg",
+      imagePath: "../assets/images/onboarding_3.jpg",
       color: const Color(0xFF7DA1BF), // Blue Gray
     ),
   ];
@@ -151,54 +151,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(14),
-              child: Image.asset(
-                pageData.imagePath,
-                width: 280,
-                height: 200,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  print('=== IMAGE LOAD ERROR ===');
-                  print('Failed to load image: ${pageData.imagePath}');
-                  print('Error: $error');
-                  print('Stack trace: $stackTrace');
-                  print('======================');
-                  return Container(
-                    width: 280,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: Colors.red, width: 2),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error,
-                          size: 60,
-                          color: Colors.red,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'ERROR: Image not found',
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          pageData.imagePath,
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontSize: 10,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+              child: _buildPlaceholderForImage(pageData),
             ),
           ),
           
@@ -243,6 +196,61 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       decoration: BoxDecoration(
         color: _currentPage == index ? blueGray : sageGreen.withOpacity(0.4),
         borderRadius: BorderRadius.circular(5.0),
+      ),
+    );
+  }
+
+  Widget _buildPlaceholderForImage(OnboardingPageData pageData) {
+    IconData iconData;
+    switch (pageData.imagePath) {
+      case "assets/images/brand_hero.png":
+        iconData = Icons.auto_awesome;
+        break;
+      case "assets/images/onboarding_1.png":
+        iconData = Icons.photo_camera;
+        break;
+      case "assets/images/onboarding_2.jpg":
+        iconData = Icons.collections;
+        break;
+      case "assets/images/onboarding_3.jpg":
+        iconData = Icons.share;
+        break;
+      default:
+        iconData = Icons.image;
+    }
+
+    return Container(
+      width: 280,
+      height: 200,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            pageData.color.withOpacity(0.8),
+            pageData.color.withOpacity(0.4),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            iconData,
+            size: 80,
+            color: Colors.white,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Image placeholder',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

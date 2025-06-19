@@ -31,12 +31,12 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  
   assets:
     - assets/images/
     - assets/icons/
-    - assets/fonts/Poppins/
-    - assets/fonts/Inter/
-    - assets/fonts/Roboto/
+    - assets/fonts/
+    - assets/frames/
   
   fonts:
     - family: Poppins
