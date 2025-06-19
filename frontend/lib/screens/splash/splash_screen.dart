@@ -68,7 +68,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: blueGray, width: 2),
               ), 
-              child: Image.asset("assets/images/brand_hero.png", fit: BoxFit.cover),
+              child: Image.asset("assets/images/onboarding_1.png", fit: BoxFit.cover),
             ),
             const SizedBox(height: 24),
             const Text(
