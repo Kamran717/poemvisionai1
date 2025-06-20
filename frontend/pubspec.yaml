@@ -34,7 +34,10 @@ flutter:
   
   assets:
     - assets/images/
-    - assets/img/
+    - assets/images/brand_hero.png
+    - assets/images/onboarding_1.png
+    - assets/images/onboarding_2.jpg
+    - assets/images/onboarding_3.jpg
     - assets/icons/
     - assets/fonts/
     - assets/frames/
