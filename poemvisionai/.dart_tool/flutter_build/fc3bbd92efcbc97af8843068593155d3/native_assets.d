@@ -1,0 +1,1 @@
+ /Users/sandydev/Desktop/freelance/poemvisionai/.dart_tool/flutter_build/fc3bbd92efcbc97af8843068593155d3/native_assets.yaml: 
