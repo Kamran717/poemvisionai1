@@ -149,59 +149,6 @@ class _GalleryScreenState extends State<GalleryScreen> {
                     foregroundColor: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 32),
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 8),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: blueGray.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: blueGray.withOpacity(0.3)),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.star,
-                            color: yellow,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Want Premium Features?',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Login to access premium frames, save poems, and more!',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: sageGreen.withOpacity(0.9),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton(
-                          onPressed: () => context.goNamed('login'),
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: yellow),
-                            foregroundColor: yellow,
-                          ),
-                          child: const Text('Login for Premium'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ],
             ),
           ),
