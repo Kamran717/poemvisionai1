@@ -9,6 +9,7 @@ import '../screens/gallery/gallery_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/onboarding/introduction_screen.dart';
 import '../screens/splash/splash_screen.dart';
+import '../screens/upgrade/upgrade_screen.dart';
 
 class AppRouter {
   static final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
@@ -68,6 +69,14 @@ class AppRouter {
             onBackToLogin: () => context.goNamed('login'),
           );
         },
+      ),
+      
+      // Upgrade route (standalone, not in shell)
+      GoRoute(
+        path: '/upgrade',
+        name: 'upgrade',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const UpgradeScreen(),
       ),
       
       // Main app shell with bottom navigation

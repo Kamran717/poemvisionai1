@@ -160,82 +160,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _initiatePayment() async {
-    // Show loading dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return const AlertDialog(
-          backgroundColor: Color(0xFF1B2A37),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(color: Color(0xFFEDD050)),
-              SizedBox(height: 16),
-              Text(
-                'Processing payment...',
-                style: TextStyle(color: Colors.white),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-
-    try {
-      // Simulate API call to initiate payment
-      await Future.delayed(const Duration(seconds: 2));
-      
-      // For now, we'll simulate a successful upgrade
-      // In a real implementation, this would integrate with a payment processor
-      // like Stripe, PayPal, or in-app purchases
-      
-      Navigator.of(context).pop(); // Close loading dialog
-      
-      // Show success message
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            backgroundColor: const Color(0xFF1B2A37),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: const Text(
-              'Payment Integration',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-            content: const Text(
-              'This would integrate with a real payment processor like Stripe, PayPal, or platform-specific in-app purchases. The backend API would handle the payment processing and membership upgrade.',
-              style: TextStyle(color: Color(0xFFC8C7B9)),
-            ),
-            actions: [
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF7DA1BF),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
-      
-    } catch (e) {
-      Navigator.of(context).pop(); // Close loading dialog
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Payment failed: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+    if (!mounted) return;
+    
+    // Navigate directly to the upgrade screen instead of showing a loading dialog
+    // This avoids the NavigatorState issues with async operations
+    context.pushNamed('upgrade');
   }
 
   Future<void> _manageSubscription() async {

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 // import 'package:share_plus/share_plus.dart';
 import '../../models/creation.dart';
 import '../../models/poem_type.dart';
@@ -1022,8 +1023,7 @@ Created with PoemVision AI''';
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                // TODO: Navigate to upgrade screen
-                // Navigator.pushNamed(context, '/upgrade');
+                context.pushNamed('upgrade');
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: yellow,
