@@ -1,6 +1,6 @@
 -- Merging decision tree log ---
 application
-INJECTED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:2:5-33:19
+INJECTED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:15:5-46:19
 INJECTED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/debug/AndroidManifest.xml
 MERGED from [:image_picker_android] /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/build/image_picker_android/intermediates/merged_manifest/debug/AndroidManifest.xml:8:5-32:19
 MERGED from [:image_picker_android] /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/build/image_picker_android/intermediates/merged_manifest/debug/AndroidManifest.xml:8:5-32:19
@@ -25,8 +25,8 @@ MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/sand
 	android:name
 		INJECTED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml
 manifest
-ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:1:1-45:12
-MERGED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:1:1-45:12
+ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:1:1-58:12
+MERGED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:1:1-58:12
 INJECTED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/debug/AndroidManifest.xml:1:1-7:12
 INJECTED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/debug/AndroidManifest.xml:1:1-7:12
 INJECTED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/debug/AndroidManifest.xml:1:1-7:12
@@ -96,22 +96,40 @@ MERGED from [androidx.annotation:annotation-experimental:1.4.0] /Users/sandydev/
 		INJECTED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/debug/AndroidManifest.xml
 	xmlns:android
 		ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:1:11-69
-queries
-ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:39:5-44:15
-intent#action:name:android.intent.action.PROCESS_TEXT+data:mimeType:text/plain
-ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:40:9-43:18
-action#android.intent.action.PROCESS_TEXT
-ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:41:13-72
+uses-permission#android.permission.CAMERA
+ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:3:5-65
 	android:name
-		ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:41:21-70
-data
-ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:42:13-50
-	android:mimeType
-		ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:42:19-48
+		ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:3:22-62
+uses-permission#android.permission.WRITE_EXTERNAL_STORAGE
+ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:6:5-81
+	android:name
+		ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:6:22-78
+uses-permission#android.permission.READ_EXTERNAL_STORAGE
+ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:7:5-80
+	android:name
+		ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:7:22-77
+uses-permission#android.permission.READ_MEDIA_IMAGES
+ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:10:5-76
+	android:name
+		ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:10:22-73
 uses-permission#android.permission.INTERNET
-ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/debug/AndroidManifest.xml:6:5-66
+ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:13:5-67
+MERGED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:13:5-67
+MERGED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:13:5-67
 	android:name
-		ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/debug/AndroidManifest.xml:6:22-64
+		ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:13:22-64
+queries
+ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:52:5-57:15
+intent#action:name:android.intent.action.PROCESS_TEXT+data:mimeType:text/plain
+ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:53:9-56:18
+action#android.intent.action.PROCESS_TEXT
+ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:54:13-72
+	android:name
+		ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:54:21-70
+data
+ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:55:13-50
+	android:mimeType
+		ADDED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/AndroidManifest.xml:55:19-48
 uses-sdk
 INJECTED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/debug/AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/debug/AndroidManifest.xml

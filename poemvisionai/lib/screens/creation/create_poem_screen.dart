@@ -676,11 +676,31 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
           _selectedImage = image;
           _errorMessage = null;
         });
+      } else {
+        // User cancelled image selection
+        setState(() {
+          _errorMessage = null;
+        });
       }
     } catch (e) {
+      String errorMessage;
+      if (e.toString().contains('Gallery permission denied')) {
+        errorMessage = 'Gallery access is required to select photos. Please grant permission in your device settings and try again.';
+      } else if (e.toString().contains('permission')) {
+        errorMessage = 'Permission required to access gallery. Please check your device settings.';
+      } else {
+        errorMessage = 'Failed to pick image. Please try again or use camera instead.';
+      }
+      
       setState(() {
-        _errorMessage = 'Failed to pick image: $e';
+        _errorMessage = errorMessage;
       });
+      
+      // Show dialog for permission issues
+      if (e.toString().contains('permission')) {
+        _showPermissionDialog('Gallery Access Required', 
+          'This app needs gallery access to let you select photos for poem creation. Please grant permission in your device settings.');
+      }
     }
   }
 
@@ -692,11 +712,31 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
           _selectedImage = image;
           _errorMessage = null;
         });
+      } else {
+        // User cancelled camera
+        setState(() {
+          _errorMessage = null;
+        });
       }
     } catch (e) {
+      String errorMessage;
+      if (e.toString().contains('Camera permission denied')) {
+        errorMessage = 'Camera access is required to take photos. Please grant permission in your device settings and try again.';
+      } else if (e.toString().contains('permission')) {
+        errorMessage = 'Permission required to access camera. Please check your device settings.';
+      } else {
+        errorMessage = 'Failed to access camera. Please try again or select from gallery instead.';
+      }
+      
       setState(() {
-        _errorMessage = 'Failed to take photo: $e';
+        _errorMessage = errorMessage;
       });
+      
+      // Show dialog for permission issues
+      if (e.toString().contains('permission')) {
+        _showPermissionDialog('Camera Access Required', 
+          'This app needs camera access to let you take photos for poem creation. Please grant permission in your device settings.');
+      }
     }
   }
 
@@ -878,5 +918,53 @@ Created with PoemVision AI''';
         );
       }
     }
+  }
+
+  // Show permission dialog to guide user
+  void _showPermissionDialog(String title, String message) {
+    // Theme colors
+    const Color primaryBlack = Color(0xFF1B2A37);
+    const Color blueGray = Color(0xFF7DA1BF);
+    const Color yellow = Color(0xFFEDD050);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: primaryBlack,
+          title: Text(
+            title,
+            style: const TextStyle(color: Colors.white),
+          ),
+          content: Text(
+            message,
+            style: const TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // The permission service already handles opening settings
+                // when permanently denied
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: blueGray,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

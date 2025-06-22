@@ -18,39 +18,109 @@ class CreationService {
   Future<bool> _requestCameraPermission() async {
     if (kIsWeb) return true; // Web doesn't need explicit permission
     
-    final status = await Permission.camera.request();
-    return status == PermissionStatus.granted;
+    try {
+      // Check current permission status first
+      final currentStatus = await Permission.camera.status;
+      if (currentStatus == PermissionStatus.granted) {
+        return true;
+      }
+      
+      // Request camera permission
+      final status = await Permission.camera.request();
+      
+      // If permanently denied, guide user to settings
+      if (status == PermissionStatus.permanentlyDenied) {
+        return await openAppSettings();
+      }
+      
+      return status == PermissionStatus.granted;
+    } catch (e) {
+      debugPrint('Error requesting camera permission: $e');
+      return false;
+    }
   }
 
-  // Request gallery permission
+  // Request gallery permission with simplified logic
   Future<bool> _requestGalleryPermission() async {
     if (kIsWeb) return true;
 
-    if (Platform.isAndroid) {
-      if (await _isAndroid13OrHigher()) {
-        // For Android 13+, request photos permission which maps to READ_MEDIA_IMAGES
+    try {
+      debugPrint('Starting gallery permission request...');
+      
+      if (Platform.isAndroid) {
+        debugPrint('Platform: Android');
+        
+        // Try multiple permission strategies for different Android versions
+        // Prioritize storage permission since it's more reliable across devices
+        List<Permission> permissionsToTry = [
+          Permission.storage, // More reliable across Android versions
+          Permission.photos,  // For Android 13+ (when properly configured)
+        ];
+        
+        for (Permission permission in permissionsToTry) {
+          try {
+            debugPrint('Trying permission: ${permission.toString()}');
+            
+            // Check current status
+            final currentStatus = await permission.status;
+            debugPrint('Current status for ${permission.toString()}: $currentStatus');
+            
+            if (currentStatus == PermissionStatus.granted) {
+              debugPrint('Permission already granted for ${permission.toString()}');
+              return true;
+            }
+            
+            // Request permission
+            final status = await permission.request();
+            debugPrint('Permission request result for ${permission.toString()}: $status');
+            
+            if (status == PermissionStatus.granted) {
+              debugPrint('Permission granted for ${permission.toString()}');
+              return true;
+            }
+            
+            if (status == PermissionStatus.permanentlyDenied) {
+              debugPrint('Permission permanently denied for ${permission.toString()}, opening settings');
+              return await openAppSettings();
+            }
+            
+          } catch (e) {
+            debugPrint('Error with permission ${permission.toString()}: $e');
+            // Continue to next permission
+            continue;
+          }
+        }
+        
+        debugPrint('All permission attempts failed for Android');
+        return false;
+        
+      } else if (Platform.isIOS) {
+        debugPrint('Platform: iOS');
+        
+        // Check current status first
+        final currentStatus = await Permission.photos.status;
+        debugPrint('Current iOS photos permission status: $currentStatus');
+        
+        if (currentStatus == PermissionStatus.granted) {
+          return true;
+        }
+        
         final status = await Permission.photos.request();
-        return status == PermissionStatus.granted;
-      } else {
-        // For Android 12 and below, use storage permission
-        final status = await Permission.storage.request();
+        debugPrint('iOS photos permission request result: $status');
+        
+        if (status == PermissionStatus.permanentlyDenied) {
+          return await openAppSettings();
+        }
+        
         return status == PermissionStatus.granted;
       }
-    } else if (Platform.isIOS) {
-      final status = await Permission.photos.request();
-      return status == PermissionStatus.granted;
+    } catch (e) {
+      debugPrint('Error requesting gallery permission: $e');
+      return false;
     }
 
+    debugPrint('Gallery permission request failed - unsupported platform');
     return false;
-  }
-
-  // Check if device is running Android 13 or higher
-  Future<bool> _isAndroid13OrHigher() async {
-    if (!Platform.isAndroid) return false;
-    
-    // Since we're targeting API 35, and most modern devices will be on Android 13+,
-    // we'll default to true. The permission_handler plugin will handle the mapping correctly.
-    return true;
   }
 
   // Pick image from camera
@@ -83,12 +153,22 @@ class CreationService {
   // Pick image from gallery
   Future<File?> pickImageFromGallery() async {
     try {
-      // Request gallery permission
-      final hasPermission = await _requestGalleryPermission();
-      if (!hasPermission) {
-        throw Exception('Gallery permission denied');
+      debugPrint('Starting gallery image selection...');
+      
+      // Check if storage permission is granted (most reliable)
+      final storageStatus = await Permission.storage.status;
+      debugPrint('Storage permission status: $storageStatus');
+      
+      if (storageStatus != PermissionStatus.granted) {
+        debugPrint('Storage permission not granted, requesting...');
+        final hasStoragePermission = await _requestGalleryPermission();
+        if (!hasStoragePermission) {
+          throw Exception('Gallery permission denied - storage access required');
+        }
       }
-
+      
+      // Try image picker since storage permission is granted
+      debugPrint('Storage permission OK, launching image picker...');
       final XFile? pickedFile = await _imagePicker.pickImage(
         source: ImageSource.gallery,
         maxWidth: 1920,
@@ -97,10 +177,22 @@ class CreationService {
       );
 
       if (pickedFile != null) {
-        return File(pickedFile.path);
+        debugPrint('Image picked successfully: ${pickedFile.path}');
+        // Verify file exists and is readable
+        final file = File(pickedFile.path);
+        final exists = await file.exists();
+        if (exists) {
+          final size = await file.length();
+          debugPrint('Image file verified: $size bytes');
+          return file;
+        } else {
+          debugPrint('Selected file does not exist');
+          throw Exception('Selected image file is not accessible');
+        }
+      } else {
+        debugPrint('User cancelled image selection');
+        return null;
       }
-      
-      return null;
     } catch (e) {
       debugPrint('Error picking image from gallery: $e');
       rethrow;

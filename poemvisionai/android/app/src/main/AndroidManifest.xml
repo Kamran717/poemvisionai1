@@ -1,4 +1,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Camera permission -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    
+    <!-- Storage permissions for saving images -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    
+    <!-- For Android 13+ (API 33+) - Media permissions -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    
+    <!-- Internet permission (likely already implicitly included) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    
     <application
         android:label="PoemVisionAI"
         android:name="${applicationName}"

@@ -9,6 +9,7 @@ import '../screens/gallery/gallery_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/onboarding/introduction_screen.dart';
 import '../screens/splash/splash_screen.dart';
+import '../screens/debug/permission_debug_screen.dart';
 
 class AppRouter {
   static final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
@@ -68,6 +69,13 @@ class AppRouter {
             onBackToLogin: () => context.goNamed('login'),
           );
         },
+      ),
+      
+      // Debug route (for development)
+      GoRoute(
+        path: '/debug',
+        name: 'debug',
+        builder: (context, state) => const PermissionDebugScreen(),
       ),
       
       // Main app shell with bottom navigation
@@ -258,6 +266,24 @@ class _HomeScreen extends StatelessWidget {
                 ),
               ),
               child: const Text('Create New Poem'),
+            ),
+            const SizedBox(height: 16),
+            // Debug button (for troubleshooting)
+            OutlinedButton.icon(
+              onPressed: () => context.goNamed('debug'),
+              icon: const Icon(Icons.bug_report),
+              label: const Text('Debug Permissions'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                side: BorderSide(color: sageGreen),
+                foregroundColor: sageGreen,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
             ),
           ],
         ),
