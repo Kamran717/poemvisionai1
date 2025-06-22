@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 // import 'package:share_plus/share_plus.dart';
 import '../../models/creation.dart';
+import '../../models/poem_type.dart';
 import '../../services/creation_service.dart';
 import '../../utils/image_helper.dart';
 
@@ -26,8 +27,28 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
   int _currentStep = 1;
   
   // Poem preferences
-  String _selectedPoemType = 'sonnet';
-  final List<String> _poemTypes = ['sonnet', 'haiku', 'free verse', 'limerick', 'ode'];
+  PoemType _selectedPoemType = PoemTypeData.allPoemTypes.first;
+  List<PoemType> _availablePoemTypes = [];
+  bool _isPremium = false; // TODO: Get from user service
+  
+  @override
+  void initState() {
+    super.initState();
+    _loadAvailablePoemTypes();
+  }
+  
+  void _loadAvailablePoemTypes() {
+    setState(() {
+      // Load ALL poem types (both free and premium)
+      _availablePoemTypes = PoemTypeData.allPoemTypes;
+      // Set default to general verse if available, otherwise first free type
+      final generalVerse = _availablePoemTypes.firstWhere(
+        (type) => type.id == 'general verse',
+        orElse: () => PoemTypeData.getFreePoemTypes().first,
+      );
+      _selectedPoemType = generalVerse;
+    });
+  }
   
   @override
   Widget build(BuildContext context) {
@@ -290,46 +311,89 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
           const SizedBox(height: 12),
           
           Expanded(
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemCount: _poemTypes.length,
-              itemBuilder: (context, index) {
-                final poemType = _poemTypes[index];
-                final isSelected = poemType == _selectedPoemType;
-                
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedPoemType = poemType;
-                    });
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isSelected ? blueGray.withOpacity(0.2) : sageGreen.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isSelected ? blueGray : sageGreen.withOpacity(0.3),
-                        width: 2,
-                      ),
+            child: _availablePoemTypes.isEmpty
+                ? Center(
+                    child: Text(
+                      'Loading poem types...',
+                      style: TextStyle(color: sageGreen.withOpacity(0.8)),
                     ),
-                    child: Center(
-                      child: Text(
-                        poemType.toUpperCase(),
-                        style: TextStyle(
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          color: isSelected ? blueGray : Colors.white,
+                  )
+                : GridView.builder(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 2.5,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                    ),
+                    itemCount: _availablePoemTypes.length,
+                    itemBuilder: (context, index) {
+                      final poemType = _availablePoemTypes[index];
+                      final isSelected = poemType.id == _selectedPoemType.id;
+                      final isPremiumLocked = !poemType.free && !_isPremium;
+                      
+                      return GestureDetector(
+                        onTap: isPremiumLocked
+                            ? () => _showPremiumRequiredDialog()
+                            : () {
+                                setState(() {
+                                  _selectedPoemType = poemType;
+                                });
+                              },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isSelected 
+                                ? blueGray.withOpacity(0.2) 
+                                : isPremiumLocked 
+                                  ? Colors.grey.withOpacity(0.1)
+                                  : sageGreen.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected 
+                                  ? blueGray 
+                                  : isPremiumLocked
+                                    ? Colors.grey.withOpacity(0.3)
+                                    : sageGreen.withOpacity(0.3),
+                              width: 2,
+                            ),
+                          ),
+                          child: Stack(
+                            children: [
+                              Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    poemType.name,
+                                    style: TextStyle(
+                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                      color: isSelected 
+                                          ? blueGray 
+                                          : isPremiumLocked
+                                            ? Colors.grey
+                                            : Colors.white,
+                                      fontSize: 12,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                              if (isPremiumLocked)
+                                Positioned(
+                                  top: 4,
+                                  right: 4,
+                                  child: Icon(
+                                    Icons.lock,
+                                    size: 16,
+                                    color: yellow,
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
           
           const SizedBox(height: 24),
@@ -772,7 +836,7 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
     try {
       // Upload and analyze the image
       final preferences = {
-        'poem_type': _selectedPoemType,
+        'poem_type': _selectedPoemType.id,
       };
       
       final creation = await _creationService.uploadAndAnalyzeImage(
@@ -782,7 +846,7 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
       
       // Generate the poem
       final poemPreferences = {
-        'poem_type': _selectedPoemType,
+        'poem_type': _selectedPoemType.id,
       };
       
       final completeCreation = await _creationService.generatePoem(
@@ -811,7 +875,12 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
       _creation = null;
       _currentStep = 1;
       _errorMessage = null;
-      _selectedPoemType = 'sonnet';
+      // Reset to first available poem type
+      final generalVerse = _availablePoemTypes.firstWhere(
+        (type) => type.id == 'general verse',
+        orElse: () => _availablePoemTypes.isNotEmpty ? _availablePoemTypes.first : PoemTypeData.allPoemTypes.first,
+      );
+      _selectedPoemType = generalVerse;
     });
   }
 
@@ -918,6 +987,54 @@ Created with PoemVision AI''';
         );
       }
     }
+  }
+
+  // Show premium required dialog
+  void _showPremiumRequiredDialog() {
+    // Theme colors
+    const Color primaryBlack = Color(0xFF1B2A37);
+    const Color blueGray = Color(0xFF7DA1BF);
+    const Color yellow = Color(0xFFEDD050);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: primaryBlack,
+          title: const Text(
+            'Premium Required',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: const Text(
+            'This poem type is only available for premium members. Upgrade to access all poem types and features.',
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // TODO: Navigate to upgrade screen
+                // Navigator.pushNamed(context, '/upgrade');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: yellow,
+                foregroundColor: Colors.black87,
+              ),
+              child: const Text('Upgrade'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // Show permission dialog to guide user
