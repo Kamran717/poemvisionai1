@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.poemvisionai.app-mergeDebugResources-39:/values-night-v8/values-night-v8.xml",
+            "outputFile": "com.poemvisionai.sandy.app-mergeDebugResources-39:/values-night-v8/values-night-v8.xml",
             "map": [
                 {
                     "source": "/Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/res/values-night/styles.xml",

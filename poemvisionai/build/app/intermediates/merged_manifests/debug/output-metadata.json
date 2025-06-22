@@ -4,7 +4,7 @@
     "type": "MERGED_MANIFESTS",
     "kind": "Directory"
   },
-  "applicationId": "com.example.poemvisionai",
+  "applicationId": "com.poemvisionai.sandy",
   "variantName": "debug",
   "elements": [
     {

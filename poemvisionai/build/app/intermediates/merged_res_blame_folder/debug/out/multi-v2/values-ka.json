@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.poemvisionai.app-mergeDebugResources-39:/values-ka/values-ka.xml",
+            "outputFile": "com.poemvisionai.sandy.app-mergeDebugResources-39:/values-ka/values-ka.xml",
             "map": [
                 {
                     "source": "/Users/sandydev/.gradle/caches/transforms-3/3a04377ab98aaf9189ccddcb951bae89/transformed/appcompat-1.1.0/res/values-ka/values-ka.xml",

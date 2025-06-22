@@ -1,5 +1,5 @@
-name: frontend
-description: "PoemVision AI Flutter App"
+name: poemvisionai
+description: "PoemVisionAI Flutter App"
 publish_to: 'none'
 version: 1.0.0+1
 

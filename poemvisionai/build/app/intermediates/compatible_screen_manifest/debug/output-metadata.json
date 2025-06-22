@@ -4,7 +4,7 @@
     "type": "COMPATIBLE_SCREEN_MANIFEST",
     "kind": "Directory"
   },
-  "applicationId": "com.example.poemvisionai",
+  "applicationId": "com.poemvisionai.sandy",
   "variantName": "debug",
   "elements": []
 }

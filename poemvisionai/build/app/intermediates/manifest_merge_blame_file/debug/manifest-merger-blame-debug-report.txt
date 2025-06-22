@@ -1,6 +1,6 @@
 1<?xml version="1.0" encoding="utf-8"?>
 2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-3    package="com.example.poemvisionai"
+3    package="com.poemvisionai.sandy"
 4    android:versionCode="1"
 5    android:versionName="1.0.0" >
 6
@@ -38,12 +38,12 @@
 30
 31    <permission
 31-->[androidx.core:core:1.13.1] /Users/sandydev/.gradle/caches/transforms-3/c666c258fca39b3353b46678a6b928ab/transformed/core-1.13.1/AndroidManifest.xml:22:5-24:47
-32        android:name="com.example.poemvisionai.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+32        android:name="com.poemvisionai.sandy.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
 32-->[androidx.core:core:1.13.1] /Users/sandydev/.gradle/caches/transforms-3/c666c258fca39b3353b46678a6b928ab/transformed/core-1.13.1/AndroidManifest.xml:23:9-81
 33        android:protectionLevel="signature" />
 33-->[androidx.core:core:1.13.1] /Users/sandydev/.gradle/caches/transforms-3/c666c258fca39b3353b46678a6b928ab/transformed/core-1.13.1/AndroidManifest.xml:24:9-44
 34
-35    <uses-permission android:name="com.example.poemvisionai.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+35    <uses-permission android:name="com.poemvisionai.sandy.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
 35-->[androidx.core:core:1.13.1] /Users/sandydev/.gradle/caches/transforms-3/c666c258fca39b3353b46678a6b928ab/transformed/core-1.13.1/AndroidManifest.xml:26:5-97
 35-->[androidx.core:core:1.13.1] /Users/sandydev/.gradle/caches/transforms-3/c666c258fca39b3353b46678a6b928ab/transformed/core-1.13.1/AndroidManifest.xml:26:22-94
 36
@@ -53,10 +53,10 @@
 39-->[androidx.core:core:1.13.1] /Users/sandydev/.gradle/caches/transforms-3/c666c258fca39b3353b46678a6b928ab/transformed/core-1.13.1/AndroidManifest.xml:28:18-86
 40        android:debuggable="true"
 41        android:extractNativeLibs="true"
-42        android:icon="@mipmap/ic_launcher"
-43        android:label="poemvisionai" >
+42        android:icon="@mipmap/launcher_icon"
+43        android:label="PoemVisionAI" >
 44        <activity
-45            android:name="com.example.poemvisionai.MainActivity"
+45            android:name="com.poemvisionai.sandy.MainActivity"
 46            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
 47            android:exported="true"
 48            android:hardwareAccelerated="true"
@@ -93,7 +93,7 @@
 78-->[:image_picker_android] /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/build/image_picker_android/intermediates/merged_manifest/debug/AndroidManifest.xml:9:9-17:20
 79            android:name="io.flutter.plugins.imagepicker.ImagePickerFileProvider"
 79-->[:image_picker_android] /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/build/image_picker_android/intermediates/merged_manifest/debug/AndroidManifest.xml:10:13-82
-80            android:authorities="com.example.poemvisionai.flutter.image_provider"
+80            android:authorities="com.poemvisionai.sandy.flutter.image_provider"
 80-->[:image_picker_android] /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/build/image_picker_android/intermediates/merged_manifest/debug/AndroidManifest.xml:11:13-74
 81            android:exported="false"
 81-->[:image_picker_android] /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/build/image_picker_android/intermediates/merged_manifest/debug/AndroidManifest.xml:12:13-37
@@ -136,7 +136,7 @@
 103-->[:share_plus] /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/build/share_plus/intermediates/merged_manifest/debug/AndroidManifest.xml:13:9-21:20
 104            android:name="dev.fluttercommunity.plus.share.ShareFileProvider"
 104-->[:share_plus] /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/build/share_plus/intermediates/merged_manifest/debug/AndroidManifest.xml:14:13-77
-105            android:authorities="com.example.poemvisionai.flutter.share_provider"
+105            android:authorities="com.poemvisionai.sandy.flutter.share_provider"
 105-->[:share_plus] /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/build/share_plus/intermediates/merged_manifest/debug/AndroidManifest.xml:15:13-74
 106            android:exported="false"
 106-->[:share_plus] /Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/build/share_plus/intermediates/merged_manifest/debug/AndroidManifest.xml:16:13-37
@@ -171,7 +171,7 @@
 124-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/sandydev/.gradle/caches/transforms-3/5d9083683aa46ad6646ca7a884bd56df/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:24:9-32:20
 125            android:name="androidx.startup.InitializationProvider"
 125-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/sandydev/.gradle/caches/transforms-3/5d9083683aa46ad6646ca7a884bd56df/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:25:13-67
-126            android:authorities="com.example.poemvisionai.androidx-startup"
+126            android:authorities="com.poemvisionai.sandy.androidx-startup"
 126-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/sandydev/.gradle/caches/transforms-3/5d9083683aa46ad6646ca7a884bd56df/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:26:13-68
 127            android:exported="false" >
 127-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/sandydev/.gradle/caches/transforms-3/5d9083683aa46ad6646ca7a884bd56df/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:27:13-37

@@ -620,13 +620,13 @@
       "languageVersion": "3.4"
     },
     {
-      "name": "frontend",
+      "name": "poemvisionai",
       "rootUri": "../",
       "packageUri": "lib/",
       "languageVersion": "3.0"
     }
   ],
-  "generated": "2025-06-22T09:28:56.865122Z",
+  "generated": "2025-06-22T10:45:25.620099Z",
   "generator": "pub",
   "generatorVersion": "3.5.4",
   "flutterRoot": "file:///Users/sandydev/Dev/flutter",

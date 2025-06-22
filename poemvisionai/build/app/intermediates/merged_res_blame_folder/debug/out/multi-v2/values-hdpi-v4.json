@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.poemvisionai.app-mergeDebugResources-39:/values-hdpi-v4/values-hdpi-v4.xml",
+            "outputFile": "com.poemvisionai.sandy.app-mergeDebugResources-39:/values-hdpi-v4/values-hdpi-v4.xml",
             "map": [
                 {
                     "source": "/Users/sandydev/.gradle/caches/transforms-3/3a04377ab98aaf9189ccddcb951bae89/transformed/appcompat-1.1.0/res/values-hdpi-v4/values-hdpi-v4.xml",
