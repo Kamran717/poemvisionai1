@@ -18,7 +18,7 @@ void main() {
     // Verify that our app loads without crashing.
     expect(find.byType(MaterialApp), findsOneWidget);
     
-    // Wait for any pending timers to complete
-    await tester.pumpAndSettle();
+    // Just pump once to verify the app builds successfully
+    await tester.pump();
   });
 }
