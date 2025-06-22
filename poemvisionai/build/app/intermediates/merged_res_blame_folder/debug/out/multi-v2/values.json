@@ -131,6 +131,25 @@
                     }
                 },
                 {
+                    "source": "/Users/sandydev/Desktop/freelance/poemvisionai1/poemvisionai/android/app/src/main/res/values/styles.xml",
+                    "from": {
+                        "startLines": "3,14",
+                        "startColumns": "4,4",
+                        "startOffsets": "173,818",
+                        "endLines": "7,16",
+                        "endColumns": "12,12",
+                        "endOffsets": "476,982"
+                    },
+                    "to": {
+                        "startLines": "1488,1492",
+                        "startColumns": "4,4",
+                        "startOffsets": "93582,93763",
+                        "endLines": "1491,1494",
+                        "endColumns": "12,12",
+                        "endOffsets": "93758,93927"
+                    }
+                },
+                {
                     "source": "/Users/sandydev/.gradle/caches/transforms-3/3849d2a4662c79004aa48857ab62a419/transformed/recyclerview-1.0.0/res/values/values.xml",
                     "from": {
                         "startLines": "30,31,32,33,34,35,36,2",
@@ -164,25 +183,6 @@
                         "startOffsets": "20176",
                         "endColumns": "42",
                         "endOffsets": "20214"
-                    }
-                },
-                {
-                    "source": "/Users/sandydev/Desktop/freelance/poemvisionai/android/app/src/main/res/values/styles.xml",
-                    "from": {
-                        "startLines": "3,14",
-                        "startColumns": "4,4",
-                        "startOffsets": "173,818",
-                        "endLines": "7,16",
-                        "endColumns": "12,12",
-                        "endOffsets": "476,982"
-                    },
-                    "to": {
-                        "startLines": "1488,1492",
-                        "startColumns": "4,4",
-                        "startOffsets": "93582,93763",
-                        "endLines": "1491,1494",
-                        "endColumns": "12,12",
-                        "endOffsets": "93758,93927"
                     }
                 },
                 {
