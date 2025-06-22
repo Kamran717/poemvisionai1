@@ -168,6 +168,37 @@ class ApiService {
     }
   }
 
+  Future<void> resetPassword(String token, String password) async {
+    if (_useMockData) {
+      // Simulate password reset
+      await Future.delayed(const Duration(seconds: 1));
+      return;
+    }
+
+    // Flask expects form data for password reset
+    final response = await http.post(
+      Uri.parse('${ApiConfig.baseUrl}/reset-password/$token'),
+      headers: ApiConfig.formHeaders,
+      body: {
+        'token': token,
+        'password': password,
+        'confirm_password': password,
+      },
+    );
+
+    await _handleResponse(response);
+
+    if (response.statusCode == 200) {
+      final responseData = jsonDecode(response.body);
+      if (responseData['success'] != true) {
+        throw Exception(responseData['error'] ?? 'Failed to reset password');
+      }
+    } else {
+      final errorData = jsonDecode(response.body);
+      throw Exception(errorData['error'] ?? 'Failed to reset password: ${response.body}');
+    }
+  }
+
   // User methods
   Future<User> getUserProfile() async {
     if (_useMockData) {

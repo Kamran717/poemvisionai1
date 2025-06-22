@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
+import '../screens/auth/forgot_password_screen.dart';
+import '../screens/auth/reset_password_screen.dart';
 import '../screens/creation/create_poem_screen.dart';
 import '../screens/gallery/gallery_screen.dart';
 import '../screens/profile/profile_screen.dart';
@@ -38,6 +40,7 @@ class AppRouter {
         builder: (context, state) => LoginScreen(
           onNavigateToRegister: () => context.pushNamed('register'),
           onLoginSuccess: () => context.goNamed('home'),
+          onNavigateToForgotPassword: () => context.pushNamed('forgot-password'),
         ),
       ),
       GoRoute(
@@ -47,6 +50,24 @@ class AppRouter {
           onNavigateToLogin: () => context.pushNamed('login'),
           onRegisterSuccess: () => context.goNamed('home'),
         ),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        name: 'forgot-password',
+        builder: (context, state) => ForgotPasswordScreen(
+          onBackToLogin: () => context.goNamed('login'),
+        ),
+      ),
+      GoRoute(
+        path: '/reset-password/:token',
+        name: 'reset-password',
+        builder: (context, state) {
+          final token = state.pathParameters['token'] ?? '';
+          return ResetPasswordScreen(
+            token: token,
+            onBackToLogin: () => context.goNamed('login'),
+          );
+        },
       ),
       
       // Main app shell with bottom navigation

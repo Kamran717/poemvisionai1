@@ -107,6 +107,11 @@ class AuthService extends ChangeNotifier {
     await _apiService.requestPasswordReset(email);
   }
 
+  // Reset password with token
+  Future<void> resetPassword(String token, String password) async {
+    await _apiService.resetPassword(token, password);
+  }
+
   // Log out user
   Future<void> logout() async {
     // Clear shared preferences

@@ -5,11 +5,13 @@ import '../../services/auth_service.dart';
 class LoginScreen extends StatefulWidget {
   final VoidCallback onNavigateToRegister;
   final VoidCallback onLoginSuccess;
+  final VoidCallback? onNavigateToForgotPassword;
 
   const LoginScreen({
     super.key, 
     required this.onNavigateToRegister,
     required this.onLoginSuccess,
+    this.onNavigateToForgotPassword,
   });
 
   @override
@@ -207,9 +209,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () {
-                        // TODO: Implement forgot password navigation
-                      },
+                      onPressed: widget.onNavigateToForgotPassword,
                       child: Text(
                         'Forgot Password?',
                         style: TextStyle(color: yellow),
