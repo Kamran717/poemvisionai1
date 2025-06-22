@@ -45,11 +45,7 @@ class CreationService {
     if (kIsWeb) return true;
 
     try {
-      debugPrint('Starting gallery permission request...');
-      
       if (Platform.isAndroid) {
-        debugPrint('Platform: Android');
-        
         // Try multiple permission strategies for different Android versions
         // Prioritize storage permission since it's more reliable across devices
         List<Permission> permissionsToTry = [
@@ -59,54 +55,41 @@ class CreationService {
         
         for (Permission permission in permissionsToTry) {
           try {
-            debugPrint('Trying permission: ${permission.toString()}');
-            
             // Check current status
             final currentStatus = await permission.status;
-            debugPrint('Current status for ${permission.toString()}: $currentStatus');
             
             if (currentStatus == PermissionStatus.granted) {
-              debugPrint('Permission already granted for ${permission.toString()}');
               return true;
             }
             
             // Request permission
             final status = await permission.request();
-            debugPrint('Permission request result for ${permission.toString()}: $status');
             
             if (status == PermissionStatus.granted) {
-              debugPrint('Permission granted for ${permission.toString()}');
               return true;
             }
             
             if (status == PermissionStatus.permanentlyDenied) {
-              debugPrint('Permission permanently denied for ${permission.toString()}, opening settings');
               return await openAppSettings();
             }
             
           } catch (e) {
-            debugPrint('Error with permission ${permission.toString()}: $e');
             // Continue to next permission
             continue;
           }
         }
         
-        debugPrint('All permission attempts failed for Android');
         return false;
         
       } else if (Platform.isIOS) {
-        debugPrint('Platform: iOS');
-        
         // Check current status first
         final currentStatus = await Permission.photos.status;
-        debugPrint('Current iOS photos permission status: $currentStatus');
         
         if (currentStatus == PermissionStatus.granted) {
           return true;
         }
         
         final status = await Permission.photos.request();
-        debugPrint('iOS photos permission request result: $status');
         
         if (status == PermissionStatus.permanentlyDenied) {
           return await openAppSettings();
@@ -115,11 +98,9 @@ class CreationService {
         return status == PermissionStatus.granted;
       }
     } catch (e) {
-      debugPrint('Error requesting gallery permission: $e');
       return false;
     }
 
-    debugPrint('Gallery permission request failed - unsupported platform');
     return false;
   }
 
@@ -153,14 +134,10 @@ class CreationService {
   // Pick image from gallery
   Future<File?> pickImageFromGallery() async {
     try {
-      debugPrint('Starting gallery image selection...');
-      
       // Check if storage permission is granted (most reliable)
       final storageStatus = await Permission.storage.status;
-      debugPrint('Storage permission status: $storageStatus');
       
       if (storageStatus != PermissionStatus.granted) {
-        debugPrint('Storage permission not granted, requesting...');
         final hasStoragePermission = await _requestGalleryPermission();
         if (!hasStoragePermission) {
           throw Exception('Gallery permission denied - storage access required');
@@ -168,7 +145,6 @@ class CreationService {
       }
       
       // Try image picker since storage permission is granted
-      debugPrint('Storage permission OK, launching image picker...');
       final XFile? pickedFile = await _imagePicker.pickImage(
         source: ImageSource.gallery,
         maxWidth: 1920,
@@ -177,24 +153,18 @@ class CreationService {
       );
 
       if (pickedFile != null) {
-        debugPrint('Image picked successfully: ${pickedFile.path}');
         // Verify file exists and is readable
         final file = File(pickedFile.path);
         final exists = await file.exists();
         if (exists) {
-          final size = await file.length();
-          debugPrint('Image file verified: $size bytes');
           return file;
         } else {
-          debugPrint('Selected file does not exist');
           throw Exception('Selected image file is not accessible');
         }
       } else {
-        debugPrint('User cancelled image selection');
         return null;
       }
     } catch (e) {
-      debugPrint('Error picking image from gallery: $e');
       rethrow;
     }
   }
@@ -233,14 +203,10 @@ class CreationService {
       }
       
       // Convert image to base64 for native platforms
-      debugPrint('Converting image to base64...');
       final base64Image = await imageFileToBase64(imageFile);
-      debugPrint('Image converted successfully, size: ${base64Image.length} characters');
       
       // Upload the image for analysis
-      debugPrint('Uploading image to server...');
       final creation = await _apiService.uploadImage(base64Image, preferences);
-      debugPrint('Image uploaded successfully, creation ID: ${creation.id}');
       
       return creation;
     } catch (e) {
@@ -258,12 +224,9 @@ class CreationService {
         throw Exception('No analysis ID found for this creation');
       }
       
-      debugPrint('Using analysis ID for poem generation: $analysisId');
-      
       final creation = await _apiService.generatePoem(analysisId, poemPreferences);
       return creation;
     } catch (e) {
-      debugPrint('Error generating poem: $e');
       rethrow;
     }
   }
