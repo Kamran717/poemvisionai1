@@ -872,15 +872,47 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
                               Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  // Frame preview (using asset image)
+                                  // Frame preview (using asset image with error handling)
                                   Expanded(
                                     child: Container(
                                       margin: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(8),
-                                        image: DecorationImage(
-                                          image: AssetImage(frame.assetPath),
+                                        color: sageGreen.withOpacity(0.1),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.asset(
+                                          frame.assetPath,
                                           fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            // Fallback UI if frame image fails to load
+                                            return Container(
+                                              color: sageGreen.withOpacity(0.2),
+                                              child: Center(
+                                                child: Column(
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  children: [
+                                                    Icon(
+                                                      Icons.image_outlined,
+                                                      color: sageGreen,
+                                                      size: 24,
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                      frame.name,
+                                                      style: TextStyle(
+                                                        color: sageGreen,
+                                                        fontSize: 10,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                      textAlign: TextAlign.center,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                          },
                                         ),
                                       ),
                                     ),

@@ -405,13 +405,24 @@ class ApiService {
         final tempCreation = _sessionService.getTempCreation(analysisId);
         final imageData = tempCreation?['imageData'] ?? 'temp_image_data';
         
-        // Return creation with the poem and actual image data
+        // Update session storage with poem text for final image creation
+        await _sessionService.storeTempCreation(analysisId, {
+          'imageData': imageData,
+          'analysisResults': tempCreation?['analysisResults'],
+          'preferences': tempCreation?['preferences'],
+          'poemText': responseData['poem'],
+          'poemType': poemPreferences['poem_type'],
+          'poemLength': poemPreferences['poem_length'],
+        });
+        
+        // Return creation with the poem and actual image data, preserving analysisId
         return Creation(
           id: analysisId.hashCode,
           imageData: imageData,
           poemText: responseData['poem'],
           poemType: poemPreferences['poem_type'],
           poemLength: poemPreferences['poem_length'],
+          shareCode: analysisId, // Preserve analysisId for frame creation
           createdAt: DateTime.now(),
         );
       } else {
