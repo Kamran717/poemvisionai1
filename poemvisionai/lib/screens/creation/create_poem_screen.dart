@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 // import 'package:share_plus/share_plus.dart';
 import '../../models/creation.dart';
 import '../../models/poem_type.dart';
+import '../../models/personalization_data.dart';
 import '../../services/creation_service.dart';
 import '../../utils/image_helper.dart';
 
@@ -24,13 +25,22 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
   Creation? _creation;
   
   // Step indicators
-  final int _totalSteps = 3;
+  final int _totalSteps = 4;
   int _currentStep = 1;
   
   // Poem preferences
   PoemType _selectedPoemType = PoemTypeData.allPoemTypes.first;
   List<PoemType> _availablePoemTypes = [];
   bool _isPremium = false; // TODO: Get from user service
+  
+  // Personalization data
+  PersonalizationData _personalizationData = PersonalizationData();
+  final TextEditingController _personNameController = TextEditingController();
+  final TextEditingController _occasionController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController();
+  final TextEditingController _customMessageController = TextEditingController();
+  String? _selectedRelationship;
+  String? _selectedEmotion;
   
   @override
   void initState() {
@@ -99,6 +109,8 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
       case 2:
         return _buildSelectPoemPreferencesStep();
       case 3:
+        return _buildPersonalizationStep();
+      case 4:
         return _buildResultStep();
       default:
         return _buildSelectImageStep();
@@ -399,6 +411,350 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
           
           const SizedBox(height: 24),
           
+          // Continue to personalization button
+          ElevatedButton(
+            onPressed: _proceedToPersonalization,
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              backgroundColor: blueGray,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Continue'),
+          ),
+          const SizedBox(height: 12),
+          
+          // Back button
+          OutlinedButton(
+            onPressed: () {
+              setState(() {
+                _currentStep = 1;
+              });
+            },
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              side: BorderSide(color: yellow),
+              foregroundColor: yellow,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Back'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPersonalizationStep() {
+    // Theme colors
+    const Color blueGray = Color(0xFF7DA1BF);
+    const Color yellow = Color(0xFFEDD050);
+    const Color sageGreen = Color(0xFFC8C7B9);
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Step indicator
+          _buildStepIndicator(),
+          const SizedBox(height: 24),
+          
+          // Title
+          const Text(
+            'Make It Personal',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          
+          // Subtitle
+          Text(
+            'Add personal details to create a meaningful poem',
+            style: TextStyle(
+              color: sageGreen.withOpacity(0.8),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          
+          // Optional notice
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: yellow.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: yellow.withOpacity(0.3)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, color: yellow, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'All fields are optional. Skip to create a general poem.',
+                    style: TextStyle(
+                      color: yellow,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // Form fields
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Person's name
+                  const Text(
+                    'Person\'s Name',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _personNameController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'e.g., Sarah, Mom, my best friend',
+                      hintStyle: TextStyle(color: sageGreen.withOpacity(0.7)),
+                      filled: true,
+                      fillColor: sageGreen.withOpacity(0.1),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: sageGreen.withOpacity(0.3)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: sageGreen.withOpacity(0.3)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: blueGray),
+                      ),
+                    ),
+                    maxLength: 50,
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Relationship dropdown
+                  const Text(
+                    'Relationship',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    value: _selectedRelationship,
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedRelationship = value;
+                      });
+                    },
+                    style: const TextStyle(color: Colors.white),
+                    dropdownColor: const Color(0xFF1B2A37),
+                    decoration: InputDecoration(
+                      hintText: 'Select relationship',
+                      hintStyle: TextStyle(color: sageGreen.withOpacity(0.7)),
+                      filled: true,
+                      fillColor: sageGreen.withOpacity(0.1),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: sageGreen.withOpacity(0.3)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: sageGreen.withOpacity(0.3)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: blueGray),
+                      ),
+                    ),
+                    items: PersonalizationOptions.relationships.map((relationship) {
+                      return DropdownMenuItem<String>(
+                        value: relationship,
+                        child: Text(relationship),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Occasion
+                  const Text(
+                    'Special Occasion',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _occasionController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'e.g., Birthday, Anniversary, Graduation',
+                      hintStyle: TextStyle(color: sageGreen.withOpacity(0.7)),
+                      filled: true,
+                      fillColor: sageGreen.withOpacity(0.1),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: sageGreen.withOpacity(0.3)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: sageGreen.withOpacity(0.3)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: blueGray),
+                      ),
+                    ),
+                    maxLength: 50,
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Location
+                  const Text(
+                    'Meaningful Place',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _locationController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'e.g., Central Park, home, beach',
+                      hintStyle: TextStyle(color: sageGreen.withOpacity(0.7)),
+                      filled: true,
+                      fillColor: sageGreen.withOpacity(0.1),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: sageGreen.withOpacity(0.3)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: sageGreen.withOpacity(0.3)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: blueGray),
+                      ),
+                    ),
+                    maxLength: 50,
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Emotion dropdown
+                  const Text(
+                    'Emotion/Mood',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    value: _selectedEmotion,
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedEmotion = value;
+                      });
+                    },
+                    style: const TextStyle(color: Colors.white),
+                    dropdownColor: const Color(0xFF1B2A37),
+                    decoration: InputDecoration(
+                      hintText: 'Select emotion',
+                      hintStyle: TextStyle(color: sageGreen.withOpacity(0.7)),
+                      filled: true,
+                      fillColor: sageGreen.withOpacity(0.1),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: sageGreen.withOpacity(0.3)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: sageGreen.withOpacity(0.3)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: blueGray),
+                      ),
+                    ),
+                    items: PersonalizationOptions.emotions.map((emotion) {
+                      return DropdownMenuItem<String>(
+                        value: emotion,
+                        child: Text(emotion),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Custom message
+                  const Text(
+                    'Additional Details',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _customMessageController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'Any special memories, qualities, or details to include...',
+                      hintStyle: TextStyle(color: sageGreen.withOpacity(0.7)),
+                      filled: true,
+                      fillColor: sageGreen.withOpacity(0.1),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: sageGreen.withOpacity(0.3)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: sageGreen.withOpacity(0.3)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: blueGray),
+                      ),
+                    ),
+                    maxLines: 3,
+                    maxLength: 200,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 24),
+          
           // Generate button
           ElevatedButton(
             onPressed: _generatePoem,
@@ -414,17 +770,32 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
           ),
           const SizedBox(height: 12),
           
-          // Back button
+          // Skip personalization button
           OutlinedButton(
-            onPressed: () {
-              setState(() {
-                _currentStep = 1;
-              });
-            },
+            onPressed: _skipPersonalizationAndGenerate,
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
               side: BorderSide(color: yellow),
               foregroundColor: yellow,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Skip & Generate'),
+          ),
+          const SizedBox(height: 12),
+          
+          // Back button
+          OutlinedButton(
+            onPressed: () {
+              setState(() {
+                _currentStep = 2;
+              });
+            },
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              side: BorderSide(color: sageGreen),
+              foregroundColor: sageGreen,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -681,6 +1052,8 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
       case 2:
         return 'Preferences';
       case 3:
+        return 'Personal';
+      case 4:
         return 'Result';
       default:
         return 'Step $step';
@@ -820,6 +1193,42 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
     });
   }
 
+  void _proceedToPersonalization() {
+    setState(() {
+      _currentStep = 3;
+      _errorMessage = null;
+    });
+  }
+
+  void _skipPersonalizationAndGenerate() {
+    // Clear personalization data and generate poem
+    _clearPersonalizationData();
+    _generatePoem();
+  }
+
+  void _clearPersonalizationData() {
+    _personNameController.clear();
+    _occasionController.clear();
+    _locationController.clear();
+    _customMessageController.clear();
+    setState(() {
+      _selectedRelationship = null;
+      _selectedEmotion = null;
+      _personalizationData = PersonalizationData();
+    });
+  }
+
+  PersonalizationData _collectPersonalizationData() {
+    return PersonalizationData(
+      personName: _personNameController.text.trim().isEmpty ? null : _personNameController.text.trim(),
+      relationship: _selectedRelationship,
+      occasion: _occasionController.text.trim().isEmpty ? null : _occasionController.text.trim(),
+      location: _locationController.text.trim().isEmpty ? null : _locationController.text.trim(),
+      emotion: _selectedEmotion,
+      customMessage: _customMessageController.text.trim().isEmpty ? null : _customMessageController.text.trim(),
+    );
+  }
+
   Future<void> _generatePoem() async {
     if (_selectedImage == null) {
       setState(() {
@@ -845,10 +1254,21 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
         preferences,
       );
       
-      // Generate the poem
-      final poemPreferences = {
+      // Collect personalization data
+      final personalizationData = _collectPersonalizationData();
+      
+      // Generate the poem with personalization
+      final Map<String, dynamic> poemPreferences = {
         'poem_type': _selectedPoemType.id,
       };
+      
+      // Add personalization data if any fields are filled
+      if (!personalizationData.isEmpty) {
+        final Map<String, dynamic> structuredPrompt = personalizationData.toStructuredPrompt();
+        if (structuredPrompt.isNotEmpty) {
+          poemPreferences['custom_prompt'] = structuredPrompt;
+        }
+      }
       
       final completeCreation = await _creationService.generatePoem(
         creation,
@@ -857,7 +1277,8 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
       
       setState(() {
         _creation = completeCreation;
-        _currentStep = 3;
+        _currentStep = 4; // Go to result step
+        _personalizationData = personalizationData; // Store the data
       });
     } catch (e) {
       setState(() {
