@@ -231,6 +231,23 @@ class CreationService {
     }
   }
 
+  // Create final framed image
+  Future<Creation> createFinalImage(Creation poemCreation, String frameStyle) async {
+    try {
+      // Get the analysisId from the shareCode field where we stored it
+      final analysisId = poemCreation.shareCode;
+      if (analysisId == null) {
+        throw Exception('No analysis ID found for this creation');
+      }
+      
+      final finalCreation = await _apiService.createFinalImage(analysisId, frameStyle);
+      return finalCreation;
+    } catch (e) {
+      debugPrint('Error creating final image: $e');
+      rethrow;
+    }
+  }
+
   // Get all creations for the current user
   Future<List<Creation>> getUserCreations() async {
     try {

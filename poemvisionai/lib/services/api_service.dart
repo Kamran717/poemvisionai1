@@ -422,6 +422,66 @@ class ApiService {
     }
   }
 
+  Future<Creation> createFinalImage(String analysisId, String frameStyle) async {
+    if (_useMockData) {
+      // Return mock final creation with framed image
+      await Future.delayed(const Duration(seconds: 3)); // Longer delay to simulate image processing
+      return Creation(
+        id: analysisId.hashCode,
+        imageData: 'mock_image_data',
+        poemText: _generateMockPoem('sonnet'),
+        poemType: 'sonnet',
+        frameStyle: frameStyle,
+        finalImageData: 'mock_final_image_data_with_frame',
+        shareCode: 'MOCK${Random().nextInt(10000)}',
+        createdAt: DateTime.now(),
+      );
+    }
+
+    final requestBody = {
+      'analysisId': analysisId,
+      'frameStyle': frameStyle,
+    };
+
+    print('Creating final image with frame: $frameStyle');
+    print('Using analysisId: $analysisId');
+
+    final headers = await _headers;
+    final response = await http.post(
+      Uri.parse(ApiConfig.createFinalImageEndpoint),
+      headers: headers,
+      body: jsonEncode(requestBody),
+    );
+
+    // Handle session management
+    await _handleResponse(response);
+
+    if (response.statusCode == 200) {
+      final responseData = jsonDecode(response.body);
+      if (responseData['success'] == true && responseData['finalImage'] != null) {
+        // Try to get stored creation data from session
+        final tempCreation = _sessionService.getTempCreation(analysisId);
+        final imageData = tempCreation?['imageData'] ?? 'temp_image_data';
+        final poemText = tempCreation?['poemText'] ?? 'Generated poem text';
+        
+        // Return complete creation with final framed image
+        return Creation(
+          id: responseData['creationId'] ?? analysisId.hashCode,
+          imageData: imageData,
+          poemText: poemText,
+          frameStyle: frameStyle,
+          finalImageData: responseData['finalImage'],
+          shareCode: responseData['shareCode'],
+          createdAt: DateTime.now(),
+        );
+      } else {
+        throw Exception('Invalid final image response: ${response.body}');
+      }
+    } else {
+      throw Exception('Failed to create final image: ${response.body}');
+    }
+  }
+
   Future<List<Creation>> getUserCreations() async {
     try {
       // Initialize session service first

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../models/creation.dart';
 import '../../models/poem_type.dart';
 import '../../models/personalization_data.dart';
+import '../../models/frame.dart';
 import '../../services/creation_service.dart';
 import '../../utils/image_helper.dart';
 
@@ -25,13 +26,17 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
   Creation? _creation;
   
   // Step indicators
-  final int _totalSteps = 4;
+  final int _totalSteps = 5;
   int _currentStep = 1;
   
   // Poem preferences
   PoemType _selectedPoemType = PoemTypeData.allPoemTypes.first;
   List<PoemType> _availablePoemTypes = [];
   bool _isPremium = false; // TODO: Get from user service
+  
+  // Frame selection
+  Frame _selectedFrame = FrameData.availableFrames.first;
+  List<Frame> _availableFrames = [];
   
   // Personalization data
   PersonalizationData _personalizationData = PersonalizationData();
@@ -58,6 +63,10 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
         orElse: () => PoemTypeData.getFreePoemTypes().first,
       );
       _selectedPoemType = generalVerse;
+      
+      // Load available frames
+      _availableFrames = FrameData.getAvailableFrames(_isPremium);
+      _selectedFrame = _availableFrames.first;
     });
   }
   
@@ -94,7 +103,7 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
           CircularProgressIndicator(color: yellow),
           const SizedBox(height: 16),
           Text(
-            'Processing your image...',
+            'Processing your creation...',
             style: TextStyle(color: sageGreen.withOpacity(0.9)),
           ),
         ],
@@ -111,6 +120,8 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
       case 3:
         return _buildPersonalizationStep();
       case 4:
+        return _buildFrameSelectionStep();
+      case 5:
         return _buildResultStep();
       default:
         return _buildSelectImageStep();
@@ -499,7 +510,7 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'All fields are optional. Skip to create a general poem.',
+                    'All fields are optional. Skip to generate poem.',
                     style: TextStyle(
                       color: yellow,
                       fontSize: 12,
@@ -633,41 +644,6 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
                   ),
                   const SizedBox(height: 16),
                   
-                  // Location
-                  const Text(
-                    'Meaningful Place',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _locationController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: 'e.g., Central Park, home, beach',
-                      hintStyle: TextStyle(color: sageGreen.withOpacity(0.7)),
-                      filled: true,
-                      fillColor: sageGreen.withOpacity(0.1),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: sageGreen.withOpacity(0.3)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: sageGreen.withOpacity(0.3)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: blueGray),
-                      ),
-                    ),
-                    maxLength: 50,
-                  ),
-                  const SizedBox(height: 16),
-                  
                   // Emotion dropdown
                   const Text(
                     'Emotion/Mood',
@@ -755,7 +731,7 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
           
           const SizedBox(height: 24),
           
-          // Generate button
+          // Generate poem button
           ElevatedButton(
             onPressed: _generatePoem,
             style: ElevatedButton.styleFrom(
@@ -807,42 +783,12 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
     );
   }
 
-  Widget _buildResultStep() {
+  Widget _buildFrameSelectionStep() {
     // Theme colors
     const Color blueGray = Color(0xFF7DA1BF);
     const Color yellow = Color(0xFFEDD050);
     const Color sageGreen = Color(0xFFC8C7B9);
 
-    if (_creation == null || _creation!.poemText == null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'No poem generated yet',
-              style: TextStyle(color: sageGreen.withOpacity(0.8)),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _currentStep = 1;
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: blueGray,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text('Start Over'),
-            ),
-          ],
-        ),
-      );
-    }
-    
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -854,7 +800,188 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
           
           // Title
           const Text(
-            'Your Poem',
+            'Choose Frame Style',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          
+          // Subtitle
+          Text(
+            'Select a beautiful frame for your poem',
+            style: TextStyle(
+              color: sageGreen.withOpacity(0.8),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 32),
+          
+          // Frame selection
+          Expanded(
+            child: _availableFrames.isEmpty
+                ? Center(
+                    child: Text(
+                      'Loading frames...',
+                      style: TextStyle(color: sageGreen.withOpacity(0.8)),
+                    ),
+                  )
+                : GridView.builder(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 1.2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                    ),
+                    itemCount: _availableFrames.length,
+                    itemBuilder: (context, index) {
+                      final frame = _availableFrames[index];
+                      final isSelected = frame.id == _selectedFrame.id;
+                      final isPremiumLocked = frame.isPremium && !_isPremium;
+                      
+                      return GestureDetector(
+                        onTap: isPremiumLocked
+                            ? () => _showPremiumRequiredDialog()
+                            : () {
+                                setState(() {
+                                  _selectedFrame = frame;
+                                });
+                              },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isSelected 
+                                ? blueGray.withOpacity(0.2) 
+                                : isPremiumLocked 
+                                  ? Colors.grey.withOpacity(0.1)
+                                  : sageGreen.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected 
+                                  ? blueGray 
+                                  : isPremiumLocked
+                                    ? Colors.grey.withOpacity(0.3)
+                                    : sageGreen.withOpacity(0.3),
+                              width: 2,
+                            ),
+                          ),
+                          child: Stack(
+                            children: [
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  // Frame preview (using asset image)
+                                  Expanded(
+                                    child: Container(
+                                      margin: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(8),
+                                        image: DecorationImage(
+                                          image: AssetImage(frame.assetPath),
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  
+                                  // Frame name
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      frame.name,
+                                      style: TextStyle(
+                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                        color: isSelected 
+                                            ? blueGray 
+                                            : isPremiumLocked
+                                              ? Colors.grey
+                                              : Colors.white,
+                                        fontSize: 12,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (isPremiumLocked)
+                                Positioned(
+                                  top: 4,
+                                  right: 4,
+                                  child: Icon(
+                                    Icons.lock,
+                                    size: 16,
+                                    color: yellow,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // Create final image button
+          ElevatedButton(
+            onPressed: _createFinalImage,
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              backgroundColor: blueGray,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Create Final Poem'),
+          ),
+          const SizedBox(height: 12),
+          
+          // Back button
+          OutlinedButton(
+            onPressed: () {
+              setState(() {
+                _currentStep = 3;
+              });
+            },
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              side: BorderSide(color: yellow),
+              foregroundColor: yellow,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Back'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResultStep() {
+    // Theme colors
+    const Color blueGray = Color(0xFF7DA1BF);
+    const Color yellow = Color(0xFFEDD050);
+    const Color sageGreen = Color(0xFFC8C7B9);
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Step indicator
+          _buildStepIndicator(),
+          const SizedBox(height: 24),
+          
+          // Success message
+          const Text(
+            'Your Poem is Ready!',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -864,64 +991,74 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
           ),
           const SizedBox(height: 32),
           
-          // Poem display
+          // Final result display
           Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  // Image
-                  if (_selectedImage != null) ...[
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: kIsWeb
-                          ? Image.network(
-                              _selectedImage!.path,
-                              height: 200,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  height: 200,
-                                  width: double.infinity,
-                                  color: Colors.grey.shade200,
-                                  child: const Center(
-                                    child: Icon(Icons.broken_image, color: Colors.red, size: 40),
+            child: _creation?.finalImageData != null
+                ? Column(
+                    children: [
+                      // Final framed image
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.memory(
+                            CreationService.base64ToImage(_creation!.finalImageData!),
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : Column(
+                    children: [
+                      // Original image
+                      Expanded(
+                        flex: 2,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: _selectedImage != null
+                              ? (kIsWeb
+                                  ? Image.network(
+                                      _selectedImage!.path,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : ImageHelper.displayFileImage(_selectedImage))
+                              : Container(
+                                  color: sageGreen.withOpacity(0.1),
+                                  child: Icon(
+                                    Icons.image,
+                                    size: 100,
+                                    color: sageGreen.withOpacity(0.5),
                                   ),
-                                );
-                              },
-                            )
-                          : ImageHelper.displayFileImage(
-                              _selectedImage,
-                              height: 200,
-                              width: double.infinity,
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Poem text
+                      Expanded(
+                        flex: 1,
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: sageGreen.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: sageGreen.withOpacity(0.3)),
+                          ),
+                          child: SingleChildScrollView(
+                            child: Text(
+                              _creation?.poemText ?? 'Your poem will appear here...',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                height: 1.6,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-                  
-                  // Poem text
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: sageGreen.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: sageGreen.withOpacity(0.3),
+                          ),
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      _creation!.poemText!,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        height: 1.5,
-                        color: Colors.white,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            ),
           ),
           
           const SizedBox(height: 24),
@@ -930,14 +1067,14 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
           Row(
             children: [
               Expanded(
-                child: OutlinedButton.icon(
+                child: ElevatedButton.icon(
                   onPressed: _sharePoem,
                   icon: const Icon(Icons.share),
                   label: const Text('Share'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: BorderSide(color: yellow),
-                    foregroundColor: yellow,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    backgroundColor: blueGray,
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -951,9 +1088,9 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
                   icon: const Icon(Icons.download),
                   label: const Text('Download'),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: blueGray,
-                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    backgroundColor: yellow,
+                    foregroundColor: Colors.black87,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -983,63 +1120,52 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
   }
 
   Widget _buildStepIndicator() {
-    // Theme colors
-    const Color blueGray = Color(0xFF7DA1BF);
     const Color yellow = Color(0xFFEDD050);
     const Color sageGreen = Color(0xFFC8C7B9);
-    
+
     return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(_totalSteps, (index) {
         final stepNumber = index + 1;
-        final isActive = stepNumber == _currentStep;
         final isCompleted = stepNumber < _currentStep;
-        
-        return Expanded(
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            child: Column(
-              children: [
-                // Step circle
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: isCompleted
-                        ? yellow
-                        : (isActive ? blueGray : sageGreen.withOpacity(0.3)),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: isCompleted
-                        ? const Icon(
-                            Icons.check,
-                            color: Colors.black87,
-                            size: 18,
-                          )
-                        : Text(
-                            stepNumber.toString(),
-                            style: TextStyle(
-                              color: isActive ? Colors.white : Colors.white70,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                
-                // Step label
-                Text(
-                  _getStepLabel(stepNumber),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isActive ? blueGray : sageGreen.withOpacity(0.8),
-                    fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+        final isActive = stepNumber == _currentStep;
+
+        return Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isCompleted || isActive
+                    ? yellow
+                    : sageGreen.withOpacity(0.3),
+              ),
+              child: Center(
+                child: isCompleted
+                    ? const Icon(Icons.check, color: Colors.black87, size: 16)
+                    : Text(
+                        stepNumber.toString(),
+                        style: TextStyle(
+                          color: isActive ? Colors.black87 : Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+              ),
             ),
-          ),
+            if (index < _totalSteps - 1) ...[
+              const SizedBox(width: 4),
+              Container(
+                width: 20,
+                height: 2,
+                color: stepNumber < _currentStep
+                    ? yellow
+                    : sageGreen.withOpacity(0.3),
+              ),
+              const SizedBox(width: 4),
+            ],
+          ],
         );
       }),
     );
@@ -1048,241 +1174,192 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
   String _getStepLabel(int step) {
     switch (step) {
       case 1:
-        return 'Select Image';
+        return 'Image';
       case 2:
-        return 'Preferences';
+        return 'Poem';
       case 3:
         return 'Personal';
       case 4:
+        return 'Frame';
+      case 5:
         return 'Result';
       default:
         return 'Step $step';
     }
   }
 
-  // Image selection methods
-  void _showImageSourceOptions() {
-    // Theme colors
-    const Color primaryBlack = Color(0xFF1B2A37);
-    const Color blueGray = Color(0xFF7DA1BF);
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: primaryBlack,
-      builder: (context) {
-        return Container(
-          decoration: BoxDecoration(
-            color: primaryBlack,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-          ),
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: Icon(Icons.photo_library, color: blueGray),
-                title: const Text(
-                  'Choose from Gallery',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImageFromGallery();
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.camera_alt, color: blueGray),
-                title: const Text(
-                  'Take a Photo',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImageFromCamera();
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _pickImageFromGallery() async {
-    try {
-      final image = await _creationService.pickImageFromGallery();
-      if (image != null) {
-        setState(() {
-          _selectedImage = image;
-          _errorMessage = null;
-        });
-      } else {
-        // User cancelled image selection
-        setState(() {
-          _errorMessage = null;
-        });
-      }
-    } catch (e) {
-      String errorMessage;
-      if (e.toString().contains('Gallery permission denied')) {
-        errorMessage = 'Gallery access is required to select photos. Please grant permission in your device settings and try again.';
-      } else if (e.toString().contains('permission')) {
-        errorMessage = 'Permission required to access gallery. Please check your device settings.';
-      } else {
-        errorMessage = 'Failed to pick image. Please try again or use camera instead.';
-      }
-      
-      setState(() {
-        _errorMessage = errorMessage;
-      });
-      
-      // Show dialog for permission issues
-      if (e.toString().contains('permission')) {
-        _showPermissionDialog('Gallery Access Required', 
-          'This app needs gallery access to let you select photos for poem creation. Please grant permission in your device settings.');
-      }
-    }
-  }
-
-  Future<void> _pickImageFromCamera() async {
-    try {
-      final image = await _creationService.pickImageFromCamera();
-      if (image != null) {
-        setState(() {
-          _selectedImage = image;
-          _errorMessage = null;
-        });
-      } else {
-        // User cancelled camera
-        setState(() {
-          _errorMessage = null;
-        });
-      }
-    } catch (e) {
-      String errorMessage;
-      if (e.toString().contains('Camera permission denied')) {
-        errorMessage = 'Camera access is required to take photos. Please grant permission in your device settings and try again.';
-      } else if (e.toString().contains('permission')) {
-        errorMessage = 'Permission required to access camera. Please check your device settings.';
-      } else {
-        errorMessage = 'Failed to access camera. Please try again or select from gallery instead.';
-      }
-      
-      setState(() {
-        _errorMessage = errorMessage;
-      });
-      
-      // Show dialog for permission issues
-      if (e.toString().contains('permission')) {
-        _showPermissionDialog('Camera Access Required', 
-          'This app needs camera access to let you take photos for poem creation. Please grant permission in your device settings.');
-      }
-    }
-  }
-
   // Navigation methods
   void _proceedToPreferences() {
-    if (_selectedImage == null) {
-      setState(() {
-        _errorMessage = 'Please select an image first';
-      });
-      return;
-    }
-    
     setState(() {
       _currentStep = 2;
-      _errorMessage = null;
     });
   }
 
   void _proceedToPersonalization() {
     setState(() {
       _currentStep = 3;
-      _errorMessage = null;
     });
   }
 
-  void _skipPersonalizationAndGenerate() {
-    // Clear personalization data and generate poem
-    _clearPersonalizationData();
-    _generatePoem();
-  }
-
-  void _clearPersonalizationData() {
-    _personNameController.clear();
-    _occasionController.clear();
-    _locationController.clear();
-    _customMessageController.clear();
-    setState(() {
-      _selectedRelationship = null;
-      _selectedEmotion = null;
-      _personalizationData = PersonalizationData();
-    });
-  }
-
-  PersonalizationData _collectPersonalizationData() {
-    return PersonalizationData(
-      personName: _personNameController.text.trim().isEmpty ? null : _personNameController.text.trim(),
-      relationship: _selectedRelationship,
-      occasion: _occasionController.text.trim().isEmpty ? null : _occasionController.text.trim(),
-      location: _locationController.text.trim().isEmpty ? null : _locationController.text.trim(),
-      emotion: _selectedEmotion,
-      customMessage: _customMessageController.text.trim().isEmpty ? null : _customMessageController.text.trim(),
+  // Image picker methods
+  void _showImageSourceOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1B2A37),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library, color: Colors.white),
+              title: const Text('Choose from Gallery', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImageFromGallery();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt, color: Colors.white),
+              title: const Text('Take a Photo', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImageFromCamera();
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
+  Future<void> _pickImageFromGallery() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      final imageFile = await _creationService.pickImageFromGallery();
+      if (imageFile != null) {
+        setState(() {
+          _selectedImage = imageFile;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+      });
+      _showPermissionDialog(e.toString());
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _pickImageFromCamera() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      final imageFile = await _creationService.pickImageFromCamera();
+      if (imageFile != null) {
+        setState(() {
+          _selectedImage = imageFile;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+      });
+      _showPermissionDialog(e.toString());
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _showPermissionDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Permission Required'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Poem generation methods
   Future<void> _generatePoem() async {
+    _clearPersonalizationData();
+    await _generatePoemWithData();
+  }
+
+  Future<void> _skipPersonalizationAndGenerate() async {
+    await _generatePoemWithData();
+  }
+
+  void _clearPersonalizationData() {
+    _personalizationData = PersonalizationData(
+      personName: _personNameController.text.trim(),
+      relationship: _selectedRelationship,
+      occasion: _occasionController.text.trim(),
+      location: _locationController.text.trim(),
+      emotion: _selectedEmotion,
+      customMessage: _customMessageController.text.trim(),
+    );
+  }
+
+  Future<void> _generatePoemWithData() async {
     if (_selectedImage == null) {
       setState(() {
         _errorMessage = 'Please select an image first';
-        _currentStep = 1;
       });
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
     try {
-      // Upload and analyze the image
-      final preferences = {
-        'poem_type': _selectedPoemType.id,
-      };
-      
-      final creation = await _creationService.uploadAndAnalyzeImage(
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      // First upload and analyze image
+      final uploadedCreation = await _creationService.uploadAndAnalyzeImage(
         _selectedImage!,
-        preferences,
+        {},
       );
-      
-      // Collect personalization data
-      final personalizationData = _collectPersonalizationData();
-      
-      // Generate the poem with personalization
-      final Map<String, dynamic> poemPreferences = {
+
+      // Then generate poem
+      final poemPreferences = {
         'poem_type': _selectedPoemType.id,
+        'poem_length': 'medium',
+        'emphasis': [],
+        'custom_prompt': _personalizationData.toCustomPrompt(),
       };
-      
-      // Add personalization data if any fields are filled
-      if (!personalizationData.isEmpty) {
-        final Map<String, dynamic> structuredPrompt = personalizationData.toStructuredPrompt();
-        if (structuredPrompt.isNotEmpty) {
-          poemPreferences['custom_prompt'] = structuredPrompt;
-        }
-      }
-      
-      final completeCreation = await _creationService.generatePoem(
-        creation,
+
+      final poemCreation = await _creationService.generatePoem(
+        uploadedCreation,
         poemPreferences,
       );
-      
+
       setState(() {
-        _creation = completeCreation;
-        _currentStep = 4; // Go to result step
-        _personalizationData = personalizationData; // Store the data
+        _creation = poemCreation;
+        _currentStep = 4; // Move to frame selection
       });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Failed to generate poem: $e';
+        _errorMessage = e.toString();
       });
     } finally {
       setState(() {
@@ -1291,218 +1368,103 @@ class _CreatePoemScreenState extends State<CreatePoemScreen> {
     }
   }
 
-  void _resetCreation() {
-    setState(() {
-      _selectedImage = null;
-      _creation = null;
-      _currentStep = 1;
-      _errorMessage = null;
-      // Reset to first available poem type
-      final generalVerse = _availablePoemTypes.firstWhere(
-        (type) => type.id == 'general verse',
-        orElse: () => _availablePoemTypes.isNotEmpty ? _availablePoemTypes.first : PoemTypeData.allPoemTypes.first,
-      );
-      _selectedPoemType = generalVerse;
-    });
-  }
-
-  // Share functionality using share_plus package
-  Future<void> _sharePoem() async {
-    if (_creation?.poemText == null) {
-      debugPrint('No poem to share');
+  Future<void> _createFinalImage() async {
+    if (_creation == null) {
+      setState(() {
+        _errorMessage = 'No poem found to create final image';
+      });
       return;
     }
 
     try {
-      debugPrint('Starting share functionality');
-      
-      final String shareText = '''🌟 Check out this AI-generated poem! 🌟
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
 
-${_creation!.poemText!}
+      final finalCreation = await _creationService.createFinalImage(
+        _creation!,
+        _selectedFrame.id,
+      );
 
-✨ Created with PoemVision AI ✨
-Transform your moments into beautiful poetry!
-
-#PoemVisionAI #Poetry #AI #CreativeWriting''';
-
-      debugPrint('Share text prepared, length: ${shareText.length}');
-      
-      // Use share_plus to share the poem
-      // TODO: Fix sharing functionality 
-      // await Share.share(
-      //   shareText,
-      //   subject: 'Beautiful AI-Generated Poem',
-      // );
-      
-      debugPrint('Share completed');
-      
-      // Show success message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Poem shared successfully!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
+      setState(() {
+        _creation = finalCreation;
+        _currentStep = 5; // Move to result
+      });
     } catch (e) {
-      debugPrint('Share error: $e');
-      
-      // Fallback to clipboard if sharing fails
-      try {
-        final String fallbackText = '''🌟 AI-Generated Poem 🌟
-
-${_creation!.poemText!}
-
-Created with PoemVision AI''';
-        
-        await Clipboard.setData(ClipboardData(text: fallbackText));
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Sharing not available. Poem copied to clipboard instead!'),
-              backgroundColor: Colors.orange,
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
-      } catch (clipboardError) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to share poem: $e'),
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
-      }
+      setState(() {
+        _errorMessage = e.toString();
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
-  // Download functionality  
-  Future<void> _downloadPoem() async {
-    if (_creation?.poemText == null) return;
-
-    try {
-      // Copy poem text to clipboard
-      await Clipboard.setData(ClipboardData(text: _creation!.poemText!));
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Poem copied to clipboard!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to copy poem: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+  // Result actions
+  void _sharePoem() {
+    if (_creation?.shareCode != null) {
+      // TODO: Implement sharing
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Share functionality coming soon!')),
+      );
     }
   }
 
-  // Show premium required dialog
+  void _downloadPoem() {
+    if (_creation?.finalImageData != null) {
+      // TODO: Implement download
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Download functionality coming soon!')),
+      );
+    }
+  }
+
+  void _resetCreation() {
+    setState(() {
+      _currentStep = 1;
+      _selectedImage = null;
+      _creation = null;
+      _errorMessage = null;
+      _personNameController.clear();
+      _occasionController.clear();
+      _locationController.clear();
+      _customMessageController.clear();
+      _selectedRelationship = null;
+      _selectedEmotion = null;
+    });
+  }
+
   void _showPremiumRequiredDialog() {
-    // Theme colors
-    const Color primaryBlack = Color(0xFF1B2A37);
-    const Color blueGray = Color(0xFF7DA1BF);
-    const Color yellow = Color(0xFFEDD050);
-
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: primaryBlack,
-          title: const Text(
-            'Premium Required',
-            style: TextStyle(color: Colors.white),
+      builder: (context) => AlertDialog(
+        title: const Text('Premium Required'),
+        content: const Text('This feature requires a premium membership. Upgrade to unlock all poem types and frames.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
           ),
-          content: const Text(
-            'This poem type is only available for premium members. Upgrade to access all poem types and features.',
-            style: TextStyle(color: Colors.white70),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.go('/upgrade');
+            },
+            child: const Text('Upgrade'),
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: Colors.white70),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                context.pushNamed('upgrade');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: yellow,
-                foregroundColor: Colors.black87,
-              ),
-              child: const Text('Upgrade'),
-            ),
-          ],
-        );
-      },
+        ],
+      ),
     );
   }
 
-  // Show permission dialog to guide user
-  void _showPermissionDialog(String title, String message) {
-    // Theme colors
-    const Color primaryBlack = Color(0xFF1B2A37);
-    const Color blueGray = Color(0xFF7DA1BF);
-    const Color yellow = Color(0xFFEDD050);
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: primaryBlack,
-          title: Text(
-            title,
-            style: const TextStyle(color: Colors.white),
-          ),
-          content: Text(
-            message,
-            style: const TextStyle(color: Colors.white70),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: Colors.white70),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                // The permission service already handles opening settings
-                // when permanently denied
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: blueGray,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
+  @override
+  void dispose() {
+    _personNameController.dispose();
+    _occasionController.dispose();
+    _locationController.dispose();
+    _customMessageController.dispose();
+    super.dispose();
   }
 }

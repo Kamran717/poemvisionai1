@@ -69,6 +69,12 @@ class PersonalizationData {
     };
   }
 
+  Map<String, dynamic> toCustomPrompt() {
+    if (isEmpty) return {};
+
+    return toStructuredPrompt();
+  }
+
   @override
   String toString() {
     return 'PersonalizationData(personName: $personName, relationship: $relationship, '
